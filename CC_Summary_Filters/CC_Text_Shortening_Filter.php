@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Text_Shortening_Filter.php,v 1.12 2008/05/19 22:15:11 jamie Exp $
+// $Id: CC_Text_Shortening_Filter.php,v 1.5 2003/07/06 01:31:34 jamie Exp $
 //=======================================================================
 // CLASS: CC_Text_Shortening_Filter
 //=======================================================================
@@ -23,8 +23,6 @@ class CC_Text_Shortening_Filter extends CC_Summary_Filter
 	 */
 
 	var $textLength;
-	var $popup;
-	var $moreLink;
 	
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Text_Shortening_Filter()
@@ -37,11 +35,9 @@ class CC_Text_Shortening_Filter extends CC_Summary_Filter
 	 * @access private
 	 */
 
-	function CC_Text_Shortening_Filter($textLength = 34, $popup = false, $linkStyle = 'text')
+	function CC_Text_Shortening_Filter($textLength = 34)
 	{
 		$this->textLength = $textLength;
-		$this->popup = $popup;
-		$this->linkStyle = $linkStyle;
 	}
 	
 	//-------------------------------------------------------------------
@@ -62,29 +58,7 @@ class CC_Text_Shortening_Filter extends CC_Summary_Filter
 		{
 			$shortString = substr($textToShorten, 0, $this->textLength - 3);
 			
-			$shortened = substr($shortString, 0, strrpos($shortString, ' ')) . "...";
-			
-			if ($this->popup)
-			{
-				switch ($this->linkStyle)
-				{
-					case 'more':
-					{
-						return $shortened . ' (<a href="javascript:window.alert(\'' . str_replace('"', "\'", str_replace("\n", "\\n", str_replace("'", "\'", $textToShorten))) . '\');">more</a>)';
-					}
-					break;
-					
-					case 'text':
-					default:
-					{
-						return '<a href="javascript:window.alert(\'' . str_replace('"', "\'", str_replace("\n", "\\n", str_replace("'", "\'", $textToShorten))) . '\');">' . $shortened . '</a>';
-					}
-				}	
-			}
-			else
-			{
-				return $shortened;
-			}
+			return substr($shortString, 0, strrpos($shortString, ' ')) . "...";
 		}
 		else
 		{

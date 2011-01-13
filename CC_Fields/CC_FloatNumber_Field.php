@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_FloatNumber_Field.php,v 1.10 2006/12/28 21:59:58 mike Exp $
+// $Id: CC_FloatNumber_Field.php,v 1.8 2003/09/28 23:48:15 patrick Exp $
 //=======================================================================
 // CLASS: CC_FloatNumber_Field
 //=======================================================================
@@ -103,26 +103,7 @@ class CC_FloatNumber_Field extends CC_Text_Field
 	{
 		return is_numeric($this->value);
 	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setValue
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * This sets the value of the field. It is encoded in the field.
-	 *
-	 * @access public
-	 * @param int $value The value to set.
-	 */
-	 
-	function setValue($value)
-	{
-		// strip out anything that isn't a digit or a decimal place
-		$value = ereg_replace('[^0-9\.-]', '', $value);
 
-		parent::setValue($value);
-	}
 }
 
 ?>

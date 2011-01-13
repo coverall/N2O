@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Summary_Sort_Handler.php,v 1.12 2008/06/05 18:25:56 mike Exp $
+// $Id: CC_Summary_Sort_Handler.php,v 1.11 2004/03/15 21:58:35 patrick Exp $
 //=======================================================================
 // CLASS: CC_Summary_Sort_Handler
 //=======================================================================
@@ -80,39 +80,6 @@ class CC_Summary_Sort_Handler extends CC_Action_Handler
 	{
 		$this->sortButton = &$sortButton;
 	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: getSummaryName()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Get the name of the summary attached to this handler!
-	 *
-	 * @access public
-	 */
-
-	function getSummaryName()
-	{
-		return $this->summary->getName();
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: getSummaryColumn()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Get the name of the summary column attached to this handler!
-	 *
-	 * @access public
-	 */
-
-	function getSummaryColumn()
-	{
-		return $this->sortByColumn;
-	}
-
 
 
 	//-------------------------------------------------------------------

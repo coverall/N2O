@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Image_Folder_Component.php,v 1.10 2008/09/19 22:37:34 patrick Exp $
+// $Id: CC_Image_Folder_Component.php,v 1.8 2004/08/04 01:22:47 patrick Exp $
 //=======================================================================
 // CLASS: CC_Image_Folder_Component
 //=======================================================================
@@ -67,7 +67,6 @@ class CC_Image_Folder_Component extends CC_Folder_Component
 		
 		$this->clearDeleteButtonHandlers();
 		$this->addDeleteButtonHandler(new CC_Delete_Image_Folder_File_Handler($this));
-		$this->setStyle('ccImageFolder');
 	}
 
 
@@ -126,22 +125,23 @@ class CC_Image_Folder_Component extends CC_Folder_Component
 					
 					$filesizeFormatted = $this->_fileSizeFilter->processValue($filesize);
 	
-					$className = ($imageNumber % 2 == 0 ? 'even' : 'odd');
+					$backgroundcolour = ($imageNumber % 2 == 0 ? $this->evenRowColour : $this->oddRowColour);
+					$backgroundHeadingColour =  ($imageNumber % 2 == 0 ? '#aaaaaa' : '#cccccc');
 	
-					$html .= ' <td class="' . $className . '">' . "\n";
+					$html .= ' <td bgcolor="' . $backgroundcolour . '" id="r' . $imageNumber . '" valign="top" onMouseOver="obj=document.getElementById(\'r' . $imageNumber . '\'); obj.style.backgroundColor=\'' . $this->rowHighlightColour . '\'; return true" onMouseOut="obj=document.getElementById(\'r' . $imageNumber . '\'); obj.style.backgroundColor=\'\'; return true">' . "\n";
 					
 					$html .= '<table cellpadding="3" cellspacing="0" border="0">';
 					$html .= ' <tr>';
-					$html .= '  <td class="' . $className . 'Heading" colspan="2" align="left">';
+					$html .= '  <td bgcolor="' . $backgroundHeadingColour . '" colspan="2" align="left">';
 	
 					if ($this->_allowDelete)
 					{
 						$html .= $this->_checkboxes[$imageNumber]->getHTML() . "\n";
-						$html .= '<span class="white-space:nowrap">' . $this->_checkboxes[$imageNumber]->getLabel() . '</span>';
+						$html .= '<nobr>' . $this->_checkboxes[$imageNumber]->getLabel() . '</nobr>';
 					}
 					else
 					{
-						$html .= '<span class="white-space:nowrap">' . $file . '</span>';
+						$html .= '<nobr>' . $file . '</nobr>';
 					}
 					$html .= '  </td>';
 					$html .= ' </tr>';
@@ -152,10 +152,10 @@ class CC_Image_Folder_Component extends CC_Folder_Component
 					$html .= '   </a>';
 					$html .= '  </td>';
 					$html .= '  <td valign="top">';
-					$html .= '   <p><a href="' . $path . $file . '" target="image" onclick="window.open(\'' . $path . $file . '\', \'imagepopup\', \'width=' . $imageWidth . ',height=' . $imageHeight . ',scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0\'); return false">View Fullsize</a></p>';
-					$html .= '   <div class="white-space:nowrap">' . $imageWidth . ' x ' . $imageHeight . '</div>';
-					$html .= '   <div class="white-space:nowrap">' . $filesizeFormatted . '</div>';
-					$html .= '   <div class="white-space:nowrap">' . date('M d, Y, H:i', $timestamp) . '</div>';
+					$html .= '   <a href="' . $path . $file . '" target="image" onclick="window.open(\'' . $path . $file . '\', \'imagepopup\', \'width=' . $imageWidth . ',height=' . $imageHeight . ',scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0\'); return false">View Fullsize</a><br><br>';
+					$html .= '   <nobr>' . $imageWidth . ' x ' . $imageHeight . '</nobr><br>';
+					$html .= '   <nobr>' . $filesizeFormatted . '</nobr><br>';
+					$html .= '   <nobr>' . date('M d, Y, H:i', $timestamp) . '</nobr><br>';
 					$html .= '  </td>';
 					$html .= ' </tr>';
 					$html .= '</table>';

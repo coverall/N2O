@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Cancel_Cleanup_Handler.php,v 1.6 2005/05/11 00:31:52 patrick Exp $
+// $Id: CC_Cancel_Cleanup_Handler.php,v 1.5 2004/04/27 03:14:12 patrick Exp $
 //=======================================================================
 
 /**
@@ -53,7 +53,7 @@ class CC_Cancel_Cleanup_Handler extends CC_Action_Handler
 
 	function process()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 	
 		// go through each field on this page and call it's cancelCleanup() method
 		
@@ -66,9 +66,11 @@ class CC_Cancel_Cleanup_Handler extends CC_Action_Handler
 		//go through each field from each record in the window and call it's 
 		// cancelCleanup() method
 		
-		for ($j = 0; $j < sizeof($this->window->records); $j++)
+		$recordKeys = array_keys($this->window->records);
+		
+		for ($j = 0; $j < sizeof($recordKeys); $j++)
 		{
-			$record = &$this->window->getRecordAtIndex($j);
+			$record = &$this->window->records[$recordKeys[$j]];
 			
 			$fieldKeys = array_keys($record->fields);
 			

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Checkbox_Field.php,v 1.44 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Checkbox_Field.php,v 1.36 2005/02/14 22:07:11 patrick Exp $
 //=======================================================================
 // CLASS: CC_Checkbox_Field
 //=======================================================================
@@ -44,17 +44,7 @@ class CC_Checkbox_Field extends CC_Field
      */
     
     var $onClickAction;
-	
-	
-	/**
-     * A two dimensional array who's first value is the associated field and the second is the value of the CC_Checkbox_Field that makes the associated field required.
-     *
-     * @var array $_associatedFields
-     * @access private
-     */
-     
-	var $_associatedFields = array();
-	    
+
 
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Checkbox_Field
@@ -136,6 +126,23 @@ class CC_Checkbox_Field extends CC_Field
 	
 	
 	//-------------------------------------------------------------------
+	// METHOD: getLiarValue
+	//-------------------------------------------------------------------
+	
+	/** 
+	 * This gets the fields value (or does it?). Returns 'Yes' if false, 'No' if true.
+	 *
+	 * @access public
+	 * @return 'True' if false, 'False' if true.
+	 */
+
+	function getLiarValue()
+	{
+		return ( ($this->value === true) ? 'No' : 'Yes' );
+	}
+
+
+	//-------------------------------------------------------------------
 	// METHOD: getViewHTML
 	//-------------------------------------------------------------------
 	
@@ -148,7 +155,7 @@ class CC_Checkbox_Field extends CC_Field
 	 
 	function getViewHTML()
 	{
-		return $this->getYesNoValue();
+		return ( ($this->value === true) ? 'Yes' : 'No' );
 	}
 
 	
@@ -255,7 +262,7 @@ class CC_Checkbox_Field extends CC_Field
 			$checkboxHTML .= ' id="' . $this->id . '"';
 		}
 		
-		$checkboxHTML .= '>';
+		$checkboxHTML .= ' tabindex="' . $this->_tabIndex .'">';
 		
 		return $checkboxHTML;
 	}
@@ -280,7 +287,7 @@ class CC_Checkbox_Field extends CC_Field
 		
 		if ($this->_linkableLabel && !$this->isDisabled() && !$this->readonly)
 		{
-			$labelText .= '<span class="ccClickableLabel" onClick="document.getElementsByName(\'' . $this->getRecordKey() . $this->name . '\')[0].checked = !document.getElementsByName(\'' . $this->getRecordKey() . $this->name . '\')[0].checked; ' . $this->onClickAction . '">';
+			$labelText .= '<span class="ccClickableLabel" onClick="document.forms[\'CC_Form\'].elements[\'' . $this->getRecordKey() . $this->name . '\'].checked = !document.forms[\'CC_Form\'].elements[\'' . $this->getRecordKey() . $this->name . '\'].checked; ' . $this->onClickAction . '">';
 			
 			if ($style)
 			{
@@ -329,52 +336,13 @@ class CC_Checkbox_Field extends CC_Field
 	 
 	function validate()
 	{
-		$valid = true;
-		$errorFields = array();
-		
-		for ($i = 0; $i < sizeof($this->_associatedFields); $i++)
+		if ($this->isRequired())
 		{
-			$currentAssociatedField = &$this->_associatedFields[$i][0];
-			$currentRequiredValue = $this->_associatedFields[$i][1];
-			
-			if ($currentRequiredValue == $this->getValue())
-			{	
-				if (!$currentAssociatedField->hasValue())
-				{
-					$valid = false;
-					$errorFields[] = &$currentAssociatedField;
-				}
-			}
-				
-			unset($currentAssociatedField);
-			unset($currentRequiredValue);
-		}
-		
-		if ($valid)
-		{
-			$this->clearAllErrors();
-			
-			if ($this->isRequired())
-			{
-				return $this->isChecked();
-			}
-			else
-			{
-				return true;
-			}
+			return $this->isChecked();
 		}
 		else
 		{
-			$this->setErrorMessage('Some additional fields are required', CC_FIELD_ERROR_CUSTOM);
-					
-			for ($i = 0; $i < sizeof($errorFields); $i++)
-			{
-				$errorField = &$errorFields[$i];
-				$errorField->setErrorMessage('Please include a value.', CC_FIELD_ERROR_MISSING);
-				unset($errorField);
-			}
-			
-			return false;
+			return true;
 		}
 	}
 
@@ -394,92 +362,6 @@ class CC_Checkbox_Field extends CC_Field
 	{	
 		$this->onClickAction = $onClickString;
 	}
-
-	
-	//-------------------------------------------------------------------
-	// METHOD: setAssociatedRequiredField
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This sets an associated field and the value of this field that makes it required.
-	 * IMPORTANT: The main field needs to be placed last in the CC_Record construction so
-	 * it gets updated LAST!
-	 *
-	 * @access public
-	 * @return int The number of selections to choose from.
-	 */
-	
-	function setAssociatedField(&$associatedField, $requiredValue)
-	{
-		$associatedElement = array();
-		$associatedElement[0] = &$associatedField;
-		$associatedElement[1] = $requiredValue;
-		
-		$this->_associatedFields[] = &$associatedElement;
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		if (!$this->isDisabled())
-		{
-			if (array_key_exists($this->getRequestArrayName(), $_REQUEST))
-			{
-				$this->setValue(1);
-			}
-			else
-			{
-				$this->setValue(0);
-			}
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		if ($value)
-		{
-			$value = ($value == 1 || $value == 't') ? true : false;
-		}
-		else
-		{
-			$value = (isset($args->checked) ? ($args->checked == 1) : false);
-		}
-
-		$field = new $className($name, $label, $required, $value);
-		
-		if (isset($args->optionalValue))
-		{
-			$field->setOptionalValue($args->optionalValue);
-		}
-		
-		return $field;
-	}
-
 }
 
 ?>

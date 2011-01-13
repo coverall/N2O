@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Summary_Num_Rows_Handler.php,v 1.12 2005/06/03 02:47:26 patrick Exp $
+// $Id: CC_Summary_Num_Rows_Handler.php,v 1.11 2004/03/15 22:02:12 patrick Exp $
 //=======================================================================
 
 /**
@@ -54,15 +54,15 @@ class CC_Summary_Num_Rows_Handler extends CC_Action_Handler
 
 	function process()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		 
 		$window = &$application->getCurrentWindow();
-		$summary = &$window->getSummary($this->summaryName);
+		$summaryObject = &$window->getSummary($this->summaryName);
 		
-		setcookie(session_name() . '_' . $summary->name . '_NUMROWS' , $summary->numberRowsPerPageList->getValue(), time() + 31536000);
+		setcookie(session_name() . '_' . $summaryObject->name . '_NUMROWS' , $summaryObject->numberRowsPerPageList->getValue(), time() + 31536000);
 		
-		$summary->setPageNumber(1);
-		$summary->update(true);
+		$summaryObject->setPageNumber(1);
+		$summaryObject->update(true);
 	}
 }
 

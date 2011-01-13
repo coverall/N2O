@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Edit_Record_Window.php,v 1.24 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Edit_Record_Window.php,v 1.22 2004/08/19 04:25:26 patrick Exp $
 if ($application->hasArgument('displayNameForEdit'))
 {
 	$displayName = $application->getArgument('displayNameForEdit');
@@ -19,20 +19,19 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
-	$window->setUnregisterOnLeave();
 	$application->registerWindow($window);
 	
 	
 	// ------------------------------------------------------------------
 	// (1) Construct the CC_Record component
 	//
-	$record = new CC_Record(getFieldListFromTable($application->getArgument("tableNameForEdit"), array('ID')), $application->getArgument("tableNameForEdit"), true, $application->getArgument("editRecordId"), $application->getArgument('idColumn'));
+	$record = &new CC_Record(getFieldListFromTable($application->getArgument("tableNameForEdit"), array('ID')), $application->getArgument("tableNameForEdit"), true, $application->getArgument("editRecordId"), $application->getArgument('idColumn'));
 	
 	$record->fields['DATE_ADDED']->setReadOnly(true);
 	
@@ -41,23 +40,25 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (2) Create our buttons
 	//
 	
-	$cancelButton = new CC_Cancel_Button();
-	$updateButton = new CC_Button("Update");
+	$cancelButton = &new CC_Cancel_Button();
+	$updateButton = &new CC_Button("Update");
 	
 	
 	// ------------------------------------------------------------------
 	// (3) Create our handlers
 	//
 	
-	$updateButtonHandler = new CC_Update_Record_Handler($record);
-	$cancelCleanupHandler = new CC_Cancel_Cleanup_Handler($window);
+	$updateButtonHandler = &new CC_Update_Record_Handler($record);
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
+	$cancelCleanupHandler = &new CC_Cancel_Cleanup_Handler($window);
 	
 	// ------------------------------------------------------------------
 	// (4) Register our handlers with our buttons
 	//
 	
 	$updateButton->registerHandler($updateButtonHandler);
-
+	$updateButton->registerHandler($unregisterWindowHandler);
+	$cancelButton->registerHandler($unregisterWindowHandler);
 	$cancelButton->registerHandler($cancelCleanupHandler);
 
 
@@ -94,11 +95,14 @@ else
 
 <div class="ccContent" align="<?php echo $ccContentAlignment; ?>">
 
-<h1 class="ccH1">Editing <?php echo $displayName; ?> #<?php echo $record->id; ?></h1>
-
 <?php echo $window->getErrorMessage(); ?>
 
-<table border="0" cellpadding="0" cellspacing="0" class="ccTable">
+<table border="0" cellpadding="0" cellspacing="0"><tr><td bgcolor="<?php echo $ccContentBorderColour; ?>">
+<table border="0" cellpadding="4" cellspacing="1">
+ <tr bgcolor="<?php echo $ccTitleBarColour; ?>">
+  <td colspan="2" class="ccSummaryHeadings">Editing <?php echo $displayName; ?> #<?php echo $record->id; ?></td>
+ </tr>
+
  <tr>
   <td align="right" bgcolor="<?php echo $ccRecordEvenRowColour; ?>"><span class="small">Created:</span></td>
   <td bgcolor="<?php echo $ccRecordEvenRowColour; ?>"><span class="small"><?php echo $record->fields["DATE_ADDED"]->getHTML(); ?></span></td>
@@ -140,13 +144,14 @@ for ($i = 0; $i < sizeof($keys); $i++)
 }
 ?>
 
- <tr class="buttonRow">
-  <td></td>
-  <td>
+ <tr bgcolor="<?php echo $ccButtonBarRowColour; ?>">
+  <td colspan="2" align="right">
    <?php echo $cancelButton->getHTML(); ?> <?php echo $updateButton->getHTML(); ?>
   </td>
  </tr>
+ 
 </table>
+</td></tr></table>
 
 </div>
 

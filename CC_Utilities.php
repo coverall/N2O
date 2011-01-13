@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Utilities.php,v 1.82 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Utilities.php,v 1.70 2004/12/21 20:20:47 patrick Exp $
 //=======================================================================
 // FILE: CC_Utilities
 //=======================================================================
@@ -47,14 +47,13 @@ function outputArrayKeys($anArray)
  *
  * @param string $file The path to the file to write.
  * @param string $content The data to write to the file.
- * @param string $mode The file mode to write (w, w+, a, a+, x, x+).
  */
  
-function writeFile($file, $content, $fileMode = 'w')
+function writeFile($file, $content)
 {
 	$mode = true;
 
-	if ($fp = fopen($file, $fileMode))
+	if ($fp = fopen($file, 'w'))
 	{
 		if (flock($fp, LOCK_EX, $mode))
 		{
@@ -202,7 +201,14 @@ function getEditableFieldListFromTable($table)
 
 function zeroPad($number)
 {
-	return sprintf('%02u', $number);
+	if ($number < 10)
+	{
+		return '0' . $number;
+	}
+	else
+	{
+		return $number;
+	}
 }
 
 
@@ -220,8 +226,8 @@ function zeroPad($number)
 
 function strSlide13($string)
 {
-	$from = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+:/?.;~ =';
-	$to	=   'q_!.5*#(v/$+=?x@0%6^2:s8~9yz1ur3t 74)pw;&lAeWgdImOabcUfjESiXZQCPGKRToFHkBLVJNDnYhM';
+	$from = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY.Z_';
+	$to	=   '9876543210nopqrstuvwxyzabcdefghijklmNOPQRSTUVWXY.ABCDEFGHIJKLM_Z';
 
 	return strtr($string, $from, $to);
 }
@@ -300,6 +306,36 @@ function URLValueDecode($URLValue)
 
 
 //-------------------------------------------------------------------
+// FUNCTION: is_a
+//-------------------------------------------------------------------
+
+/**
+ * This method is used since the real is_a function is only available in PHP 4.2 or greater. It returns whether a given object is of a specified class.
+ *
+ * @access public
+ * @param mixed $object The object to verify.
+ * @param string $class_name The name of the class to check for the object's membership. 
+ * @return bool Whether or not the object is of the specified class.
+ */
+ 
+if (!function_exists('is_a'))
+{
+	function is_a($object, $class_name)
+	{
+		$class_name = strtolower($class_name);
+		
+		if (get_class($object) == $class_name)
+		{
+			return true;
+		}
+		else
+		{
+			return is_subclass_of($object, $class_name);
+		}
+	}
+}
+
+//-------------------------------------------------------------------
 // FUNCTION: cc_is_int
 //-------------------------------------------------------------------
 
@@ -370,7 +406,7 @@ if (!function_exists('array_change_key_case'))
 
 function verifyClasstype($anObject, $aClassName)
 {
-	if ($anObject instanceof $aClassName)
+	if (!is_a($anObject, $aClassName))
 	{
 		trigger_error('The passed object of type ' . get_class($anObject) . ' did not match the requested type: ' . $aClassName, E_USER_ERROR);
 	}
@@ -405,7 +441,7 @@ function requireAllFilesInFolder($folder)
 		{
 			requireAllFilesInFolder($fullFile . '/');
 		}
-		else if (preg_match('/^[^.]\.php$/', $fullFile))
+		else if (preg_match('/\.php$/', $fullFile))
 		{
 			require_once($fullFile);
 		}
@@ -667,21 +703,21 @@ function convertMysqlTimeStampToPHP($date, $timeStampOrDate)
 	
 	//2002 03 08 18 02 30
 	
-	$yr = strval(substr($date, 0, 4));
-	$mo = strval(substr($date, 4, 2));
-	$da = strval(substr($date, 6, 2));
+	$yr=strval(substr($date,0,4));
+	$mo=strval(substr($date,4,2));
+	$da=strval(substr($date,6,2));
 	
-	$hr = strval(substr($date, 8, 2));
-	$mi = strval(substr($date, 10, 2));
-	$se = strval(substr($date, 12, 2));
+	$hr=strval(substr($date,8,2));
+	$mi=strval(substr($date,10,2));
+	$se=strval(substr($date,12,2));
 	
 	if ($timeStampOrDate == 'timestamp')
 	{
-		return mktime($hr, $mi, $se, $mo, $da, $yr);
+		return mktime($hr,$mi,$se,$mo,$da,$yr);
 	}
 	else
 	{
-		return date('F d, Y', mktime($hr, $mi, $se, $mo, $da, $yr));
+		return date('F d, Y', mktime($hr,$mi,$se,$mo,$da,$yr));
 	}
 }
 
@@ -822,7 +858,7 @@ function shortenText($textToShorten, $textLength = 25, $moreString = '...')
   * This method sends an email. An error is written to the log file if an error occurs (no need to duplicate this code in every application) and the error object (of type PEAR_Error) is returned to the application so that it can handle it as it sees fit.
   *
   * @access public
-  * @param mixed $to The email address, or an array of email addresses to send to.
+  * @param string $to The email address to send to.
   * @param string $subject The email subject.
   * @param string $content The email message.
   * @param array $headers Additional headers to add to the e-mail.
@@ -850,21 +886,15 @@ function cc_mail($to, $subject, $content, $headers, $mailserver = null)
 		$headers['From'] = $sendmailFromEmailAddress;
 	}
 
-	if (is_array($to))
-	{
-		$recipients = $to;
-	}
-	else
-	{
-		$recipients = array($to);
-	}
-	
 	if (!isset($headers['To']))
 	{
 		$headers['To'] = $to;
 	}
 	$headers['Subject'] = $subject;
 	$headers['X-Mailer'] = 'N2O';
+	
+	$recipients = array();
+	$recipients[] = $to;
 	
 	if (isset($headers['Cc']))
 	{
@@ -1113,116 +1143,4 @@ function getStackTrace($ignoreFirst = true)
 	}
 }
 
-
-//-------------------------------------------------------------------
-// FUNCTION: mb_strlen
-//-------------------------------------------------------------------
-
-/** 
-  * This function returns the number of characters, regardless of whether they are
-  * multibyte or not. It also excludes line breaks and carriage returns.
-  *
-  * @access public
-  * @param string $str The string to analyze
-  * @return int The number of characters.
-  */
-
-function cc_strlen($str)
-{
-	// STRINGS ARE EXPECTED TO BE IN ASCII OR UTF-8 FORMAT
-	
-	// Number of characters in string
-	$strlen_var = strlen($str);
-	
-	// string bytes counter
-	$d = 0;
-	
-	// number extra bytes counter
-	$e = 0;
-	
-	/*
-	* Iterate over every character in the string,
-	* escaping with a slash or encoding to UTF-8 where necessary
-	*/
-	
-	for ($c = 0; $c < $strlen_var; ++$c) 
-	{
-		if ($d == $strlen_var)
-		{
-			break;
-		}
-		
-		$ord_var_c = ord($str{$d});
-		
-		switch (true) 
-		{
-			case (($ord_var_c == 0xA) || ($ord_var_c == 0xD)):
-			{
-				// don't count line breaks
-				$d++;
-				$e+=1;
-			}
-			break;
-			
-			case (($ord_var_c >= 0x20) && ($ord_var_c <= 0x7F)):
-			{
-				// characters U-00000000 - U-0000007F (same as ASCII)
-				$d++;
-			}
-			break;
-			
-			case (($ord_var_c & 0xE0) == 0xC0):
-			{
-				// characters U-00000080 - U-000007FF, mask 110XXXXX
-				// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-				$d+=2;
-				$e+=1;
-			}
-			break;
-			
-			case (($ord_var_c & 0xF0) == 0xE0):
-			{
-				// characters U-00000800 - U-0000FFFF, mask 1110XXXX
-				// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-				$d+=3;
-				$e+=2;
-			}
-			break;
-			
-			case (($ord_var_c & 0xF8) == 0xF0):
-			{
-				// characters U-00010000 - U-001FFFFF, mask 11110XXX
-				// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-				$d+=4;
-				$e+=3;
-			}
-			break;
-			
-			case (($ord_var_c & 0xFC) == 0xF8):
-			{
-				// characters U-00200000 - U-03FFFFFF, mask 111110XX
-				// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-				$d+=5;
-				$e+=4;
-			}
-			break;
-			
-			case (($ord_var_c & 0xFE) == 0xFC):
-			{
-				// characters U-04000000 - U-7FFFFFFF, mask 1111110X
-				// see http://www.cl.cam.ac.uk/~mgk25/unicode.html#utf-8
-				$d+=6;
-				$e+=5;
-			}
-			break;
-			
-			default:
-			{
-				$d++;    
-			}
-		}
-	}
-	
-	return ($strlen_var - $e);
-}
 ?>

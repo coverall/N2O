@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_IntegerNumber_Field.php,v 1.12 2009/09/11 01:23:03 patrick Exp $
+// $Id: CC_IntegerNumber_Field.php,v 1.10 2004/10/25 21:19:23 patrick Exp $
 //=======================================================================
 // CLASS: CC_IntegerNumber_Field
 //=======================================================================
@@ -15,9 +15,6 @@
 
 class CC_IntegerNumber_Field extends CC_Text_Field
 {	
-	var $minValue = null;
-	var $maxValue = null;
-	
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_IntegerNumber_Field
 	//-------------------------------------------------------------------
@@ -55,25 +52,7 @@ class CC_IntegerNumber_Field extends CC_Text_Field
 		if (is_numeric($this->getValue()))
 		{
 			if (intval($this->getValue()) == $this->getValue())
-			{	
-				if ($this->minValue != null)
-				{
-					if ($this->getValue() < $this->minValue)
-					{
-						$this->setErrorMessage('The value cannot be less than ' . $this->minValue);
-						return false;
-					}
-				}
-				
-				if ($this->maxValue != null)
-				{
-					if ($this->getValue() > $this->maxValue)
-					{
-						$this->setErrorMessage('The value cannot be greater than ' . $this->maxValue);
-						return false;
-					}
-				}
-				
+			{
 				return true;
 			}
 			else
@@ -96,56 +75,7 @@ class CC_IntegerNumber_Field extends CC_Text_Field
 	{
 		parent::setValue(str_replace(',', '', $value));
 	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setMinValue
-	//-------------------------------------------------------------------
-	
-	function setMinValue($minValue)
-	{
-		$this->minValue = $minValue;
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setMaxValue
-	//-------------------------------------------------------------------
-	
-	function setMaxValue($maxValue)
-	{
-		$this->maxValue = $maxValue;
-	}
-	
-	
-		//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
 
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$field = &parent::getInstance($className, $name, $label, $value, $args, $required);
-		
-		if (isset($args->maxValue))
-		{
-			$field->setMaxValue($args->maxValue);
-		}
-		
-		if (isset($args->minValue))
-		{
-			$field->setMinValue($args->minValue);
-		}
-
-		return $field;
-	}
 }
 
 ?>

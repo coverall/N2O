@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_AnchorImage_Button.php,v 1.9 2005/03/16 20:43:50 patrick Exp $
+// $Id: CC_AnchorImage_Button.php,v 1.8 2004/12/08 23:34:24 patrick Exp $
 //=======================================================================
 // CLASS: CC_AnchorImage_Button
 //=======================================================================
@@ -144,7 +144,7 @@ class CC_AnchorImage_Button extends CC_Text_Button
 
 		if ($this->clickable)
 		{
-			return '<a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey())) . '" class="' . $this->getStyle() . '">' .  $img . '</a>';
+			return '<a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey()) . (SID ? '&' . SID : '')) . '" class="' . $this->getStyle() . '">' .  $img . '</a>';
 		}
 		else
 		{

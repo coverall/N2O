@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_PostalCode_Field.php,v 1.7 2009/09/10 02:10:20 patrick Exp $
+// $Id: CC_PostalCode_Field.php,v 1.5 2003/07/14 08:48:02 jamie Exp $
 //=======================================================================
 // CLASS: CC_PostalCode_Field
 //=======================================================================
@@ -17,17 +17,6 @@
 
 class CC_PostalCode_Field extends CC_Text_Field
 {	
-
-	/**
-     * The country field to associate for validation.
-     *
-     * @var CC_Country_Field or CC_ISO_Country_Field $countryField
-     * @access private
-     */	
-     
-	var $countryField;
-	
-		
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_PostalCode_Field
 	//-------------------------------------------------------------------
@@ -61,14 +50,7 @@ class CC_PostalCode_Field extends CC_Text_Field
 	 
 	function validate()
 	{
-		$CAValue = ($this->countryField instanceof CC_ISO_Country_Field) ? 'CA' : 'Canada'; 
-		
-		if (!isset($this->countryField) || ($this->countryField->getValue() == $CAValue))
-		{
-			return ereg('^[A-Za-z]{1}[0-9]{1}[A-Za-z]{1}[ ]*[0-9]{1}[A-Za-z]{1}[0-9]{1}$', $this->getValue());
-		}
-	
-		return true;
+		return ereg('^[A-Za-z]{1}[0-9]{1}[A-Za-z]{1}[ ]*[0-9]{1}[A-Za-z]{1}[0-9]{1}$', $this->getValue());
 	}
 
 
@@ -86,23 +68,6 @@ class CC_PostalCode_Field extends CC_Text_Field
 	function setValue($value)
 	{
 		parent::setValue(strtoupper($value));
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setCountryField
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * Set the country field to associate with this field, for validation.
-	 *
-	 * @access public
-	 * @param CC_ISO_Country_Field or CC_Country_Field The country field to set.
-	 */
-	 
-	function setCountryField(&$countryField)
-	{
-		$this->countryField = &$countryField;
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Field.php,v 1.68 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Field.php,v 1.59 2004/11/02 21:44:48 mike Exp $
 //=======================================================================
 // CLASS: CC_Field
 //=======================================================================
@@ -11,13 +11,6 @@ define('CC_FIELD_ERROR_ALL', 7);
 
 /**
  * This is the superclass for N2O fields. Fields provide applications with an interface to accept user input. Subclasses build on HTML form fields for display.
- *
- * When you define your fields for use with CC_Records using the CC_FieldManager's addField() method, you can use the fourth [optional] argument to pass the following initialization arguments:
- *
- * required=[0/1] - whether or not the field is required.
- * value=xxx - the default value of the field; only used if the field in the record has no existing value.
- *
- * Example: $application->fieldManager->addField('NAME', 'CC_Text_Field', 'Name', 'required=1&value=eg. Joe Smith');
  *
  * @package CC_Fields
  * @access public
@@ -60,18 +53,6 @@ class CC_Field extends CC_Component
      */	
      
 	var $label;
-	
-	
-	/**
-     * The example text for the item.
-     *
-     * @var string $label
-     * @access private
-     * @see getExample()
-     * @see setExample()
-     */	
-     
-	var $_example = '';
 	
 	
 	/**
@@ -277,19 +258,18 @@ class CC_Field extends CC_Component
      */	
 
 	var $id = '';
-	
+
 
 	/**
-     * Keeps track of when a field has been updated but not saved to the database.
-     *
-     * @var string $updated
-     * @see isUpdated()
+     * The "tabindex" for this field. This will allow us to control the order in which fields are tabbed.
+	 *
+     * @var int $_tabIndex
      * @access private
-     */	
+     */
 
-	var $updated = false;
+	var $_tabIndex;
 
-
+   	
    	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Field
 	//-------------------------------------------------------------------
@@ -312,7 +292,6 @@ class CC_Field extends CC_Component
 		$this->setRequired($required);
 		$this->_error = false;
 		$this->setValue($defaultValue);
-		$this->updated = false;
 		$this->addToDatabase = true;
 	}
 	
@@ -454,6 +433,7 @@ class CC_Field extends CC_Component
 
 	function getLabel()
 	{
+		
 		$style = ($this->_error ? 'ccLabelError' : $this->labelStyle);
 
 		if ($style)
@@ -483,6 +463,7 @@ class CC_Field extends CC_Component
 		return $labelText;
 	}
 	
+	
 	//-------------------------------------------------------------------
 	// METHOD: setLabel
 	//-------------------------------------------------------------------
@@ -498,60 +479,6 @@ class CC_Field extends CC_Component
 	function setLabel($labelToSet)
 	{
 		$this->label = $labelToSet;
-	}
-	
-	//-------------------------------------------------------------------
-	// METHOD: hasExample
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This method sets the field's example text.
-	 *
-	 * @access public
-	 * @return bool Whether or not the field has example text.
-	 * @see getExample()
-	 * @see setExample()
-	 */
-
-	function hasExample()
-	{
-		return ($this->_example != '');
-	}
-
-	
-	//-------------------------------------------------------------------
-	// METHOD: setExample
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This method sets the field's example text.
-	 *
-	 * @access public
-	 * @param string $exampleToSet The field's example text.
-	 * @see getExample()
-	 */
-
-	function setExample($exampleToSet)
-	{
-		$this->_example = $exampleToSet;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: getExample
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This method gets the field's example text.
-	 *
-	 * @access public
-	 * @return string The field's example text.
-	 * @see setExample()
-	 */
-
-	function getExample()
-	{
-		return $this->_example;
 	}
 	
 	
@@ -636,7 +563,7 @@ class CC_Field extends CC_Component
 
 	function getEditHTML()
 	{
-		return;
+		return '';
 	}
 
 
@@ -752,54 +679,9 @@ class CC_Field extends CC_Component
      * @see getValue()
      */	
 
-	function setValue($value = '')
+	function setValue($fieldValue = '')
 	{
-		if ($this->value != $value)
-		{
-			$this->updated = true;
-		}
-		$this->value = $value;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: isUpdated
-	//-------------------------------------------------------------------
-
-	/**
-     * Has the field been updated?
-     *
-     * @access public
-     */	
-
-	function isUpdated()
-	{
-		return $this->updated;
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$key = $this->getRequestArrayName();
-		
-		if (array_key_exists($key, $_REQUEST))
-		{
-			$this->setValue(stripslashes($_REQUEST[$key]));
-		}
-		
-		unset($key);
+		$this->value = $fieldValue;
 	}
 	
 	
@@ -1629,26 +1511,5 @@ class CC_Field extends CC_Component
 	{
 		$window->registerField($this);
 	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$field = new $className($name, $label, $required, $value);
-
-		return $field;
-	}
-
 }
 ?>

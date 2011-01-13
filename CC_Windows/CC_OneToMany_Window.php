@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_OneToMany_Window.php,v 1.16 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_OneToMany_Window.php,v 1.15 2004/04/15 18:07:11 patrick Exp $
 // If the window is registered but the record is not, we want to unRegister the
 // window so it constructs all its components afresh
 
@@ -32,11 +32,11 @@ if (!$application->isCurrentWindowRegistered())
 	//
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 	$application->registerWindow($window);
 	
@@ -45,7 +45,7 @@ if (!$application->isCurrentWindowRegistered())
 	// (2) Create our components
 	//
 	{
-		$entries = new CC_Summary($oneToManySourceTable . '-entries', "select ID, $oneToManyDisplayColumn from $oneToManySourceTable", $oneToManySourceTable);
+		$entries = &new CC_Summary($oneToManySourceTable . '-entries', "select ID, $oneToManyDisplayColumn from $oneToManySourceTable", $oneToManySourceTable);
 		$entries->setAllowView(true);
 		$entries->setDefaultNumRowsPerPage(25);
 		
@@ -54,22 +54,22 @@ if (!$application->isCurrentWindowRegistered())
 			$entries->setAllowEdit(true);
 			$entries->setAllowAdd(true);
 
-			$contentProvider = new CC_OneToMany_Checkbox_Provider($oneToManySelectedIds);
+			$contentProvider = &new CC_OneToMany_Checkbox_Provider($oneToManySelectedIds);
 			$entries->addColumn('Selected', $contentProvider);
 			$entries->setAdditionalColumnsFirst(true);
 
-			$cancelButton = new CC_Cancel_Button();
+			$cancelButton = &new CC_Cancel_Button();
 		}
 		else
 		{
-			$contentProvider = new CC_OneToMany_Checkbox_Provider($oneToManySelectedIds, true);
+			$contentProvider = &new CC_OneToMany_Checkbox_Provider($oneToManySelectedIds, true);
 			$entries->addColumn('Selected', $contentProvider);
 			$entries->setAdditionalColumnsFirst(true);
 
-			$cancelButton = new CC_Cancel_Button('Done');
+			$cancelButton = &new CC_Cancel_Button('Done');
 		}
 
-		$finishButton = new CC_Button('Finish');
+		$finishButton = &new CC_Button('Finish');
 	}
 
 	
@@ -77,8 +77,8 @@ if (!$application->isCurrentWindowRegistered())
 	// (3) Create our handlers, filters, and content providers
 	//
 	{
-		$finishButtonHandler = new CC_Update_OneToMany_Handler($oneToManyField, $contentProvider);
-		$backHandler = new CC_Cancel_Button_Handler();
+		$finishButtonHandler = &new CC_Update_OneToMany_Handler($oneToManyField, $contentProvider);
+		$backHandler = &new CC_Cancel_Button_Handler();
 	}
 
 

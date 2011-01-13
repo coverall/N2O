@@ -1,4 +1,4 @@
-<!-- $Id: CC_Manage_FK_Table_Window.php,v 1.18 2010/11/11 04:28:32 patrick Exp $ -->
+<!-- $Id: CC_Manage_FK_Table_Window.php,v 1.17 2004/12/08 05:39:21 jamie Exp $ -->
 <?php
 //get the foreign key field name from the arguments array
 $foreignKeyField = &$application->getArgument('foreignKeyField');
@@ -11,11 +11,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	//
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 
 
@@ -30,14 +30,14 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (1) Create our buttons
 	//
 	
-	$doneButton = new CC_Cancel_Button('Done');
+	$doneButton = &new CC_Cancel_Button('Done');
 
 	
 	// ------------------------------------------------------------------
 	// (2) Create our handlers
 	//
 	
-	//$doneHandler = new CC_Back_Button_Handler();
+	//$doneHandler = &new CC_Back_Button_Handler();
 
 	
 	// ------------------------------------------------------------------
@@ -57,13 +57,13 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (5) Register the summary with the application
 	//
 		
-	$FKSummary = new CC_Summary('FKSummary', 'select ID, ' . $application->relationshipManager->getDisplayColumn($foreignKeyField) . ' from ' . $application->relationshipManager->getRelatedTable($foreignKeyField), $application->relationshipManager->getRelatedTable($foreignKeyField), $application->relationshipManager->getDisplayColumn($foreignKeyField), true, true, true, true, 'CC_View_Record_Handler', 'CC_Edit_Record_Handler', 'CC_Delete_Confirm_Handler', 'CC_Add_FK_Record_Handler');
+	$FKSummary = &new CC_Summary('FKSummary', 'select ID, ' . $application->relationshipManager->getDisplayColumn($foreignKeyField) . ' from ' . $application->relationshipManager->getRelatedTable($foreignKeyField), $application->relationshipManager->getRelatedTable($foreignKeyField), $application->relationshipManager->getDisplayColumn($foreignKeyField), true, true, true, true, 'CC_View_Record_Handler', 'CC_Edit_Record_Handler', 'CC_Delete_Confirm_Handler', 'CC_Add_FK_Record_Handler');
 
 	$FKSummary->setShowIdColumn(false);
 	$FKSummary->setAllowAdd(true);
 	$FKSummary->setDisplayName($foreignKeyName);
 	
-	$textShorteningFilter = new CC_Text_Shortening_Filter(36);
+	$textShorteningFilter = &new CC_Text_Shortening_Filter(36);
 
 	$FKSummary->registerFilter($application->relationshipManager->getDisplayColumn($foreignKeyField), $textShorteningFilter);
 

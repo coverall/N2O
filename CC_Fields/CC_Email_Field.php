@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Email_Field.php,v 1.17 2009/09/11 01:23:03 patrick Exp $
+// $Id: CC_Email_Field.php,v 1.13 2004/11/26 17:52:45 patrick Exp $
 //=======================================================================
 // CLASS: CC_Email_Field
 //=======================================================================
@@ -60,7 +60,7 @@ class CC_Email_Field extends CC_Text_Field
 	
 	function getViewHTML()
 	{
-		if ($this->linkable)
+		if ($this->isLinkable())
 		{
 			return '<a href="mailto:' . $this->getValue() . '">' . $this->getValue() . '</a>';		
 		}
@@ -87,7 +87,7 @@ class CC_Email_Field extends CC_Text_Field
 	 
 	function validate()
 	{
-		if (!ereg(".+\@.+\..+", $this->getValue()) || !ereg("^[a-zA-Z0-9_@.+-]+$", $this->getValue()))
+		if ((!ereg(".+\@.+\..+", $this->getValue())) || (!ereg("^[a-zA-Z0-9_@.+-]+$", $this->getValue())))
 		{
 			$this->setErrorMessage('You have entered an invalid email address');
 			
@@ -137,52 +137,22 @@ class CC_Email_Field extends CC_Text_Field
 
 
 	//-------------------------------------------------------------------
-	// METHOD: setValue
+	// METHOD: isLinkable
 	//-------------------------------------------------------------------
 	
 	/** 
-	 * This sets the value of the field.
-	 *
-	 * @access public
-	 * @param int $value The value to set.
-	 */
-	 
-	function setValue($value)
+	  * Returns whether or not the field is linkable.
+	  *
+	  * @access public
+	  * @return bool Whether or not make the e-mail address linkable.
+	  */
+	  	
+	function isLinkable()
 	{
-		if (strtoupper($value) == $value)
-		{
-			parent::setValue(strtolower($value));
-		}
-		else
-		{
-			parent::setValue($value);
-		}
+		return $this->linkable;
 	}
-	
 
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
 
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$field = &parent::getInstance($className, $name, $label, $value, $args, $required);
-		
-		if (isset($args->linkable))
-		{
-			$field->setLinkable($args->linkable);
-		}
-
-		return $field;
-	}
 }
 
 ?>

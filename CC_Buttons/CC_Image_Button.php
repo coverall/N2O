@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Image_Button.php,v 1.20 2008/06/01 17:26:13 mike Exp $
+// $Id: CC_Image_Button.php,v 1.16 2004/11/02 21:24:51 patrick Exp $
 //=======================================================================
 // CLASS: CC_Image_Button
 //=======================================================================
@@ -24,16 +24,6 @@ class CC_Image_Button extends CC_Button
      */
 
 	var $path;
-
-
-	/**
-     * The path to the disabled image (optional).
-     *
-     * @var string $path
-     * @access private
-     */
-
-	var $pathDisabled;
 
 
 	/**
@@ -110,23 +100,6 @@ class CC_Image_Button extends CC_Button
 	
 
 	//-------------------------------------------------------------------
-	// METHOD: setDisabledImagePath()
-	//-------------------------------------------------------------------
-
-	/**
- 	 * This method sets the path of the image to use for the button when it's disabled. If not set, it will just use the primary image.
-	 * 
-	 * @access public
-	 * @param string $path The path to the disabled image.
-	 */
-
-	function setDisabledImagePath($path)
-	{
-		$this->pathDisabled = $path;
-	}
-	
-
-	//-------------------------------------------------------------------
 	// METHOD: getHTML()
 	//-------------------------------------------------------------------
 
@@ -140,11 +113,11 @@ class CC_Image_Button extends CC_Button
 	{	
 		if ($this->clickable)
 		{
-			return '<input id="' . $this->id . '" type="image" name="_PP_' . $this->id . '" value="' . $this->label . '" src="' . $this->path . '" width="' . $this->width . '" height="' . $this->height . '" border="' . $this->border . '" title="' . $this->label . '" alt="' . $this->getLabel() . '" class="' . $this->style . '"' . (isset($this->_onClick) ? ' onClick="' . $this->_onClick . '"' : '' ) . '>';
+			return '<input type="image" name="_PP_' . $this->id . '" value="' . $this->label . '" src="' . $this->path . '" width="' . $this->width . '" height="' . $this->height . '" border="' . $this->border . '" title="' . $this->label . '" alt="' . $this->getLabel() . '" class="' . $this->style . '" tabindex="' . $this->_tabIndex . '"' . (isset($this->_onClick) ? ' onClick="' . $this->_onClick . '"' : '' ) . '>';
 		}
 		else
 		{
-			return '<img id="' . $this->id . '" src="' . (isset($this->pathDisabled) ? $this->pathDisabled : $this->path) . '" width="' . $this->width . '" height="' . $this->height . '" border="' . $this->border . '" alt="' . $this->getLabel() . '" class="' . $this->style . '">';
+			return '<img src="' . $this->path . '" width="' . $this->width . '" height="' . $this->height . '" border="' . $this->border . '" alt="' . $this->getLabel() . '" class="' . $this->style . '">';
 		}
 	}
 
@@ -168,18 +141,15 @@ class CC_Image_Button extends CC_Button
 
 		for ($j = 0; $j < sizeof($this->handlers); $j++)
 		{
-			$x = isset($_REQUEST['_PP_' . $this->id . '_x']) ? $_REQUEST['_PP_' . $this->id . '_x'] : false;
-			$y = isset($_REQUEST['_PP_' . $this->id . '_y']) ? $_REQUEST['_PP_' . $this->id . '_y'] : false;
-			
 			// If any handlers returns false, don't execute any more
-			if ($this->handlers[$j]->process($multipleClick, $x, $y) === false)
+			if ($this->handlers[$j]->process($multipleClick, $_REQUEST['_PP_' . $this->id . '_x'], $_REQUEST['_PP_' . $this->id . '_y']) === false)
 			{
-				unset($size, $x, $y);
+				unset($size);
 				return;
 			}
 		}
 
-		unset($size, $x, $y);
+		unset($size);
 	}
 
 

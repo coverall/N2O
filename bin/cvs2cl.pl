@@ -9,8 +9,8 @@ exec perl -w -x $0 ${1+"$@"} # -*- mode: perl; perl-indent-level: 2; -*-
 ###                                                        ###
 ##############################################################
 
-## $Revision: 1.2 $
-## $Date: 2005/03/25 02:07:46 $
+## $Revision: 1.1 $
+## $Date: 2003/02/12 02:31:08 $
 ## $Author: patrick $
 ##
 ##   (C) 2001,2002,2003 Martyn J. Pearce <fluffy@cpan.org>, under the GNU GPL.
@@ -78,7 +78,7 @@ use File::Basename;
 my $Log_Source_Command = "cvs log";
 
 # In case we have to print it out:
-my $VERSION = '$Revision: 1.2 $';
+my $VERSION = '$Revision: 1.1 $';
 $VERSION =~ s/\S+\s+(\S+)\s+\S+/$1/;
 
 ## Vars set by options:
@@ -151,7 +151,7 @@ my $Show_Tags = 0;
 my $Show_Tag_Dates = 0;
 
 # Show branches by symbolic name in output?
-my $Show_Branches = 1;
+my $Show_Branches = 0;
 
 # Show only revisions on these branches or their ancestors.
 my @Follow_Branches;
@@ -170,7 +170,7 @@ my $Regexp_Gate = "";
 my $Global_Opts = "";
 
 # Pass this option string along to the cvs log subcommand:
-my $Command_Opts = "-b";
+my $Command_Opts = "";
 
 # Read log output from stdin instead of invoking cvs log?
 my $Input_From_Stdin = 0;

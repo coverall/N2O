@@ -1,4 +1,4 @@
-<!-- $Id: CC_Add_FK_Record_Window.php,v 1.16 2010/11/11 04:28:32 patrick Exp $ -->
+<!-- $Id: CC_Add_FK_Record_Window.php,v 1.15 2004/08/19 04:25:26 patrick Exp $ -->
 <?php
 if ($application->hasArgument('displayNameForAddFK'))
 {
@@ -17,11 +17,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 	$application->registerWindow($window);
 	
@@ -29,15 +29,15 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// ------------------------------------------------------------------
 	// (1) Construct the CC_Record component
 	//	
-	$record = new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAddFK')), $application->getArgument('tableNameForAddFK'), true, -1);
+	$record = &new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAddFK')), $application->getArgument('tableNameForAddFK'), true, -1);
 	
 	
 	// ------------------------------------------------------------------
 	// (2) Create our buttons
 	//
 	
-	$cancelButton = new CC_Cancel_Button();
-	$addButton = new CC_Button('Add', false);
+	$cancelButton = &new CC_Cancel_Button();
+	$addButton = &new CC_Button('Add', false);
 	
 	
 	// ------------------------------------------------------------------
@@ -47,7 +47,7 @@ if (!$application->isWindowRegistered($application->getAction()))
 	//get the FK field value 
 	$FKFieldName = getEditableFieldListFromTable($application->getArgument('tableNameForAddFK'));
 	
-	$addButtonHandler = new CC_Insert_FK_Record_Handler($record, $FKFieldName);
+	$addButtonHandler = &new CC_Insert_FK_Record_Handler($record, $FKFieldName);
 	
 	
 	// ------------------------------------------------------------------
@@ -83,7 +83,7 @@ else
 	
 	if (!($window->isRecordRegisteredAtIndex(0)))
 	{
-		$record = new CC_Record(getFieldListFromTable($application->getArgument('tableNameForAddFK')), $application->getArgument('tableNameForAddFK'), true, -1);
+		$record = &new CC_Record(getFieldListFromTable($application->getArgument('tableNameForAddFK')), $application->getArgument('tableNameForAddFK'), true, -1);
 	}
 	else
 	{

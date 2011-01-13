@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Time_Field.php,v 1.13 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Time_Field.php,v 1.7 2004/12/08 11:35:59 jamie Exp $
 //=======================================================================
 // CLASS: CC_Time_Field
 //=======================================================================
@@ -71,15 +71,15 @@ class CC_Time_Field extends CC_Field
 		}
 		
 
-		for ($i = 0; $i < 60; $i++)
+		for ($j = 0; $j < 60; $j++)
 		{
-			$minuteArray[] = sprintf('%02u', $i);
+			$minuteArray[] = sprintf('%02u', $j);
 		}
 		
 
-		for ($i = 0; $i < 60; $i++)
+		for ($k = 0; $k < 60; $k++)
 		{
-			$secondArray[] = sprintf('%02u', $i);
+			$secondArray[] = sprintf('%02u', $k);
 		}
 		
 
@@ -330,7 +330,6 @@ class CC_Time_Field extends CC_Field
 	 
 	function setReadOnly($fieldReadOnly)
 	{
-		parent::setReadOnly($fieldReadOnly);
 		$this->hourField->setReadOnly($fieldReadOnly);
 		$this->minuteField->setReadOnly($fieldReadOnly);
 		$this->secondField->setReadOnly($fieldReadOnly);
@@ -350,92 +349,7 @@ class CC_Time_Field extends CC_Field
 
 	function getValue()
 	{
-		return sprintf('%02u:%02u:%02u', $this->getHourValue(), $this->getMinuteValue(), $this->getSecondValue());
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setValue
-	//-------------------------------------------------------------------
-
-	/** 
-	 * The method sets the field's value taking a string in the form HH:MM:SS. 
-	 *
-	 * @access public
-	 * @param string $value A string of the form HH:MM:SS representing a time.
-	 */
-
-	function setValue($value)
-	{
-		if (preg_match('/[0-9]{2}:[0-9]{2}:[0-9]{2}/', $value))
-		{
-			$parsed = explode(':', $value);
-			
-			$this->setHourValue($parsed[0]);
-			$this->setMinuteValue($parsed[1]);
-			$this->setSecondValue($parsed[2]);
-			
-			unset($parsed);
-		}
-		else
-		{
-			if ($value)
-			{
-				trigger_error('You must specify time in HH:MM:SS format (' . $value . ').', E_USER_WARNING);
-			}
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$key = $this->getRequestArrayName();
-		
-		if (array_key_exists($key . '_hour', $_REQUEST))
-		{
-			$this->setHourValue($_REQUEST[$key . '_hour']);
-			$this->setMinuteValue($_REQUEST[$key . '_minute']);
-			$this->setSecondValue($_REQUEST[$key . '_second']);
-		}
-		
-		unset($key);
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$field = new $className($name, $label, $required);
-		
-		if (strlen($value))
-		{
-			$field->setValue($value);
-		}
-
-		return $field;
+		return sprintf('%04u:%02u:%02u', $this->getHourValue(), $this->getMinuteValue(), $this->getSecondValue());
 	}
 }
 

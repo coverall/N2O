@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Pie_Chart.php,v 1.11 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Pie_Chart.php,v 1.9 2005/02/18 01:08:36 patrick Exp $
 //=======================================================================
 // CLASS: CC_Pie_Chart
 //=======================================================================
@@ -10,7 +10,7 @@
  * <p><i>Example:</i>
  *
  * <p><pre>
- *  $piechart = new CC_Pie_Chart('Favourite Types of Pie', 500, 200, true);
+ *  $piechart = &new CC_Pie_Chart('Favourite Types of Pie', 500, 200, true);
  *
  *  // Note that these values don't have to add up to 100. CC_Pie_Chart
  *  // calculates percentages based on the total sum.
@@ -351,23 +351,7 @@ class CC_Pie_Chart
     	exit();
 	}
 	
-	
-	//-------------------------------------------------------------------
-	// METHOD: output
-	//-------------------------------------------------------------------
 
-	/**
-	 * Does all the magical drawing...
-	 *
-	 * @access private
-	 */
-	 
-	 function output()
-	 {
-	 	$this->streamImage();
-	 }
-	 
-	 
 	//-------------------------------------------------------------------
 	// METHOD: drawPie
 	//-------------------------------------------------------------------

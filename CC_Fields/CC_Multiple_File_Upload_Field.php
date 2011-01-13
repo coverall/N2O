@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Multiple_File_Upload_Field.php,v 1.19 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Multiple_File_Upload_Field.php,v 1.12 2004/10/09 22:50:39 jamie Exp $
 //=======================================================================
 // CLASS: CC_Multiple_File_Upload_Field
 //=======================================================================
@@ -135,6 +135,10 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 
 	function CC_Multiple_File_Upload_Field($name, $label, $required, $rootSavePath, $fileList = '', $minimumNumberBlankFields = 1, $uploadClass = 'CC_File_Upload_Field', $allowFileAdditions = true, $maxFileSize = 1000000000)
 	{
+		$application = &$_SESSION['application'];
+		
+		$this->window = &$application->getCurrentWindow();
+		
 		$this->rootSavePath = $rootSavePath;
 		$this->maxFileSize = $maxFileSize;
 		
@@ -150,11 +154,52 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 		// build array of File Upload fields based on the contents of the fileList variable
 		// which is a comma-delimited list of path names as stored in the database
 		
-		$this->uploadFieldArray = array();
-		
-		if ($fileList)
+		if (strlen($fileList) != 0)
 		{
 			$this->fileNameArray = explode('|', $fileList);
+			$numFiles = sizeof($this->fileNameArray);
+		}
+		else
+		{
+			$numFiles = 0;
+		}
+		
+		$this->uploadFieldArray = array();
+		
+		for ($i = 0; $i < $numFiles; $i++)
+		{
+			$this->uploadFieldArray[] = &$this->createNewUploadField($this->fileNameArray[$i]);
+		}
+		
+		if ($this->allowFileAdditions)
+		{
+			// add the minimum number of blank fields on top of the files already present
+			for ($j = $numFiles; $j < $numFiles + $this->minimumNumberBlankFields; $j++)
+			{
+				$this->uploadFieldArray[] = &$this->createNewUploadField();
+			}
+			
+			$this->addMoreFilesButton = &new CC_Button('Add More Files');
+			$this->addMoreFilesButton->setStyle('small');
+			$this->addMoreFilesButton->setValidateOnClick(false);
+			$this->addMoreFilesButton->setFieldUpdater(true);
+			//$this->addMoreFilesButton->setFieldsToUpdate($this->name);
+			
+			$this->addMoreFilesButton->registerHandler(new CC_Add_File_Upload_Field_Handler($this));
+		}
+		else
+		{
+			// add fields so the total is minimumNumberBlankFields
+			for ($j = $numFiles; $j < $this->minimumNumberBlankFields; $j++)
+			{
+				$this->uploadFieldArray[] = &$this->createNewUploadField();
+			}
+		}
+		
+		// there are no upload fields, we need to include at least one
+		if ((sizeof($this->uploadFieldArray) == 0))
+		{
+			$this->uploadFieldArray[] = &$this->createNewUploadField();
 		}
 	}
 			
@@ -186,14 +231,15 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			$editHTML .= '<div class="ccFileUploadField">' . $this->uploadFieldArray[$i]->getEditHTML() . '</div>';
+			$uploadField = &$this->uploadFieldArray[$i];
+			$editHTML .= $uploadField->getEditHTML() . '<p>';
 		}
 		
 		unset($size);
 	
 		if ($this->allowFileAdditions)
 		{
-			$editHTML .= $this->addMoreFilesButton->getHTML();
+			$editHTML .= $this->addMoreFilesButton->getHTML() . '<p>';
 		}
 		
 		return $editHTML;
@@ -342,7 +388,7 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 	function &createNewUploadField($filePath = '')
 	{
 		$uniqueInt = sizeof($this->uploadFieldArray);
-		$newUploadField = new $this->uploadClass($this, $this->getRequestArrayName() . '[]', $this->getRequestArrayName() . '_' . $uniqueInt, $this->required, $this->rootSavePath, $this->maxFileSize, $filePath);
+		$newUploadField = &new $this->uploadClass($this, $this->getRequestArrayName() . '[]', $this->getRequestArrayName() . '_' . $uniqueInt, $this->required, $this->rootSavePath, $this->maxFileSize, $filePath);
 		$newUploadField->allowDelete = $this->allowDelete;
 
 		return $newUploadField;
@@ -453,19 +499,26 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 		
 		for ($i = 0; $i < $size; $i++)
 		{
+			$uploadField = &$this->uploadFieldArray[$i];
 			if ($this->uploadFieldArray[$i]->getDeleted())
 			{
 				// delete any files associated with this field
-				$this->uploadFieldArray[$i]->deleteCleanup();
+				$uploadField = &$this->uploadFieldArray[$i];
+				$uploadField->deleteCleanup();
 				
-				$this->uploadFieldArray[$i]->resetField();
-
+				// delete the upload file field from the object
+				$this->uploadFieldArray = &deleteArrayElement($this->uploadFieldArray, $i);
+				
+				$this->uploadFieldArray[$i] = &$this->createNewUploadField();
+				
 				if ($i < (sizeof($this->uploadFieldArray) - 1))
 				{
 					$i--;
 					$size--;
 				}
 			}
+			
+			unset($uploadField);
 		}
 		
 		unset($size);
@@ -553,7 +606,7 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 
 	function updateDatabase()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		// update the record's value, only if the file was there to begin with
 		// it could have been added and not updated
@@ -584,65 +637,6 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 	{
 		parent::register($window);
 
-		if (isset($this->fileNameArray))
-		{
-			$numFiles = sizeof($this->fileNameArray);
-
-			for ($i = 0; $i < $numFiles; $i++)
-			{
-				if (file_exists($this->fileNameArray[$i]))
-				{
-					$this->uploadFieldArray[] = &$this->createNewUploadField($this->fileNameArray[$i]);
-				}
-				else
-				{
-					trigger_error($this->fileNameArray[$i] . ' does not exist. Skipping...', E_USER_WARNING);
-				}
-			}
-		}
-		else
-		{
-			$numFiles = 0;
-		}
-
-		if ($this->allowFileAdditions)
-		{
-			// add the minimum number of blank fields on top of the files already present
-			for ($j = $numFiles; $j < $numFiles + $this->minimumNumberBlankFields; $j++)
-			{
-				$this->uploadFieldArray[] = &$this->createNewUploadField();
-			}
-			
-			$this->addMoreFilesButton = new CC_Button('Add More Files');
-			$this->addMoreFilesButton->setStyle('ccFileUploadFieldAddButton');
-			$this->addMoreFilesButton->setValidateOnClick(false);
-			$this->addMoreFilesButton->setFieldUpdater(true);
-			//$this->addMoreFilesButton->setFieldsToUpdate($this->name);
-			
-			$this->addMoreFilesButton->registerHandler(new CC_Add_File_Upload_Field_Handler($this));
-		}
-		else
-		{
-			// add fields so the total is minimumNumberBlankFields
-			for ($j = $numFiles; $j < $this->minimumNumberBlankFields; $j++)
-			{
-				$this->uploadFieldArray[] = &$this->createNewUploadField();
-			}
-		}
-		
-		$size = sizeof($this->uploadFieldArray);
-		
-		for ($i = 0; $i < $size; $i++)
-		{
-			$window->registerComponent($this->uploadFieldArray[$i]->deleteFileCheckbox);
-		}
-		
-		// there are no upload fields, we need to include at least one
-		if ((sizeof($this->uploadFieldArray) == 0))
-		{
-			$this->uploadFieldArray[] = &$this->createNewUploadField();
-		}
-
 		if ($this->allowFileAdditions)
 		{
 			$window->registerComponent($this->addMoreFilesButton);
@@ -656,7 +650,7 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 	
 	function resetField()
 	{
-		$this->uploadFieldArray = array();
+		$this->uploadFieldArray[] = array();
 		
 		$this->uploadFieldArray[] = &$this->createNewUploadField();
 		
@@ -669,10 +663,10 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 			}			
 		}
 		else
-		{	
+		{
 			// add fields so the total is minimumNumberBlankFields
-			for ($j = 1; $j < $this->minimumNumberBlankFields; $j++)
-			{	
+			for ($j = 0; $j < $this->minimumNumberBlankFields; $j++)
+			{
 				$this->uploadFieldArray[] = &$this->createNewUploadField();
 			}
 		}
@@ -732,99 +726,5 @@ class CC_Multiple_File_Upload_Field extends CC_Field
 		
 		unset($size, $i);
 	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$this->resetInvalid();
-		
-		if (!isset($_FILES[$this->getRequestArrayName()]))
-		{
-			return;
-		}
-	
-		$ksize = sizeof(@$_FILES[$this->getRequestArrayName()]['tmp_name']);
-		
-		for ($k = 0; $k < $ksize; $k++)
-		{
-			if (file_exists($_FILES[$this->getRequestArrayName()]['tmp_name'][$k]))
-			{
-				$uploadField = &$this->uploadFieldArray[$k];
-
-				$index = $k;
-				
-				// find the next empty upload field to fill
-				while ($uploadField->getValue() != '')
-				{
-					if ($index < sizeof($this->uploadFieldArray))
-					{
-						unset($uploadField);
-						$uploadField = &$this->uploadFieldArray[$index++];
-					}
-					else
-					{
-						break;
-					}
-				}
-				
-				//update the field with the uploaded file info
-				$uploadField->setFileInfo($k);
-	
-				if ($uploadField->validate())
-				{
-					$uploadField->moveTempFileToUploadsFolder();
-					$this->clearAllErrors();
-				}
-				else
-				{
-					$this->setErrorMessage($uploadField->getErrorMessage());
-				}
-				
-				unset($uploadField);
-			}
-		}
-		
-		unset($ksize);
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$minFields = (isset($args->minFields) ? $args->minFields : 1);
-		$fieldClass = (isset($args->fieldClass) ? $args->fieldClass : 'CC_File_Upload_Field');
-		$showAdd = (isset($args->showAdd) ? ($args->showAdd == 1) : false);
-		$uploadPath = (isset($args->uploadPath) ? $args->uploadPath : APPLICATION_PATH . 'uploads/');
-
-		$field = new $className($name, $label, $required, $uploadPath, $value, $minFields, $fieldClass, $showAdd, 1000000000);
-
-		unset($minFields, $fieldClass, $showAdd, $uploadPath);
-
-		return $field;
-	}
-
 }
 ?>

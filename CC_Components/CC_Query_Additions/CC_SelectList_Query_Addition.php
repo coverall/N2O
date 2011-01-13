@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_SelectList_Query_Addition.php,v 1.10 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_SelectList_Query_Addition.php,v 1.2 2004/12/08 05:24:38 mike Exp $
 //=======================================================================
 // CLASS: CC_SelectList_Query_Addition
 //=======================================================================
@@ -21,7 +21,7 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
      * @access private
      */
     
-	var $_useAnd;
+    var $_useAnd;
 
 
 	/**
@@ -31,7 +31,7 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
      * @access private
      */
     
-	var $_selectList;
+    var $_selectList;
     
     
 	/**
@@ -41,41 +41,10 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
      * @access private
      */
      
-	var $_options;
-     
-     
-   	/**
-     * An array of the queries.
-     *
-     * @var array $_queries
-     * @access private
-     */
-     
-	var $_queries;
-        
+     var $_options;
+    
+    
     	
-    /**
-     * If set to true, we an use this component dynamically (with a CC_Dynamic_Summary)
-     *
-     * @var bool $_isDynamic
-     * @access private
-     */
-    
-    var $_isDynamic = false;
-
-
-    /**
-     * Save a cookie for the future!
-     *
-     * @var string $_cookieName
-     * @access private
-     */
-    
-    var $_cookieName = false;
-
-
-
-
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR
 	//-------------------------------------------------------------------
@@ -91,21 +60,7 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
 	{
 		$this->name = $name;
 		$this->_useAnd = $useAnd;
-		$this->_cookieName = session_name() . '_' . $this->name;
-		
-		$this->_selectList = new CC_AutoSubmit_Select_Field($name . '_queryaddition', '', false, '', '', null, 'Go', true);
-
-		if (array_key_exists($this->_cookieName, $_COOKIE))
-		{
-			$selectedIndex = $_COOKIE[$this->_cookieName];
-			
-			if ($this->_selectList->getNumberOfItems() > $selectedIndex)
-			{
-				$this->_selectList->setSelectedIndex($selectedIndex);
-			}
-		}
-		
-		$this->_selectList->setId($name);
+		$this->_selectList = &new CC_AutoSubmit_Select_Field($name . '_queryaddition', '', false, '', '', null, 'Go', true);
 	}
 	
 	
@@ -123,21 +78,9 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
 
 	function addQuery($label, $query)
 	{
-		$index = sizeof($this->_options);
-		$this->_options[] = array($index, $label);		
-		$this->_queries[$index] = $query;
+		$this->_options[] = array($query, $label);
 		
 		$this->_selectList->setOptions($this->_options);
-
-		if (array_key_exists($this->_cookieName, $_COOKIE))
-		{
-			$selectedIndex = $_COOKIE[$this->_cookieName];
-			
-			if ($this->_selectList->getNumberOfItems() > $selectedIndex)
-			{
-				$this->_selectList->setSelectedIndex($selectedIndex);
-			}
-		}
 	}
 
 
@@ -172,78 +115,9 @@ class CC_SelectList_Query_Addition extends CC_Query_Addition
 		$booleanOperator = $this->_useAnd ? ' and ': ' or ';
 		$selectedIndex = $this->_selectList->getSelectedIndex();
 		
-		if (!headers_sent())
-		{
-			setcookie($this->_cookieName, $selectedIndex, time() + 60*60*24*30);
-		}
-		
-		return $this->_queries[$selectedIndex];
+		return $this->_options[$selectedIndex][0];
 	}
 	
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setValue()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Set's the value of the search field...
-	 *
-	 * @access public
-	 */
-
-	function setValue($value)
-	{
-		$this->_selectList->setValue($value);
-		
-		if (!headers_sent())
-		{
-			setcookie($this->_cookieName, $this->_selectList->getSelectedIndex(), time() + 60*60*24*30);
-		}
-	}
-
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setDynamic()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the label of the component. Defaults to 'Search-O-Matic'.
-	 *
-	 * @access public
-	 */
-
-	function setDynamic($dynamic, $summaryName, $filterName)
-	{
-		$this->_isDynamic = $dynamic;
-		
-		unset($this->_selectList);
-		
-		if ($this->_isDynamic)
-		{
-			$this->_selectList = new CC_SelectList_Field($this->getName() . '_queryaddition', '', false, '', '', null);
-		
-			$this->_selectList->setId($this->getName());
-
-			$this->_selectList->setJavascriptOnChange("filterPage('" . $summaryName . "', '" . $filterName . "', $('" . $filterName . "'), '" . $this->getName() . "'); return false;");
-		}
-		else
-		{
-			$this->_selectList = new CC_AutoSubmit_Select_Field($this->getName() . '_queryaddition', '', false, '', '', null, 'Go', true);
-		}
-
-		if (array_key_exists($this->_cookieName, $_COOKIE))
-		{
-			$selectedIndex = $_COOKIE[$this->_cookieName];
-			
-			if ($this->_selectList->getNumberOfItems() > $selectedIndex)
-			{
-				$this->_selectList->setSelectedIndex($selectedIndex);
-			}
-		}
-	}
-
 	
 	//-------------------------------------------------------------------
 	// METHOD: register

@@ -38,48 +38,16 @@
 	width: 100%;
 }
 
-/* Style for the page selection and records per page controls. */
-.ccSummaryControl
-{
-	width: 100%;
-}
-
-/* Styles for CC_Summary column headings row. */
-tr.ccSummaryHeadings th
-{
-	background-color: #666666;
-}
-
-tr.ccSummaryHeadings th, tr.ccSummaryHeadings th a
+/* Style for CC_Summary column headings row. */
+tr.ccSummaryHeadings td, tr.ccSummaryHeadings a:hover, tr.ccSummaryHeadings a:link, tr.ccSummaryHeadings a:visited
 {
 	font-weight: bold;
 	color: #ffffff;
-	text-align: left;
-}
-
-table.ccSummary tr.even:hover, table.ccSummary tr.odd:hover, table.ccSummary tr.hover
-{
-	background-color: #cccccc;
-}
-
-table.ccSummary tr.even
-{
-	background-color: #eeeeee;
-}
-
-table.ccSummary tr.odd
-{
-	background-color: transparent;
 }
 
 .ccSummarySearch input, .ccSummarySearch select, .ccSummaryControl select, .ccSummaryControl input
 {
 	font-size: 10px;
-}
-
-.ccSummarySearch input[type=search]
-{
-	font-size: 12px;
 }
 
 .ccSummarySearch span, .ccSummaryControl span
@@ -145,19 +113,6 @@ tr.ccSummaryData td
 	border: 1px dotted #999999;
 }
 
-/* Style for the upload fields (wrapped around the above table) */
-div.ccFileUploadField
-{
-	margin-bottom: 4px;
-}
-
-/* Style for the button */
-input.ccFileUploadFieldAddButton
-{
-	margin-top: 6px;
-	font-size: 9px;
-}
-
 /* Style for file upload field tables. */
 .ccFileName, .ccFileDetails
 {
@@ -170,114 +125,8 @@ input.ccFileUploadFieldAddButton
 	font-weight: bold;
 }
 
-/* Styles for CC_PercentageFilter */
-div.ccPercent
-{
-	background-image: url(/N2O/CC_Images/bar-empty.gif);
-	background-repeat: repeat-x;
-	background-color: #a6a6a6;
-	height: 12px;
-	border: 1px solid #666;
-	white-space: nowrap;
-}
-
-div.ccPercent span
-{
-	font-size: 10px;
-	height: 16px;
-}
-
-/* Styles for CC_Image_Folder_Component */
-table.ccImageFolder
-{
-	border-collapse: collapse;
-}
-
-table.ccImageFolder tr td
-{
-	border: 1px solid #cccccc;
-	font-size: 11px;
-}
-
-table.ccImageFolder tr td p
-{
-	margin-top: 0;
-	margin-bottom: 8px;
-}
-
-table.ccImageFolder tr:hover
-{
-	background-color: white;
-}
-
-table.ccImageFolder tr td.even
-{
-	background-color: #eeeeee;
-}
-
-table.ccImageFolder tr td.odd
-{
-	background-color: #dddddd;
-}
-
-table.ccImageFolder tr td.evenHeading
-{
-	background-color: #dddddd;
-	font-size: 12px;
-	font-weight: bold;
-}
-
-table.ccImageFolder tr td.oddHeading
-{
-	background-color: #cccccc;
-	font-size: 12px;
-	font-weight: bold;
-}
-
-table.ccImageFolder tr td table tr td
-{
-	border-style: none;
-}
-
-table.ccImageFolder tr td img
-{
-	border: 1px solid #cccccc;
-}
-
-
-/* Styles for default windows. */
-
-h1.ccH1
-{
-	font-size: 16px;
-	border-bottom: 1px solid #cccccc;
-}
-
-.ccTable
-{
-	border-collapse: collapse;
-}
-
-.ccTable td
-{
-	border: 1px solid #cccccc;
-	padding: 3px;
-}
-
-.ccTable tr.buttonRow td
-{
-	border-bottom-style: none;
-	border-right-style: none;
-	border-left-style: none;
-}
-
 form
 {
 	margin: 0px;
 	padding: 0px;
-}
-
-table.ccForeignKeyMultipleField
-{
-	width: 100%;
 }

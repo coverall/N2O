@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Application.php,v 1.107 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Application.php,v 1.83 2005/03/06 00:46:02 patrick Exp $
 //=======================================================================
 // CLASS: CC_Application
 //=======================================================================
@@ -25,17 +25,6 @@ class CC_Application
      */
 
 	var $action;
-
-
-	/**
-     * The javascript to return when a user submits the form. It must be set in the header of the appropriate page, before the form tag is output.
-     *
-     * @var string $onSubmit
-     * @see CC_Application::setOnSubmit()
-     * @access private
-     */
-
-	var $onSubmit = '';
 
 
 	/**
@@ -256,7 +245,7 @@ class CC_Application
 				include($databaseConfigPath);
 			}
 			
-			$this->db = new CC_Database($DATABASE_HOST, $DATABASE_NAME, $DATABASE_USER, $DATABASE_PASSWORD, $DATABASE_ENCODE_PASSWORD, (isset($DATABASE_TYPE) ? $DATABASE_TYPE : DB_MYSQL));
+			$this->db = &new CC_Database($DATABASE_HOST, $DATABASE_NAME, $DATABASE_USER, $DATABASE_PASSWORD, $DATABASE_ENCODE_PASSWORD, (isset($DATABASE_TYPE) ? $DATABASE_TYPE : DB_MYSQL));
 
 			// initialize the relationship manager
 			//
@@ -264,16 +253,16 @@ class CC_Application
 			//
 			if (!isset($GLOBALS['noRelationshipManager']) || $GLOBALS['noRelationshipManager'] == false)
 			{
-				$this->relationshipManager = new CC_RelationshipManager($this->db, $noCCFieldManagerDatabase);
+				$this->relationshipManager = &new CC_RelationshipManager($this->db, $noCCFieldManagerDatabase);
 			}
 		}
 
 		
 		// initialize the field manager
-		$this->fieldManager = new CC_FieldManager($this->db, $noCCFieldManagerDatabase);
+		$this->fieldManager = &new CC_FieldManager($this->db, $noCCFieldManagerDatabase);
 
 		// initialize the error manager
-		$this->errorManager = new CC_ErrorManager();
+		$this->errorManager = &new CC_ErrorManager();
 	}
 	
 	
@@ -291,7 +280,7 @@ class CC_Application
 	 
 	function setUser(&$aUser)
 	{
-		if ($aUser instanceof CC_User)
+		if (is_a($aUser, 'CC_User'))
 		{
 			$this->_user = &$aUser;
 		}
@@ -367,11 +356,6 @@ class CC_Application
 
 	function unregisterWindow($windowId)
 	{
-		if (isset($this->windows[$windowId]))
-		{
-			$this->windows[$windowId]->cleanup();
-			$this->windows[$windowId] = null;
-		}
 		unset($this->windows[$windowId]);
 	}
 
@@ -429,43 +413,24 @@ class CC_Application
 		if ($action != $this->action)
 		{
 			$this->lastAction = $this->action;
-
-			if ($this->isCurrentWindowRegistered())
-			{
-				$window = &$this->getCurrentWindow();
-
-				if ($window->_unregisterOnLeave)
-				{
-					unset($window);
-					$this->unregisterCurrentWindow();
-				}
-			}
 			
 			$this->action = $this->setActionArguments($action);
 		}
 		
 		$this->lastActionKey = $this->actionKey;
 		$this->actionKey = $actionKey;
+		
+		// output debug info if necessary
+		if (DEBUG)
+		{
+			if (!file_exists($this->action . '.php'))
+			{
+				trigger_error("$this->action.php doesn't exist.", E_USER_WARNING);
+			}
+		}
 	}
 	
 	
-	//-------------------------------------------------------------------
-	// METHOD: setOnSubmit
-	//-------------------------------------------------------------------
-
-	/**
-	 * This method sets the form's onSubmit action and must be called from the header before the form tag is output. 
-	 *
-	 * @access public
-	 * @param string $onSubmit The javascript function to call.
-	 */
-
-	function setOnSubmit($onSubmit = '')
-	{
-		$this->onSubmit = $onSubmit;
-	}
-
-
 	//-------------------------------------------------------------------
 	// METHOD: getAction
 	//-------------------------------------------------------------------
@@ -720,7 +685,7 @@ class CC_Application
 	 */
 
 	function setArgument($name, $value)
-	{
+	{	
 		if (is_object($value))
 		{
 			trigger_error('An object was passed to setArgument(). Use setObject() instead.', E_USER_WARNING);
@@ -810,86 +775,6 @@ class CC_Application
 	
 	
 	//-------------------------------------------------------------------
-	// METHOD: clearAllArguments
-	//-------------------------------------------------------------------
-	
-	/**
-	 * This method clears all arguments. 
-	 *
-	 * @access public
-	 * @see getArgument()
-	 * @see popArgument()
-	 * @see setArgument()
-	 * @see clearArgument()
-	 */
-
-	function clearAllArguments()
-	{	
-		$this->arguments = null;
-		unset($this->arguments);
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: clearObject
-	//-------------------------------------------------------------------
-	
-	/**
-	 * This method removes an object of a given name from the application. 
-	 *
-	 * @access public
-	 * @param string $name The name of the object to remove.
-	 * @see getObject()
-	 * @see setObject()
-	 */
-
-	function clearObject($name)
-	{	
-		unset($this->objects[$name]);
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: clearAllObjects
-	//-------------------------------------------------------------------
-	
-	/**
-	 * This method clears all objects. 
-	 *
-	 * @access public
-	 * @see getObject()
-	 * @see setObject()
-	 */
-
-	function clearAllObjects()
-	{	
-		$this->objects = null;
-		unset($this->objects);
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: reset
-	//-------------------------------------------------------------------
-	
-	/**
-	 * This method resets the application by unregistering all windows, objects and arguments. 
-	 *
-	 * @access public
-	 * @see clearAllObjects()
-	 * @see clearAllArguments()
-	 * @see unregisterAllWindows()
-	 */
-
-	function reset()
-	{	
-		$this->clearAllObjects();
-		$this->clearAllArguments();
-		$this->unregisterAllWindows();
-	}
-	
-	
-	//-------------------------------------------------------------------
 	// METHOD: getArgument
 	//-------------------------------------------------------------------
 
@@ -908,7 +793,7 @@ class CC_Application
 			trigger_error('CC_Application::getArgument() was passed an unset or NULL object.');
 		}
 		
-		if (isset($this->arguments[$name]))
+		if (array_key_exists($name, $this->arguments))
 		{
 			return $this->arguments[$name];
 		}
@@ -957,7 +842,7 @@ class CC_Application
 
 	function hasArgument($name)
 	{	
-		return isset($this->arguments[$name]);
+		return array_key_exists($name . '', $this->arguments);
 	}
 
 
@@ -998,7 +883,7 @@ class CC_Application
 
 	function hasObject($name)
 	{	
-		return isset($this->objects[$name]);
+		return array_key_exists($name . '', $this->objects);
 	}
 
 
@@ -1018,11 +903,11 @@ class CC_Application
 	{	
 		if (!$actionKey)
 		{
-			return isset($this->windows[$windowName]);
+			return array_key_exists($windowName, $this->windows);
 		}
 		else
 		{
-			return (isset($this->windows[$windowName]) && is_array($this->windows[$windowName]) && isset($this->windows[$windowName][$actionKey]));
+			return (array_key_exists($windowName, $this->windows) && is_array($this->windows[$windowName]) && isset($this->windows[$windowName][$actionKey]));
 		}
 	}
 	
@@ -1209,7 +1094,7 @@ class CC_Application
 
 		if (!$window)
 		{
-			$window = new CC_Window();
+			$window = &new CC_Window();
 			$this->registerWindow($window);
 		}
 
@@ -1437,11 +1322,11 @@ class CC_Application
 		}
 		else
 		{
-			$action .= '?' . session_name() . '=' . session_id();
+			$action .= '?' . SID;
 
 			if ($queryString)
 			{
-				$action .= '&' . $queryString;
+				$action .= '?' . $queryString;
 			}
 		}
 		
@@ -1460,10 +1345,10 @@ class CC_Application
 	 * @access public
 	 */
 
-	function getFormOpen($id = 'ccForm', $name = 'CC_Form')
+	function getFormOpen()
 	{
 ?>
-<form method="POST" id="<?php echo $id; ?>" name="<?php echo $name; ?>" enctype="multipart/form-data" action="<?php echo $this->getFormAction(); ?>"<?php echo ($this->onSubmit != "") ? ' onSubmit="return ' . $this->onSubmit . '"' : ''; ?>>
+<form method="POST" name="CC_Form" enctype="multipart/form-data" action="<?php echo $this->getFormAction(); ?>">
 <input type="hidden" name="pageId" value="<?php echo URLValueEncode($this->getAction()); ?>">
 <input type="hidden" name="pageIdKey" value="<?php echo URLValueEncode($this->getActionKey()); ?>">
 <?php
@@ -1483,180 +1368,9 @@ class CC_Application
 
 	function getFormClose()
 	{
-		echo "</form>\n";
+?>
+</form>
+<?php
 	}
-
-
-
-	//-------------------------------------------------------------------
-	// METHOD: callMethod
-	//-------------------------------------------------------------------
-
-	/**
-	 * Break away from the main application logic/flow to perform ajax requests and such.
-	 *
-	 * @return string
-	 * @access public
-	 */
-
-	function callMethod()
-	{
-		$method = $_REQUEST['method'];
-
-		//error_log('calling method: ' . $method);
-		
-		switch ($method)
-		{
-			case 'sortSummary':
-			{
-				$summaryName = $_REQUEST['summary'];
-				$summarySortByColumn = mysql_escape_string($_REQUEST['column']);
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-
-				if ($summary->getSortByColumn() == $summarySortByColumn)
-				{
-					// toggle sorting...
-					$order = $summary->sortByDirection;
-	
-					if ($order == 'ASC')
-					{
-						$summary->setSortByDirection('DESC');
-					}
-					else
-					{
-						$summary->setSortByDirection('ASC');
-					}
-				}
-
-				$summary->setSortByColumn($summarySortByColumn);
-
-				setcookie(session_name() . '_' . $summary->getName() . '_SORTBY' , $summary->getSortByColumn(), time() + 31536000);
-				setcookie(session_name() . '_' . $summary->getName() . '_SORTBYDIR' , $summary->getSortByDirection(), time() + 131536000);
-
-				$summary->setPageNumber(1);
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson();
-			}
-			break;
-			
-			case 'jumpToPage':
-			{
-				$summaryName = $_REQUEST['summary'];
-				$summaryPage = mysql_escape_string($_REQUEST['page']);
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-				$summary->setPageNumber($summaryPage);
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson();
-			}
-			break;
-
-			case 'nextPage':
-			{
-				$summaryName = $_REQUEST['summary'];
-				$summaryPage = mysql_escape_string($_REQUEST['page']);
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-				
-				$summary->setPageNumber($summary->getPageNumber() + 1);
-				
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson();
-			}
-			break;
-
-			case 'previousPage':
-			{
-				$summaryName = $_REQUEST['summary'];
-				$summaryPage = mysql_escape_string($_REQUEST['page']);
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-
-				$summary->setPageNumber($summary->getPageNumber() - 1);
-
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson();
-			}
-			break;
-
-			case 'filterSummary':
-			{
-				$summaryName = $_REQUEST['summary'];
-				$filterName = mysql_escape_string($_REQUEST['filterName']);
-				$query = mysql_escape_string($_REQUEST['q']);
-
-				$filterQueryAdditionName = (isset($_REQUEST['qaname']) ? mysql_escape_string($_REQUEST['qaname']) : null);
-				$filterQueryAdditionValue = (isset($_REQUEST['qavalue']) ? mysql_escape_string($_REQUEST['qavalue']) : null);
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-				
-				$summaryFilter = &$window->getComponent($filterName);
-				$summaryFilter->setValue($query);
-
-				if ($filterQueryAdditionName)
-				{
-					$summaryQueryAddition = &$window->getComponent($filterQueryAdditionName);
-					
-					//error_log(get_class($summaryQueryAddition));
-					
-					if (get_class($summaryQueryAddition) == 'cc_checkbox_query_addition')
-					{
-						$filterQueryAdditionIndex = (isset($_REQUEST['index']) ? mysql_escape_string($_REQUEST['index']) : null);
-						
-						//error_log('value is ' . $filterQueryAdditionValue);
-						//error_log('index is ' . $filterQueryAdditionIndex);
-						
-						$checkbox = $summaryQueryAddition->getCheckboxFilterAtIndex($filterQueryAdditionIndex);
-						
-						$summaryQueryAddition->setValueAtIndex($filterQueryAdditionValue, $filterQueryAdditionIndex);
-						
-					}
-					else
-					{
-						$summaryQueryAddition->setValue($filterQueryAdditionValue);
-					}
-				}
-				
-				
-				$summaryFilter->search();
-
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson(true);
-			}
-			break;
-
-			case 'refresh':
-			{
-				$summaryName = $_REQUEST['summary'];
-				
-				$window = &$this->getCurrentWindow();
-				
-				$summary = &$window->getSummary($summaryName, true);
-				
-				$summary->update(true);
-				
-				echo $summary->getRowsAsJson();
-			}
-			break;
-		}
-	}
-
-
 }
 ?>

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Sort_Button.php,v 1.22 2008/06/05 18:25:56 mike Exp $
+// $Id: CC_Sort_Button.php,v 1.17 2004/03/12 01:01:13 patrick Exp $
 //=======================================================================
 // CLASS: CC_Sort_Button
 //=======================================================================
@@ -36,8 +36,6 @@ class CC_Sort_Button extends CC_Text_Button
 	var $currentlySorting = false;
 
 
-
-
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Button
 	//-------------------------------------------------------------------
@@ -55,6 +53,8 @@ class CC_Sort_Button extends CC_Text_Button
 		$this->CC_Text_Button($label, true);
 		
 		$this->registerHandler($sortHandler);
+		$this->setStyle('ccSummaryHeadings');
+
 	}
 	
 	
@@ -124,13 +124,7 @@ class CC_Sort_Button extends CC_Text_Button
 	function getHTML()
 	{
 		$application = &getApplication();
-		
-		$handler = $this->handlers[0];
-		$summaryName = $handler->getSummaryName();
-		$summaryColumn = $handler->getSummaryColumn();
 
-		$direction = 'up';
-		
 		if ($this->currentlySorting)
 		{
 			if ($this->up)
@@ -141,11 +135,13 @@ class CC_Sort_Button extends CC_Text_Button
 			{
 				$direction = 'down';
 			}
-		}
 
-		$display = ($this->currentlySorting ? 'inline' : 'none');
-		
-		return '<nobr><a alt="' . $this->label .'" href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey())) . '" class="' . $this->style . '"' . (isset($this->_onClick) ? ' onClick="' . $this->_onClick . '"' : '' ) . '>' . $this->label . '<img id="' . $summaryName . '_' . $summaryColumn . '_sort" style="display:' . $display . '" src="/N2O/CC_Images/' . $direction . '_arrow.png" width="10" height="10" border="0" style="behavior: url(\'/N2O/png_fix.htc\');"></a></nobr>';
+			return '<nobr><a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey()) . (SID ? '&' . SID : '')) . '" class="' . $this->style . '">' . $this->label . '<img src="/N2O/CC_Images/' . $direction . '_arrow.gif" width="10" height="10" border="0"></a></nobr>';
+		}
+		else
+		{
+			return '<nobr><a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey()) . (SID ? '&' . SID : '')) . '" class="' . $this->style . '">' . $this->label . '</a></nobr>';
+		}
 
 	}
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_AutoSubmit_Select_Field.php,v 1.28 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_AutoSubmit_Select_Field.php,v 1.21 2004/09/14 18:18:23 patrick Exp $
 //=======================================================================
 // CLASS: CC_AutoSubmit_Select_Field
 //=======================================================================
@@ -29,11 +29,11 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 	/**
      * Whether or not to include the field's go button.
      *
-     * @var bool $hideGoButton
+     * @var bool $omitGoButton
      * @access private
      */
      
-	var $hideGoButton;
+	var $omitGoButton;
 
 	
 	//-------------------------------------------------------------------
@@ -51,20 +51,43 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 	 * @param int $unselectedValue The value to use when nothing is selected in the select list. Default is ' - Select - '.
 	 * @param array $theOptions An array of the selection options.
 	 * @param string $buttonLabel The label for the button ('Go', by default);
-	 * @param boolean $hideGoButton If set to true, the 'Go' button will be omitted, and the select list's Javascript will submit the form rather than clicking the button.
+	 * @param boolean $omitGoButton If set to true, the 'Go' button will be omitted, and the select list's Javascript will submit the form rather than clicking the button.
 	 */
 
-	function CC_AutoSubmit_Select_Field($name, $label, $required = false, $defaultValue = '', $unselectedValue = ' - Select - ', $theOptions = null, $buttonLabel = 'Go', $hideGoButton = false)
+	function CC_AutoSubmit_Select_Field($name, $label, $required = false, $defaultValue = '', $unselectedValue = ' - Select - ', $theOptions = null, $buttonLabel = 'Go', $omitGoButton = false)
 	{
+		$application = &$_SESSION['application'];
+		
 		if ($theOptions == null)
 		{
 			$theOptions = array();
 		}
 		
-		$this->hideGoButton = $hideGoButton;
+		$this->omitGoButton = $omitGoButton;
 		
-		$this->goButton = new CC_Button($buttonLabel);
-		$this->goButton->setValidateOnClick(false);
+		if (!$this->omitGoButton)
+		{
+			$this->goButton = &new CC_Button($buttonLabel);
+			$this->goButton->setValidateOnClick(false);
+			
+		/*	if (isset($application))
+			{
+				$window = &$application->getCurrentWindow();
+	
+				if (isset($window))
+				{
+					$window->registerComponent($this->goButton);
+				}
+				else
+				{
+					trigger_error('$goButton needs to be registered. Constructed outside a CC_Window context.', E_USER_WARNING);
+				}
+			}
+			else
+			{
+				trigger_error('$goButton needs to be registered. Constructed outside a CC_Window context.', E_USER_WARNING);
+			}*/
+		}
 		
 		$this->CC_SelectList_Field($name, $label, $required, $defaultValue, $unselectedValue, $theOptions);
 	}
@@ -88,10 +111,6 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 		{
 			$this->goButton->registerHandler($aHandler);
 		}
-		else
-		{
-			trigger_error('Not adding handler because this field was constructed without a button.', E_USER_WARNING);
-		}
 	}
 	
 	
@@ -108,13 +127,13 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 
 	function getEditHTML()
 	{
-		if (!$this->hideGoButton)
+		if (isset($this->goButton))
 		{
-			$selectHTML = '<span style="white-space:nowrap"><select name="' . $this->getRecordKey() . $this->name . '" onChange="document.getElementsByName(\'_BCC_' . $this->goButton->getId() . '\')[0].click()">' . "\n";
+			$selectHTML = '<nobr><select name="' . $this->getRecordKey() . $this->name . '" onChange="document.forms[\'CC_Form\'][\'_BCC_' . $this->goButton->getId() . '\'].click()" tabindex="' . $this->_tabIndex .'">' . "\n";
 		}
 		else
 		{
-			$selectHTML = '<select name="' . $this->getRecordKey() . $this->name . '" onChange="this.form.submit()">' . "\n";
+			$selectHTML = '<select name="' . $this->getRecordKey() . $this->name . '" onChange="document.forms[\'CC_Form\'].submit()" tabindex="' . $this->_tabIndex .'">' . "\n";
 		}
 
 		$names = array_keys($this->options);
@@ -154,9 +173,9 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 		
 		$selectHTML .= '</select> ';
 		
-		if (!$this->hideGoButton)
+		if (isset($this->goButton))
 		{
-			$selectHTML .= $this->goButton->getHTML() . "</span>";
+			$selectHTML .= $this->goButton->getHTML() . "</nobr>";
 		}
 
 		unset($size);
@@ -181,8 +200,13 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 
 	function register(&$window)
 	{
+		$window->registerCustomComponent($this);
 		$window->registerField($this);
-		$window->registerButton($this->goButton);
+
+		if (isset($this->goButton))
+		{
+			$window->registerButton($this->goButton);
+		}
 	}
 
 
@@ -198,7 +222,10 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 
 	function click()
 	{
-		$this->goButton->click();
+		if (isset($this->goButton))
+		{
+			$this->goButton->click();
+		}
 	}
 
 
@@ -214,37 +241,14 @@ class CC_AutoSubmit_Select_Field extends CC_SelectList_Field
 
 	function getButton()
 	{
-		return $this->goButton;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$key = $this->getRequestArrayName();
-		
-		if (array_key_exists($key, $_REQUEST) && stripslashes($_REQUEST[$key]) != $this->getValue())
+		if (isset($this->goButton))
 		{
-			$this->setValue(stripslashes($_REQUEST[$key]));
-
-			if ($this->hideGoButton)
-			{
-				$this->goButton->click();
-			}
+			return $this->goButton;
 		}
-		
-		unset($key);
+		else
+		{
+			return false;
+		}
 	}
 }
 

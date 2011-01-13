@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Component.php,v 1.14 2005/06/01 19:28:47 patrick Exp $
+// $Id: CC_Component.php,v 1.11 2004/01/30 20:09:57 patrick Exp $
 //=======================================================================
 // CLASS: CC_Component
 //=======================================================================
@@ -51,16 +51,6 @@ class CC_Component
 
 	function setName($name)
 	{
-		if (!$name)
-		{
-			trigger_error('A component was constructed with an empty name. This will cause big problems. Stack-trace to follow.', E_USER_WARNING);
-			trigger_error(getStackTrace(), E_USER_WARNING);
-		}
-		else if (strpos($name, '.'))
-		{
-			trigger_error('You have constructed a component using a "." in the name. PHP doesn\'t like this, and your components won\'t be updated. Stack-trace to follow.', E_USER_WARNING);
-			trigger_error(getStackTrace(), E_USER_WARNING);
-		}
 		$this->name = $name;
 	}
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Record.php,v 1.154 2010/06/04 17:40:23 patrick Exp $
+// $Id: CC_Record.php,v 1.132 2005/02/28 19:19:59 mike Exp $
 //=======================================================================
 // CLASS: CC_Record
 //=======================================================================
@@ -132,188 +132,126 @@ class CC_Record extends CC_Component
 		$fieldNameArray = explode(',', $fieldList);
 		
 		$key = $this->getKeyID($table, $id);
-		$size = sizeof($fieldNameArray);
-		$row = false;
 		
 		if ($id != -1)
 		{
 			// get the record from the database
 			$selectQuery = 'select ';
 			
+			$size = sizeof($fieldNameArray);
+			
 			for ($i = 0; $i < $size; $i++)
 			{
 				$fieldType = $application->fieldManager->getFieldType($fieldNameArray[$i]);
 				
-				switch ($fieldType)
+				switch (strtolower($fieldType))
 				{
 					case 'cc_credit_card_field':
 					{
-						$selectQuery .= 'decode(' . $fieldNameArray[$i] . ', \'' . $application->db->getEncodePassword() . '\') as ' . $fieldNameArray[$i] . ', ';
+						$selectQuery .= 'decode(' . $fieldNameArray[$i] . ', \'' . $application->db->getEncodePassword() . '\') as ' . $fieldNameArray[$i];
+						
+						break;
 					}
-					break;
-					
-					case 'cc_foreign_key_multiple_field':
-					{
-						$foreignKeys[] = $fieldNameArray[$i];
-					}
-					break;
-					
 					default:
 					{
-						$selectQuery .= $fieldNameArray[$i] . ', ';
+						$selectQuery .= $fieldNameArray[$i];
+						break;
 					}
-					break;
 				}
 				
-				unset($fieldType);
+				if ($size > $i + 1)
+				{
+					$selectQuery .= ', ';
+				}
 			}
 			
-			$selectQuery = substr($selectQuery, 0, strlen($selectQuery) - 2);
+			unset($size);
 			
 			$selectQuery .= ' from ' . $this->table . ' where ' . $this->idColumnName . '=\'' . $id . '\'';
 			
-			$row = $application->db->doGetRow($selectQuery);
+			//echo $selectQuery . "<p>";
 			
-			//echo $selectQuery;
+			$results = $application->db->doSelect($selectQuery);
 			
-			if (PEAR::isError($row))
+			if (PEAR::isError($results))
 			{
-				trigger_error('Query failed: ' . $row->getMessage() . '. The query was: ' . $selectQuery, E_USER_WARNING);
-				eval('$this = $row;');
-				return;
+				$this->initializeFields($fieldNameArray);
+				trigger_error('Query failed: ' . $results->getMessage() . '. The query was: ' . $selectQuery, E_USER_WARNING);
 			}
 			else
 			{
-				if (!$row)
+				if ($row = cc_fetch_assoc($results))
+				{
+					$size = sizeof($fieldNameArray);
+					
+					for ($i = 0; $i < $size; $i++)
+					{
+						$fieldName = $fieldNameArray[$i];
+						$fieldData = $row[$fieldName];
+						
+						$fieldObject = &$this->createFieldObject($fieldName, $fieldData);
+						$fieldObject->setRecord($this);
+						
+						// make sure field keys are all upper case in this array
+						$this->fields[strtoupper($fieldName)] = &$fieldObject;
+	
+						unset($fieldName);
+						unset($fieldData);
+						unset($fieldObject);
+					}
+					
+					unset($size);
+				}
+				else
 				{
 					trigger_error('The record with id ' . $this->id . ' doesn\'t exist. The query was: ' . $selectQuery, E_USER_WARNING);
-					eval('$this = PEAR::raiseError(\'The record with id \' . $this->id . \' does not exist. The query was: \' . $selectQuery, 0, PEAR_ERROR_RETURN);');
-					return;
+					$this->initializeFields($fieldNameArray);
 				}
 			}
 			
 			unset($selectQuery, $results);
 		}
+		else
+		{
+			$this->initializeFields($fieldNameArray);
+		}
 		
-		$this->initialize($fieldNameArray, $size, $row);
-
-		unset($row, $size, $fieldNameArray);		
+		unset($fieldNameArray);
    	}	
 	
-
-	//-------------------------------------------------------------------
-	// METHOD: initialize
-	//-------------------------------------------------------------------
 	
-	function initialize($fieldNameArray, $size, $row)
-	{
-		global $application;
+	//-------------------------------------------------------------------
+	// METHOD: initializeFields
+	//-------------------------------------------------------------------
 
+	/**
+	 * This method initializes the fields array.
+	 *
+	 * @access private
+	 */
+
+	function initializeFields($fieldNameArray)
+	{
+		// no record exists, so create blank fields.
+		$size = sizeof($fieldNameArray);
+		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if (!$ccFieldData = $application->fieldManager->getFieldData($fieldNameArray[$i]))
-			{
-				$ccFieldData = array();
-				$ccFieldData[0] = 'cc_text_field';
-				$ccFieldData[1] = $fieldNameArray[$i];
-				$ccFieldData[2] = new stdclass();
-			}
-
-			$className = $ccFieldData[0];
+			$fieldName = $fieldNameArray[$i];
 			
-			if ($className == 'cc_foreign_key_multiple_field')
-			{
-				$label = $ccFieldData[1];
-				$relationsShipData = $ccFieldData[2];
-				$value = 0;
-				
-				$application->relationshipManager->addManyRelationship($fieldNameArray[$i], $relationsShipData->setTable, $relationsShipData->setTableMainKey, $relationsShipData->setTableSourceKey, $relationsShipData->sourceTable, $relationsShipData->displayColumn);
-
-				$fieldObject = call_user_func(array((string)$className, 'getInstance'), $className, $fieldNameArray[$i], $label, "", $ccFieldData[2], 1);
-				
-				if (!$fieldObject->isReadOnly())
-				{
-					$fieldObject->setReadOnly(!$this->editable);
-				}
-				
-				// set the summary label, if it exists
-				if (isset($ccFieldData[2]->summaryLabel))
-				{
-					$fieldObject->setSummaryLabel($ccFieldData[2]->summaryLabel);
-				}
-				
-				// make sure field keys are all upper case in this array
-				$this->fields[strtoupper($fieldNameArray[$i])] = &$fieldObject;
-				
-				$fieldObject->setValue($value, $this->id);
-				
-				unset($fieldObject, $ccFieldData, $className, $label);
-			}
-			else if ($className == 'cc_foreign_key_field')
-			{
-				$label = $ccFieldData[1];
-				$relationsShipData = $ccFieldData[2];
-				
-				$value = ($row ? $row[$fieldNameArray[$i]] : (isset($ccFieldData[2]->value) ? $ccFieldData[2]->value : false));
-				
-				$application->relationshipManager->addRelationship($fieldNameArray[$i], $relationsShipData->sourceTable, $relationsShipData->displayColumn);
-				
-				if (!isset($relationsShipData->required))
-				{
-					$relationsShipData->required = false;
-				}
-				
-				$fieldObject = call_user_func(array((string)$className, 'getInstance'), $className, $fieldNameArray[$i], $label, "", $ccFieldData[2], $relationsShipData->required);
-				
-				if (!$fieldObject->isReadOnly())
-				{
-					$fieldObject->setReadOnly(!$this->editable);
-				}
-				
-				// set the summary label, if it exists
-				if (isset($ccFieldData[2]->summaryLabel))
-				{
-					$fieldObject->setSummaryLabel($ccFieldData[2]->summaryLabel);
-				}
-				
-				// make sure field keys are all upper case in this array
-				$this->fields[strtoupper($fieldNameArray[$i])] = &$fieldObject;
-				
-				$fieldObject->setValue($value);
-				
-				unset($fieldObject, $ccFieldData, $className, $label);
-			}
-			else
-			{
-				$label       = $ccFieldData[1];
-				$required    = (isset($ccFieldData[2]->required) ? $ccFieldData[2]->required : false);
-				$value       = ($row ? $row[$fieldNameArray[$i]] : (isset($ccFieldData[2]->value) ? $ccFieldData[2]->value : false));
-				
-				$fieldObject = call_user_func(array((string)$className, 'getInstance'), $className, $fieldNameArray[$i], $label, $value, $ccFieldData[2], $required);
-				
-				if (!$fieldObject->isReadOnly())
-				{
-					$fieldObject->setReadOnly(!$this->editable);
-				}
-				
-				// set the summary label, if it exists
-				if (isset($ccFieldData[2]->summaryLabel))
-				{
-					$fieldObject->setSummaryLabel($ccFieldData[2]->summaryLabel);
-				}
-				
-				// make sure field keys are all upper case in this array
-				$this->fields[strtoupper($fieldNameArray[$i])] = &$fieldObject;
-				
-				unset($fieldObject, $ccFieldData, $className, $label, $required, $value);
-			}
-
+			$fieldObject = &$this->createFieldObject($fieldName, '');
+			
+			// make sure field keys are all upper case in this array
+			$this->fields[strtoupper($fieldName)] = &$fieldObject;
+			
+			unset($fieldObject);
 		}
-	
-		unset($row, $size, $fieldNameArray);		
+		
+		unset($size);
 	}
 
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getField
 	//-------------------------------------------------------------------
@@ -330,7 +268,7 @@ class CC_Record extends CC_Component
 	{
 		$fieldName = strtoupper($fieldName);
 		
-		if (isset($this->fields[$fieldName]))
+		if (array_key_exists($fieldName, $this->fields))
 		{
 			return $this->fields[$fieldName];
 		}
@@ -357,24 +295,6 @@ class CC_Record extends CC_Component
 	function getKeyID($table, $id = -1)
 	{
 		return $table . '_' . str_replace('.', '_', $id);
-	}
-
-
-
-	//-------------------------------------------------------------------
-	// METHOD: getRecordKey
-	//-------------------------------------------------------------------
-
-	/**
-     * Gets the record key of the record
-     *
-     * @access public
-     * @return mixed A string representing the record's key
-     */	
-
-	function getRecordKey()
-	{
-		return ($this->getKeyID($this->table, $this->id)) . '|';
 	}
 
 	
@@ -427,32 +347,6 @@ class CC_Record extends CC_Component
 
 
 	//-------------------------------------------------------------------
-	// METHOD: doBatchChange
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This method sets whether or not the record (and it's associated fields) are editable.
-	 *
-	 * @access private
-	 * @param bool $editable Whether or not the record is editable.
-	 */
-
-	function doBatchChange($functionName, $value)
-	{
-		$keys = array_keys($this->fields);
-		
-		$size = sizeof($keys);
-		
-		for ($i = 0; $i < $size; $i++)
-		{
-			$this->fields[$keys[$i]]->$functionName($value);
-		}
-		
-		unset($keys, $size);
-	}
-
-
-	//-------------------------------------------------------------------
 	// METHOD: setEditable
 	//-------------------------------------------------------------------
 
@@ -468,7 +362,16 @@ class CC_Record extends CC_Component
 	{
 		$this->editable = $editable;
 		
-		$this->doBatchChange('setReadOnly', !$editable);
+		$keys = array_keys($this->fields);
+		
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
+		{
+			$this->fields[$keys[$i]]->setReadOnly(!$editable);
+		}
+		
+		unset($keys, $size);
 	}
 	
 	
@@ -488,7 +391,16 @@ class CC_Record extends CC_Component
 	{
 		$this->disabled = $disabled;
 		
-		$this->doBatchChange('setDisabled', $disabled);
+		$keys = array_keys($this->fields);
+		
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
+		{
+			$this->fields[$keys[$i]]->setDisabled($disabled);
+		}
+		
+		unset($keys, $size);
 	}
 
 	
@@ -574,7 +486,16 @@ class CC_Record extends CC_Component
 
 	function setRequired($required)
 	{
-		$this->doBatchChange('setRequired', $required);
+		$keys = array_keys($this->fields);
+		
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
+		{
+			$this->fields[$keys[$i]]->setRequired($required);
+		}
+		
+		unset($keys, $size);
 	}
 
 
@@ -592,7 +513,16 @@ class CC_Record extends CC_Component
 
 	function setShowAsterisk($show)
 	{
-		$this->doBatchChange('setShowAsterisk', $show);
+		$keys = array_keys($this->fields);
+		
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
+		{
+			$this->fields[$keys[$i]]->setShowAsterisk($show);
+		}
+		
+		unset($keys, $size);
 	}
 
 
@@ -618,14 +548,17 @@ class CC_Record extends CC_Component
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($this->fields[$keys[$i]]->hasError())
+			$field = &$this->fields[$keys[$i]];
+			
+			if ($field->hasError())
 			{
-				unset($keys, $size);
-				return true;
+				$errors = true;
 			}
+			
+			unset($field);
 		}
 		
-		unset($keys, $size);
+		unset($size);
 		
 		return $errors;
 	}
@@ -657,7 +590,7 @@ class CC_Record extends CC_Component
 		for ($i = 0; $i < $size; $i++)
 		{
 			$currentField = &$this->fields[$keys[$i]];
-
+			
 			if ($currentField->addToDatabase())
 			{
 				// keep all our fieldnames uppercase internall to cc_record.
@@ -689,8 +622,6 @@ class CC_Record extends CC_Component
 
 	function buildUpdateQuery()
 	{
-		error_log('CC_Record->buildUpdateQuery() is deprecated. Use CC_Record->update() instead.');
-
 		// CC_Database fields should be excluded from the update
 		$application = &$_SESSION['application'];
 		
@@ -820,309 +751,6 @@ class CC_Record extends CC_Component
 	
 	
 	//-------------------------------------------------------------------
-	// METHOD: insert()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * This function inserts data into the database for this record, including set tables
-	  *
-	  * @access public
-	  * @return string An update query to add database-updateable fields to the database.
-	  * @see CC_Field::addToDatabase()
-	  * @see CC_Field::setAddToDatabase()
-	  * @see getDatabaseUpdateableFieldNames()
-	  */
-
-	function insert()
-	{
-		// CC_Database fields should be excluded from the update
-		$application = &$_SESSION['application'];
-		
-		if ($application->db->isPostgres())
-		{
-			$insertQuery = 'insert into ' . $this->table . ' (' . $this->idColumnName . ', DATE_ADDED, ';
-		}
-		else // if ($application->db->isMysql())
-		{
-			$insertQuery = 'insert into ' . $this->table . ' (DATE_ADDED, ';
-		}
-
-		$keys = $this->getDatabaseUpdateableFieldNames();
-		
-		$size = sizeof($keys);
-		
-		$valueList = '';
-		$fieldList = '';
-
-		$oneToManyFields = array();
-		
-		for ($i = 0; $i < $size; $i++)
-		{
-			$field = &$this->fields[$keys[$i]];
-			$this->fields[$keys[$i]]->updated = false;
-			
-			// one to many field
-			if (get_class($field) == 'cc_foreign_key_multiple_field')
-			{
-				$oneToManyFields[] = $field;
-			}
-			else if ($field->addToDatabase()) // && !$field->isReadOnly())
-			{
-				$fieldList .= $keys[$i] . ', ';
-				
-				if ($field->getEncode())
-				{
-					$valueList .= 'encode(\'' . $field->getEscapedValue() . '\', \'' . $application->db->getEncodePassword() . '\'), ';
-				}
-				else if ($field->getPassword())
-				{
-					$valueList .= '\'' . md5($field->getEscapedValue()) . '\', ';
-				}
-				else
-				{	
-					$valueList .= '\'' . $field->getEscapedValue() . '\', ';
-				}				
-			}
-					
-			unset($field);
-		}
-		
-		$fieldList = substr($fieldList, 0, $fieldList - 2);
-		$valueList = substr($valueList, 0, $valueList - 2);
-		
-		unset($size);
-		
-		switch ($application->db->_databaseType)
-		{
-			case DB_POSTGRES:
-				$tableIdSequence = strtolower($this->table . '_id_seq');
-				$insertQuery .= $fieldList . ') values (nextval(\'' . $tableIdSequence . '\'), now(), ' . $valueList . ')';
-			break;
-			
-			case DB_MYSQL:
-			default:
-				$insertQuery .= $fieldList . ') values (now(), ' . $valueList . ')';
-			break;
-		}
-
-		$recordId = $application->db->doInsert($insertQuery);
-		
-		if (!PEAR::isError($recordId))
-		{
-			$this->setId($recordId);
-			// process all the foreign_key_multiple_fields
-			for ($i = 0; $i < sizeof($oneToManyFields); $i++)
-			{
-				$field = $oneToManyFields[$i];
-				
-				$sourceTableIds = array_keys($field->checkboxes);
-				
-				for ($j = 0; $j < sizeof($sourceTableIds); $j++)
-				{
-					if ($field->checkboxes[$sourceTableIds[$j]]->isChecked())
-					{
-						$setId = $sourceTableIds[$j];
-						$query = 'insert into ' . $field->setTable . '(' . $field->setTableMainKey . ', ' . $field->setTableSourceKey . ') values (' . $this->getId() . ', ' . $setId . ')';
-						$result = $application->db->doInsert($query);
-						
-						if (PEAR::isError($result))
-						{
-							$window->setErrorMessage($recordId->getMessage());
-							return false;
-						}
-
-					}
-				}
-			}
-			
-			return $recordId;
-		}
-		else
-		{
-			$window->setErrorMessage($recordId->getMessage());
-			return false;
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: update()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * This function updates data into the database for this record, including set tables
-	  *
-	  * @access public
-	  * @see CC_Field::addToDatabase()
-	  * @see CC_Field::setAddToDatabase()
-	  * @see getDatabaseUpdateableFieldNames()
-	  */
-
-	function update()
-	{
-		// CC_Database fields should be excluded from the update
-		global $application;
-		
-		$updateQuery = 'update ' . $this->table . ' set ';
-		
-		$keys = $this->getDatabaseUpdateableFieldNames();		
-		$size = sizeof($keys);
-		
-		$oneToManyFields = array();
-
-		for ($i = 0; $i < $size; $i++)
-		{
-			$field = $this->fields[$keys[$i]];
-			
-			$this->fields[$keys[$i]]->updated = false;
-			
-			// one to many field
-			if (get_class($field) == 'cc_foreign_key_multiple_field')
-			{
-				$oneToManyFields[] = $field;
-			}
-			else if ($field->addToDatabase()) // && !$field->isReadOnly())
-			{
-				if ($field->getEncode())
-				{
-					$updateQuery .= $keys[$i] . '=encode(\'' . $field->getEscapedValue() . '\', \'' . $application->db->getEncodePassword() . '\'), ';
-				}
-				else if ($field->getPassword())
-				{
-					if (strlen($field->getValue()) == 32)
-					{
-						$updateQuery .= $keys[$i] . '=\'' . $field->getEscapedValue() . '\', ';
-					}
-					else
-					{
-						$updateQuery .= $keys[$i] . '=\'' . md5($field->getEscapedValue()) . '\', ';
-					}
-				}
-				else
-				{	
-					$updateQuery .= $keys[$i] . '=\'' . $field->getEscapedValue() . '\', ';
-				}
-
-				$updatedField = true;
-			}
-			
-			unset($field);
-		}
-		
-		unset($size);
-		
-		$updateQuery = substr($updateQuery, 0, strlen($updateQuery) - 2);
-		
-		$updateQuery .= ' where ' . $this->idColumnName . ' =\'' . $this->id . '\'';		
-		
-		$result = $application->db->doUpdate($updateQuery);
-		
-		if (!PEAR::isError($result))
-		{
-			for ($i = 0; $i < sizeof($oneToManyFields); $i++)
-			{
-				$field = $oneToManyFields[$i];
-
-				// delete existing set entries				
-				$query = 'delete from ' . $field->setTable . ' where ' . $field->setTableMainKey . ' = ' . $this->getId();
-				$result = $application->db->doDelete($query);
-				
-				// insert set entries afresh
-				$sourceTableIds = array_keys($field->checkboxes);				
-				for ($j = 0; $j < sizeof($sourceTableIds); $j++)
-				{
-					if ($field->checkboxes[$sourceTableIds[$j]]->isChecked())
-					{
-						$setId = $sourceTableIds[$j];
-						$query = 'insert into ' . $field->setTable . '(' . $field->setTableMainKey . ', ' . $field->setTableSourceKey . ') values (' . $this->getId() . ', ' . $setId . ')';
-						
-						$result = $application->db->doInsert($query);
-						
-						if (PEAR::isError($result))
-						{
-							$window->setErrorMessage($recordId->getMessage());
-							return false;
-						}
-
-					}
-				}
-			}
-		}
-		else
-		{
-			$window->setErrorMessage($result->getMessage());
-			return false;
-		}
-		
-		return true;
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: delete()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * This function deletes data from the database for this record, including set tables
-	  *
-	  * @access public
-	  * @see CC_Field::addToDatabase()
-	  * @see CC_Field::setAddToDatabase()
-	  * @see getDatabaseUpdateableFieldNames()
-	  */
-
-	function delete()
-	{
-		// CC_Database fields should be excluded from the update
-		global $application;
-		
-		$deleteQuery = 'delete from ' . $this->table;		
-		$deleteQuery .= ' where ' . $this->idColumnName . ' =\'' . $this->id . '\'';		
-		
-		$result = $application->db->doDelete($deleteQuery);
-		
-		if (!PEAR::isError($result))
-		{
-			$keys = $this->getDatabaseUpdateableFieldNames();		
-			$size = sizeof($keys);
-			
-			$oneToManyFields = array();
-	
-			for ($i = 0; $i < $size; $i++)
-			{
-				$field = $this->fields[$keys[$i]];
-				
-				// one to many field
-				if (get_class($field) == 'cc_foreign_key_multiple_field')
-				{
-					$oneToManyFields[] = $field;
-				}
-	
-				unset($field);
-			}
-			
-			unset($size);
-
-			for ($i = 0; $i < sizeof($oneToManyFields); $i++)
-			{
-				$field = $oneToManyFields[$i];
-
-				// delete existing set entries				
-				$query = 'delete from ' . $field->setTable . ' where ' . $field->setTableMainKey . ' = ' . $this->getId();
-				$result = $application->db->doDelete($query);				
-			}
-		}
-		else
-		{
-			$window->setErrorMessage($result->getMessage());
-			return false;
-		}
-		
-		return true;
-	}
-
-	
-	//-------------------------------------------------------------------
 	// METHOD: buildInsertQuery()
 	//-------------------------------------------------------------------
 
@@ -1138,18 +766,16 @@ class CC_Record extends CC_Component
 
 	function buildInsertQuery()
 	{
-		error_log('CC_Record->buildInsertQuery() is deprecated. Use CC_Record->insert() instead.');
-		
 		// CC_Database fields should be excluded from the update
 		$application = &$_SESSION['application'];
 		
 		if ($application->db->isPostgres())
 		{
-			$insertQuery = 'insert into ' . $this->table . ' (' . $this->idColumnName . ', ' . (isset($this->fields['DATE_ADDED']) ? '' : 'DATE_ADDED, ');
+			$insertQuery = 'insert into ' . $this->table . ' (' . $this->idColumnName . ', DATE_ADDED, ';
 		}
 		else // if ($application->db->isMysql())
 		{
-			$insertQuery = 'insert into ' . $this->table . ' (' . (isset($this->fields['DATE_ADDED']) ? '' : 'DATE_ADDED, ');
+			$insertQuery = 'insert into ' . $this->table . ' (DATE_ADDED, ';
 		}
 
 		$keys = $this->getDatabaseUpdateableFieldNames();
@@ -1196,18 +822,792 @@ class CC_Record extends CC_Component
 		{
 			case DB_POSTGRES:
 				$tableIdSequence = strtolower($this->table . '_id_seq');
-				$insertQuery .= $fieldList . ') values (nextval(\'' . $tableIdSequence . '\'), ' . (isset($this->fields['DATE_ADDED']) ? '' : 'now(), ') . $valueList . ')';
+				$insertQuery .= $fieldList . ') values (nextval(\'' . $tableIdSequence . '\'), now(), ' . $valueList . ')';
 			break;
 			
 			case DB_MYSQL:
 			default:
-				$insertQuery .= $fieldList . ') values (' . (isset($this->fields['DATE_ADDED']) ? '' : 'now(), ') . $valueList . ')';
+				$insertQuery .= $fieldList . ') values (now(), ' . $valueList . ')';
 			break;
 		}
 
 		return $insertQuery;
 	}
+
 	
+	//-------------------------------------------------------------------
+	// METHOD: createFieldObject()
+	//-------------------------------------------------------------------
+
+	/** 
+	  * This method creates a field object based on the field's name and associated data, for an existing record, or default/blank data for a new record. This method is called in the CC_Record constructor when building the record's member fields.
+	  *
+	  * @access private
+	  * @param string $fieldName The name of the field to create.
+	  * @param string $fieldData The data to fill the field with upon creation.
+	  * @return CC_Field A reference to the created field object.
+	  */
+
+	function &createFieldObject($fieldName, $fieldData)
+	{
+		global $application;
+		$application->fieldManager = &$application->fieldManager;
+		
+		$ccFieldData = $application->fieldManager->getFieldData($fieldName);
+		$fieldType   = $ccFieldData[0];
+		$displayName = $ccFieldData[1];
+			
+		$required = (isset($ccFieldData[2]->required) ? $ccFieldData[2]->required : false);
+
+		switch (strtolower($fieldType))
+		{
+			case 'cc_text_field':
+			case 'cc_number_field':
+			case 'cc_dollar_field':
+			case 'cc_integernumber_field':
+			case 'cc_floatnumber_field':
+			case 'cc_phone_field':
+			{
+				if (isset($ccFieldData[2]->size))
+				{
+					$size = $ccFieldData[2]->size;
+				}
+				else
+				{
+					$size = 32;				
+				}
+				
+				if (isset($ccFieldData[2]->maxlength))
+				{
+					$maxlength = $ccFieldData[2]->maxlength;
+				}
+				else
+				{
+					$maxlength = 128;
+				}
+				
+				
+				if (isset($ccFieldData[2]->value))
+				{
+					$fieldData = $ccFieldData[2]->value;
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $size, $maxlength);
+				
+				unset($size);
+				unset($maxlength);
+				unset($value);
+				
+				break;
+			}
+			case 'cc_checkbox_field':
+			case 'cc_dependant_checkbox_field':
+			{
+				if (strlen($fieldData))
+				{
+					if ($fieldData == 1 || (string)$fieldData == 't')
+					{
+						$checked = true;
+					}
+					else
+					{
+						$checked = false;
+					}
+				}
+				else
+				{
+					if (isset($ccFieldData[2]->checked))
+					{
+						$checked = ($ccFieldData[2]->checked == 1 ? true : false);
+					}
+					else
+					{
+						$checked = false;
+					}
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $checked);
+				
+				if (isset($ccFieldData[2]->optionalValue))
+				{
+					$fieldObject->setOptionalValue($ccFieldData[2]->optionalValue);
+				}
+				
+				unset($checked);
+	
+				break;
+			}
+			case 'cc_textarea_field':
+			{
+				if (isset($ccFieldData[2]->x) && isset($ccFieldData[2]->y))
+				{
+					$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $ccFieldData[2]->x, $ccFieldData[2]->y);
+				}
+				else
+				{
+					$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, 50, 5);
+				}
+				
+				if (isset($ccFieldData[2]->autolink) && $ccFieldData[2]->autolink)
+				{
+					$fieldObject->setAutolink(true);
+				}
+				
+				break;
+			}
+			case 'cc_credit_card_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, strSlide13($fieldData));
+				
+				break;
+			}
+			case 'cc_country_field':
+			case 'cc_iso_country_field':
+			case 'cc_postalcode_field':
+			case 'cc_zipcode_field':
+			case 'cc_postalzipcode_field':
+			case 'cc_encoded_field':
+			case 'cc_domain_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData);
+
+				break;
+			}
+			case 'cc_state_field':
+			{
+				$fieldObject = &new CC_ProvinceState_Field($fieldName, $displayName, $required, $fieldData);
+				$fieldObject->setIncludeStates(true);
+				$fieldObject->setIncludeProvinces(false);
+				
+				switch ($application->getLanguage())
+				{
+					case 'French':
+					{
+						$fieldObject->setUnselectedValue('- S&eacute;l&eacute;ctionnez un &Eacute;tat -');
+					}
+					break;
+					
+					default:
+					{
+						$fieldObject->setUnselectedValue('- Select State -');
+					}
+				}
+				break;
+			}
+			case 'cc_province_field':
+			{
+				$fieldObject = &new CC_ProvinceState_Field($fieldName, $displayName, $required, $fieldData);
+				$fieldObject->setIncludeStates(false);
+				$fieldObject->setIncludeProvinces(true);
+				break;
+			}
+			case 'cc_stateprovince_field':
+			{
+				$fieldObject = &new CC_ProvinceState_Field($fieldName, $displayName, $required, $fieldData);
+				$fieldObject->setIncludeStates(true, true);
+				$fieldObject->setIncludeProvinces(true);
+				break;
+			}
+			case 'cc_provincestate_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData);
+				$showFirst = '';
+				$NAFirst = '';
+				
+				if (isset($ccFieldData[2]->showFirst))
+				{
+					$showFirst = $ccFieldData[2]->showFirst;
+				}
+				
+				if (isset($ccFieldData[2]->NAFirst))
+				{
+					$NAFirst = $ccFieldData[2]->NAFirst;
+				}
+				
+				if (isset($ccFieldData[2]->abbreviated))
+				{
+					$fieldObject->setAbbreviated($ccFieldData[2]->abbreviated);
+				}
+				
+				if (isset($ccFieldData[2]->includeStates))
+				{
+					$fieldObject->setIncludeStates($ccFieldData[2]->includeStates, ($showFirst == 'States'));
+				}
+				
+				if (isset($ccFieldData[2]->includeProvinces))
+				{
+					$fieldObject->setIncludeProvinces($ccFieldData[2]->includeProvinces, ($showFirst == 'Provinces'));
+				}
+				
+				if (isset($ccFieldData[2]->includeNA))
+				{
+					$fieldObject->setIncludeNA($ccFieldData[2]->includeNA, $NAFirst);
+				}
+				
+				break;
+			}
+			case 'cc_email_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, (isset($ccFieldData[2]->size) ? $ccFieldData[2]->size : 32));
+
+				if (isset($ccFieldData[2]->linkable))
+				{
+					$fieldObject->setLinkable(true);
+				}
+				
+				break;
+			}
+			case 'cc_percentage_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $displayName, $fieldData);
+
+				break;			
+			}
+			case 'cc_date_field':
+			{
+				$parsedDate = getDate(convertMysqlDateToTimestamp($fieldData));
+				
+				$month = $parsedDate['mon'];
+				$day   = $parsedDate['mday'];
+				$year  = $parsedDate['year'];
+	
+				if (isset($ccFieldData[2]->startYear))
+				{
+					$startYear = $ccFieldData[2]->startYear;
+				}
+				else
+				{
+					$startYear = $year - 2;
+				}
+	
+				if (isset($ccFieldData[2]->endYear))
+				{
+					$endYear = $ccFieldData[2]->endYear;
+				}
+				else
+				{
+					$endYear = $year + 10;
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $month, $day, $year, $startYear, $endYear);
+
+				if (isset($ccFieldData[2]->allowBlank))
+				{
+					$fieldObject->setAllowBlankValue($ccFieldData[2]->allowBlank);
+				}
+	
+				unset($parsedDate);
+				unset($month);
+				unset($day);
+				unset($year);
+				unset($startYear);
+				unset($endYear);
+
+				break;
+			}
+			case 'cc_expiry_date_field':
+			{
+				if ((strcmp($fieldData, '0000-00-00') == 0) || (strlen($fieldData) == 0))
+				{
+					$parsedDate = getDate(strtotime('today +1 month'));
+				}
+				else
+				{
+					$parsedDate = getDate(convertMysqlDateToTimestamp($fieldData));
+				}
+	
+				$month = $parsedDate['mon'];
+				$year  = $parsedDate['year'];
+	
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $month, 1, $year);
+
+				break;
+			}
+			case 'cc_datetime_field':
+			{
+				$parsedDate = getDate(convertMysqlDateTimeToTimestamp(substr($fieldData, 0, 19)));
+				
+				$month = $parsedDate['mon'];
+				$day   = $parsedDate['mday'];
+				$year  = $parsedDate['year'];
+				
+				$hour  = $parsedDate['hours'];
+				$minute  = $parsedDate['minutes'];
+				
+				$parameter1 = $ccFieldData[2]->startYear;	// (int) start year
+				$parameter2 = $ccFieldData[2]->endYear;	// (int) end year
+				
+				if (strlen($parameter1) > 0) 
+				{
+					$startDate = $parameter1;
+				}
+				else
+				{
+					$startDate = $year - 2;
+				}
+				
+				if (strlen($parameter2) > 0)
+				{
+					$endDate = $parameter2;
+				}
+				else
+				{
+					$endDate = $year + 10;
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $month, $day, $year, $hour, $minute, $startDate, $endDate, 1);
+				
+				if (isset($ccFieldData[2]->allowBlank))
+				{
+					$fieldObject->setAllowBlankValue($ccFieldData[2]->allowBlank);
+				}
+
+				unset($parameter1);
+				unset($parameter2);
+				unset($startDate);
+				unset($endDate);
+				unset($parsedDate);
+				unset($month);
+				unset($day);
+				unset($year);
+				unset($hour);
+				unset($minute);
+
+				break;
+			}
+			case 'cc_time_field':
+			{
+				$parsedTime = explode(':', $fieldData);
+				
+				$hour    = $parsedTime[0];
+				$minute  = $parsedTime[1];
+				$second  = $parsedTime[2];
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $hour, $minute, $second);
+				
+				unset($hour);
+				unset($minute);
+				unset($second);
+
+				break;
+			}
+			case 'cc_date_added_field':
+			{
+				$parsedDate = getDate(convertMysqlDateTimeToTimestamp($fieldData));
+				
+				$month = $parsedDate['mon'];
+				$day   = $parsedDate['mday'];
+				$year  = $parsedDate['year'];
+				
+				$hour  = $parsedDate['hours'];
+				$minute  = $parsedDate['minutes'];
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $month, $day, $year, $hour, $minute);
+	
+				unset($parsedDate);
+				unset($month);
+				unset($day);
+				unset($year);
+				unset($hour);
+				unset($minute);
+
+				break;
+			}
+			case 'cc_timestamp_field':
+			{
+				$parsedDate = getDate(convertMysqlTimestampToPHPTimestamp($fieldData));
+				
+				$month = $parsedDate['mon'];
+				$day   = $parsedDate['mday'];
+				$year  = $parsedDate['year'];
+				
+				$hour  = $parsedDate['hours'];
+				$minute  = $parsedDate['minutes'];
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $month, $day, $year, $hour, $minute, $year - 2, $year + 10);
+	
+				unset($parsedDate);
+				unset($month);
+				unset($day);
+				unset($year);
+				unset($hour);
+				unset($minute);
+
+				break;
+			}
+			case 'cc_hidden_field':
+			case 'cc_hidden_number_field':
+			{
+				$fieldObject = &new $fieldType($fieldName, $fieldData);
+
+				break;
+			}
+			case 'cc_radiobutton_field':
+			{
+				// get the delimiter...
+				if (isset($ccFieldData[2]->delimiter))
+				{
+					$delimiter = $ccFieldData[2]->delimiter;
+				}
+				else
+				{
+					$delimiter = ',';
+				}
+
+				// (string) delimited list of options
+				if (isset($ccFieldData[2]->options) > 0)
+				{
+					$options = explode($delimiter, $ccFieldData[2]->options);
+				}	
+				else
+				{
+					$options = array();
+				}
+
+				// the default value
+				if (!strlen($fieldData) && isset($ccFieldData[2]->value))
+				{
+					$fieldData = $ccFieldData[2]->value;
+				}
+
+				// the index of the default value.
+				if (isset($ccFieldData[2]->index))
+				{
+					$index = $ccFieldData[2]->index;
+				}
+								
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $options);
+				
+				if (!strlen($fieldData) && isset($index) && cc_is_int($index))
+				{
+					$fieldObject->setSelectedAtIndex($index);
+				}
+				
+				unset($fieldData, $index);
+
+				break;
+			}
+			case 'cc_selectlist_field':
+			case 'cc_autosubmit_select_field':
+			{
+				if (isset($ccFieldData[2]->unselectedValue))
+				{
+					$unselectedValue = $ccFieldData[2]->unselectedValue;	// the default unselectedValue
+				}
+				else
+				{
+					$unselectedValue = '- Select -';
+				}
+				
+				if (isset($ccFieldData[2]->options))
+				{
+					if (strpos($ccFieldData[2]->options, '='))
+					{
+						$preoptions = explode(',', $ccFieldData[2]->options);
+						$size = sizeof($preoptions);
+						$options = array();
+						
+						for ($i = 0; $i < $size; $i++)
+						{
+							$suboptions = explode('=', $preoptions[$i]);
+							$options[] = array($suboptions[0], $suboptions[1]);
+							unset($suboptions);
+						}
+						unset($preoptions, $size);
+					}
+					else
+					{
+						$options = explode(',', $ccFieldData[2]->options);
+					}
+				}	
+				else
+				{
+					$options = array();
+				}
+
+				if (isset($ccFieldData[2]->value))
+				{
+					$fieldData = $ccFieldData[2]->value;
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $unselectedValue, $options);
+				
+				unset($options);
+
+				break;
+			}
+			case 'cc_multiple_selectlist_field':
+			{
+				if (isset($ccFieldData[2]->unselectedValue))
+				{
+					$unselectedValue = $ccFieldData[2]->unselectedValue;	// the default unselectedValue
+				}
+				else
+				{
+					$unselectedValue = '- Select -';
+				}
+				
+				if (isset($ccFieldData[2]->options))
+				{
+					$options = explode(',', $ccFieldData[2]->options);
+				}	
+				else
+				{
+					$options = array();
+				}
+
+				if (isset($ccFieldData[2]->value))
+				{
+					$fieldData = explode(',', $ccFieldData[2]->value);
+				}
+				
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $unselectedValue, $options);
+				
+				unset($options);
+
+				break;
+			}
+			case 'cc_foreign_key_field':
+			case 'cc_fk_field':
+			{
+				// args:
+				//
+				// showAdd (boolean)
+				// addHandler (string)
+				// orderBy (string)
+				// whereClause (string)
+				
+				if (isset($ccFieldData[2]->showAdd) && ($ccFieldData[2]->showAdd == 'false' || $ccFieldData[2]->showAdd == 0))
+				{
+					$showButton = false;
+				}
+				else
+				{
+					$showButton = true;
+				}
+				
+				if (isset($ccFieldData[2]->addHandler) && class_exists($ccFieldData[2]->addHandler))
+				{
+					$fieldObject = &$application->relationshipManager->getField($fieldName, $fieldData, $displayName, $showButton, (isset($ccFieldData[2]->orderBy) ? $ccFieldData[2]->orderBy : ''), $ccFieldData[2]->addHandler, (isset($ccFieldData[2]->whereClause) ? $ccFieldData[2]->whereClause : ''));
+				}
+				else
+				{
+					$fieldObject = &$application->relationshipManager->getField($fieldName, $fieldData, $displayName, $showButton, (isset($ccFieldData[2]->orderBy) ? $ccFieldData[2]->orderBy : ''), 'CC_Manage_FK_Table_Handler', (isset($ccFieldData[2]->whereClause) ? $ccFieldData[2]->whereClause : ''));
+				}
+				
+				break;
+			}
+			case 'cc_onetomany_field':
+			{
+				if (isset($ccFieldData[2]->handler))
+				{
+					$handlerClass = $ccFieldData[2]->handler;
+				}
+				else
+				{
+					$handlerClass = 'CC_Manage_FK_Table_Handler';
+				}
+	
+				if (isset($ccFieldData[2]->class))
+				{
+					$fieldClass = $ccFieldData[2]->class;
+				}
+				else
+				{
+					$fieldClass = 'CC_OneToMany_Field';
+				}
+	
+				$fieldObject = &$application->relationshipManager->getOneToManyField($fieldName, $fieldData, $displayName, $required, $handlerClass, $fieldClass);
+				
+				unset($handlerClass, $fieldClass);
+
+				break;
+			}
+			case 'cc_password_field':
+			{
+				if (isset($ccFieldData[2]->size))
+				{
+					$sizeOfField = $ccFieldData[2]->size;	// (int) size
+				}
+				else
+				{
+					$sizeOfField = 16;
+				}
+				
+				if (isset($ccFieldData[2]->showPassword))
+				{
+					$showPassword = $ccFieldData[2]->showPassword;
+				}
+				else
+				{
+					$showPassword = false;
+				}
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $fieldData, $sizeOfField, 32, $showPassword);
+				
+				unset($sizeOfField, $showPassword);
+
+				break;
+			}
+			case 'cc_file_upload_field':
+			{	
+				$fieldObject = &new CC_Multiple_File_Upload_Field($fieldName, $displayName, $required, APPLICATION_PATH . 'uploads/', $fieldData, false, 'CC_File_Upload_Field', false, 1000000000);
+
+				break;
+			}
+			case 'cc_image_upload_field':
+			{	
+				$fieldObject = &new CC_Multiple_File_Upload_Field($fieldName, $displayName, $required, APPLICATION_PATH . 'uploads/', $fieldData, false, 'CC_Image_Upload_Field', false, 1000000000);
+
+				break;
+			}
+			case 'cc_multiple_file_upload_field':
+			{	
+				// Minimum Number of Fields
+				if (!isset($ccFieldData[2]->minFields))
+				{
+					$minFields = 1;
+				}
+				else
+				{
+					$minFields = $ccFieldData[2]->minFields;
+				}
+
+				// File Upload Field class
+				if (!isset($ccFieldData[2]->fieldClass))
+				{
+					$fieldClass = 'CC_File_Upload_Field';
+				}
+				else
+				{
+					$fieldClass = $ccFieldData[2]->fieldClass;
+				}
+
+				// Allow 'add file' button
+				if (isset($ccFieldData[2]->showAdd))
+				{
+					if ($ccFieldData[2]->showAdd == 'true' || $ccFieldData[2]->showAdd == 1)
+					{
+						$showAdd = true;
+					}
+					else
+					{
+						$showAdd = false;
+					}
+				}
+				else
+				{
+					$showAdd = false;
+				}
+
+				// Path to uploads
+				if (isset($ccFieldData[2]->uploadPath))
+				{
+					$uploadPath = $ccFieldData[2]->uploadPath;
+				}
+				else
+				{
+					$uploadPath = APPLICATION_PATH . 'uploads/';
+				}
+
+				
+				$fieldObject = &new $fieldType($fieldName, $displayName, $required, $uploadPath, $fieldData, $minFields, $fieldClass, $showAdd, 1000000000);
+	
+				unset($minFields);
+				unset($fieldClass);
+				unset($showAdd);
+
+				break;
+			}
+			default:
+			{
+				$fieldObject = &$this->createOtherFieldObject($fieldName, $fieldType, $fieldData, $displayName, $ccFieldData);
+				
+				if ($fieldObject == false)
+				{
+					$fieldObject = &new CC_Text_Field($fieldName, $displayName, $required, $fieldData, 32, 128);
+				}
+
+				break;
+			}
+		}
+		
+		if (!$fieldObject->isReadOnly())
+		{
+			$fieldObject->setReadOnly(!$this->editable);
+		}
+		
+		// set the summary label, if it exists
+		if (isset($ccFieldData[2]->summaryLabel))
+		{
+			$fieldObject->setSummaryLabel($ccFieldData[2]->summaryLabel);
+		}
+		
+		return $fieldObject;
+	}
+
+
+	//-------------------------------------------------------------------
+	// METHOD: createOtherFieldObject()
+	//-------------------------------------------------------------------
+
+
+	/** If you want to use custom (extended) fields created by a CC_Record object, you will need to also extend CC_Record, and override this method. This method will be where you define how these other fields are created, and will ultimately return the new field.
+	  *
+	  * @access public
+	  * @param string $fieldName The name of the field to create.
+	  * @param string $fieldType The type of N2O field to create.
+	  * @param string $fieldData The data to fill the field with upon creation.
+	  * @param string $displayName The field's text label.
+	  * @param string $ccFieldData Other field parameters from the ARGS column in CC_FIELDS.
+	  * @return CC_Field The field object (in subclasses that override this method)
+	  */
+
+	function &createOtherFieldObject($fieldName, $fieldType, $fieldData, $displayName, $ccFieldData)
+	{
+		return false;
+	}
+
+
+
+	//-------------------------------------------------------------------
+	// METHOD: saveAndDuplicateRecord()
+	//-------------------------------------------------------------------
+	
+	/** This method saves the current record and then duplicates all the values into a new record. After running this, your record's id WILL change to the new id.
+	  *
+	  * @access public
+	  * @return int The id of the newly created record.
+	  *
+	  */
+
+	function saveAndDuplicateRecord()
+	{
+		$application = &$_SESSION['application'];
+		
+		$db = &$application->db;
+
+		if (strcmp($this->id, '-1'))
+		{
+			$query = $this->buildInsertQuery();
+			$db->doInsert($query);
+		}
+		else
+		{
+			$query = $this->buildUpdateQuery();
+			$db->doUpdate($query);
+		}
+		
+		$query = $this->buildInsertQuery();
+		
+		$newRecordId = $db->doInsert($query);
+		
+		$this->id = $newRecordId;
+		
+		return $this->id;
+	}
+
 
 	//-------------------------------------------------------------------
 	// METHOD: setId
@@ -1268,7 +1668,6 @@ class CC_Record extends CC_Component
 		for ($i = 0; $i < $size; $i++)
 		{
 			$this->fields[$keys[$i]]->setRecord($this);
-			$this->fields[$keys[$i]]->register($window);
 		}
 		
 		unset($keys, $size);

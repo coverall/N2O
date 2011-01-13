@@ -47,7 +47,7 @@ function applicationErrorHandler($errno, $errmsg, $filename, $linenum, $vars)
 	if ($logUserErrors)
 	{
 		// write to the virtualhost error log
-		error_log('[' . $_SERVER['REMOTE_ADDR'] . '] ' . $verboseError, 0);
+		error_log('[client ' . $_SERVER['REMOTE_ADDR'] . '] ' . $verboseError, 0);
 	}	
 
 	switch ($errno)

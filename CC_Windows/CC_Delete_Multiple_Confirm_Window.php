@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Delete_Multiple_Confirm_Window.php,v 1.10 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Delete_Multiple_Confirm_Window.php,v 1.9 2004/08/19 04:25:26 patrick Exp $
 if ($application->hasArgument('displayNameForDeleteMultiple'))
 {
 	$displayName = $application->getArgument('displayNameForDeleteMultiple');
@@ -17,22 +17,22 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 
 	// ------------------------------------------------------------------
 	// (1) Create our buttons
 	//
 	
-	$cancelButton = new CC_Cancel_Button();
+	$cancelButton = &new CC_Cancel_Button();
 	$cancelButton->setFieldUpdater(false);
 	$cancelButton->setValidateOnClick(false);
 	
-	$deleteButton = new CC_Button("Delete", false);
+	$deleteButton = &new CC_Button("Delete", false);
 	$deleteButton->setFieldUpdater(false);
 	$deleteButton->setValidateOnClick(false);
 	
@@ -43,8 +43,8 @@ if (!$application->isWindowRegistered($application->getAction()))
 
 	// (!) what is $windows? -PG	
 	
-	$deleteHandler = new CC_Delete_Multiple_Records_Handler($application->getArgument('tableNameForDeleteMultiple'), $application->getObject('recordsForDeleteMultiple'));
-	$unregisterWindowHandler = new CC_Unregister_Window_Handler();
+	$deleteHandler = &new CC_Delete_Multiple_Records_Handler($application->getArgument('tableNameForDeleteMultiple'), $application->getObject('recordsForDeleteMultiple'));
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 	
 	
 	// ------------------------------------------------------------------

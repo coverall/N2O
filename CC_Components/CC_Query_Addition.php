@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Query_Addition.php,v 1.5 2008/06/06 03:38:12 patrick Exp $
+// $Id: CC_Query_Addition.php,v 1.3 2003/08/29 04:03:23 patrick Exp $
 //=======================================================================
 // CLASS: CC_Query_Addition
 //=======================================================================
@@ -15,22 +15,6 @@
 class CC_Query_Addition extends CC_Component
 {
 	//-------------------------------------------------------------------
-	// METHOD: saveCookie()
-	//-------------------------------------------------------------------
-
-	/**
-	 * This method saves a cookie! Sublasses override this appropriately.
-	 *
-	 * @access public
-	 */
-
-	function saveCookie()
-	{
-		return '';
-	}
-
-
-	//-------------------------------------------------------------------
 	// METHOD: getQueryAddition()
 	//-------------------------------------------------------------------
 
@@ -42,7 +26,7 @@ class CC_Query_Addition extends CC_Component
 
 	function getQueryAddition()
 	{
-		return;
+		return '';
 	}
 
 

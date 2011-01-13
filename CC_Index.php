@@ -1,5 +1,9 @@
 <?php
-// $Id: CC_Index.php,v 1.99 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Index.php,v 1.87 2005/02/14 01:09:37 patrick Exp $
+
+	//--- Software Version Info -----------------------------------------
+	
+	define ('CURRENT_VERSION', $version_number);	// current version of the software
 
 	//--- Path Information ----------------------------------------------
 	
@@ -15,22 +19,14 @@
 	//--- Require the CC_Framework files --------------------------------
 
 	require_once(CC_FRAMEWORK_PATH . '/_RequireOnceFiles.php');
-	if (!isset($require_admin) || $require_admin != false)
-	{
-		require_once(CC_FRAMEWORK_PATH . '/_RequireOnceAdminFiles.php');
-	}
+	//require_once(APPLICATION_PATH . '_n2o_extras.php');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'required/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'handlers/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'filters/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'fields/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'contentproviders/');
-	
-	// Provide a hook so applications can require other files...
-	if (function_exists('_n2o_init'))
-	{
-		_n2o_init();
-	}
-	
+
+		
 	//--- Session Starting ----------------------------------------------
 	
 	header('Cache-control: private, must-revalidate, max-age=0');
@@ -65,16 +61,11 @@
 	}
 	
 	session_set_cookie_params($session_expiry, (isset($cookiePath) ? $cookiePath : BASE_URL), (isset($cookieDomain) ? $cookieDomain : ''));
-	session_cache_expire($session_expiry * 60);
 	session_start();
 	
 	if (isset($_SESSION['application']))
 	{
 		$application = &$_SESSION['application'];
-		if ($session_expiry)
-		{
-			setcookie(session_name(), session_id(), time() + $session_expiry, (isset($cookiePath) ? $cookiePath : BASE_URL), (isset($cookieDomain) ? $cookieDomain : ''));
-		}
 		
 		// watch for action resetting
 		if (!empty($_GET['resetAction']))
@@ -92,7 +83,7 @@
 		{
 			$application_class = 'CC_Application';
 		}
-		$_SESSION['application'] = new $application_class();
+		$_SESSION['application'] = &new $application_class();
 		$application = &$_SESSION['application'];
 		
 		$application->setAction($start_point);
@@ -112,13 +103,10 @@
 		$jmpAction = $_REQUEST['jmp'];
 		$application->jumpTo($jmpAction);
 	}
-	else if (!empty($_REQUEST['method']))
+	else if (isset($_REQUEST['err']))
 	{
-		// Break away from the current processing to handle AJAX requests...
-		
-		$application->callMethod();
-		
-		exit;
+		echo $application->errorManager->displayApplicationErrors();
+		exit(0);
 	}
 	// process only the first button click if multiple clicks have been encountered and 
 	else if (!$newSession) // (!isset($_REQUEST['clickCounter']) || !($_REQUEST['clickCounter'] > 1))
@@ -135,20 +123,23 @@
 		// If the back button was clicked, the application->getAction() will
 		// be out of date, so we should use the pageId instead.
 				
-		if (!empty($_REQUEST['pageId']))
+		if (!$newSession)
 		{
-			// pageId is the window where a button was clicked.
-			$pageId = URLValueDecode($_REQUEST['pageId']);
-			if (!empty($_REQUEST['pageIdKey']) && $_REQUEST['pageIdKey'])
+			if (!empty($_REQUEST['pageId']))
 			{
-				$pageIdKey = URLValueDecode($_REQUEST['pageIdKey']);
-			}
-			else
-			{
-				$pageIdKey = '';
-			}
+				// pageId is the window where a button was clicked.
+				$pageId = URLValueDecode($_REQUEST['pageId']);
+				if (!empty($_REQUEST['pageIdKey']) && $_REQUEST['pageIdKey'])
+				{
+					$pageIdKey = URLValueDecode($_REQUEST['pageIdKey']);
+				}
+				else
+				{
+					$pageIdKey = '';
+				}
 
-			$application->setAction($pageId, $pageIdKey);
+				$application->setAction($pageId, $pageIdKey);
+			}
 		}
 
 		// Check to see which button was clicked and if the user erroneously
@@ -163,6 +154,7 @@
 		{
 			// if no pageId exists, use the current action value as the current page.
 			$window = &$application->getWindow($application->getAction(), $application->getActionKey());
+			$fieldsUpdated = false;
 
 			$size = sizeof($window->buttons);
 
@@ -177,7 +169,7 @@
 					break;
 				}
 			}
-
+			
 			unset($size);
 
 			if ($buttonFound)
@@ -200,9 +192,9 @@
 					header('Location: ' . $application->getFormAction());
 					exit();
 				}*/
-
+								
 				// Update the fields from the form if appropriate
-				if ($button->isFieldUpdater())
+				if ($button->isFieldUpdater() && !$fieldsUpdated)
 				{
 					$window->updateFieldsFromPage($button->validateOnClick(), $button->fieldsToValidateArray);
 				}
@@ -216,9 +208,10 @@
 				}
 	
 				// Update the fields from the database if appropriate
-				if ($window && $button->isFieldUpdater())
+				if ($button->isFieldUpdater() && !$fieldsUpdated)
 				{
 					$window->updateFieldsFromDatabase($button->fieldsToValidateArray);
+					$fieldsUpdated = true;
 				}
 				
 				if ($linkityLack)
@@ -258,7 +251,7 @@
 			}
 		}
 		
-		unset($newSession, $linkityLack, $buttonFound, $button, $window);
+		unset($newSession, $linkityLack, $buttonFound, $button, $fieldsUpdated, $window);
 	}
 	else
 	{
@@ -271,9 +264,19 @@
 	include($headerFile);
 	
 	$application->getFormOpen();
-	
+
 	include($application->getActionURL() . '.php');
 	
+	if (DEBUG)
+	{
+		$debugLogoutButton = &new CC_Logout_Button();
+		$logoutWindow = &$application->getCurrentWindow();
+		$logoutWindow->registerComponent($debugLogoutButton);
+		echo $debugLogoutButton->getHTML();
+		unset($logoutWindow);
+		unset($debugLogoutButton);
+	}
+
 	$application->getFormClose();
 
 	include($footerFile);

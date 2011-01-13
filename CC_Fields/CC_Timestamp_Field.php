@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Timestamp_Field.php,v 1.6 2005/05/11 00:31:52 patrick Exp $
+// $Id: CC_Timestamp_Field.php,v 1.5 2003/11/26 19:45:18 mike Exp $
 //=======================================================================
 // CLASS: CC_Timestamp_Field
 //=======================================================================
@@ -13,8 +13,58 @@
  * @copyright Copyright &copy; 2003, Coverall Crew
  */
 
-class CC_Timestamp_Field extends CC_DateTime_Field
+class CC_Timestamp_Field extends CC_Field
 {
+	/**
+     * The value for the month.
+     *
+     * @var int $monthValue
+     * @access private
+     */	
+
+	var $monthValue;
+	
+	
+	/**
+     * The value for the day of the month.
+     *
+     * @var int $dateValue
+     * @access private
+     */	
+
+	var $dateValue;
+
+
+	/**
+     * The value for the year.
+     *
+     * @var int $yearValue
+     * @access private
+     */	
+
+	var $yearValue;	
+
+
+	/**
+     * The value for the hour.
+     *
+     * @var int $hourValue
+     * @access private
+     */		
+
+	var $hourValue;
+
+
+	/**
+     * The value for the minute.
+     *
+     * @var int $minuteValue
+     * @access private
+     */		
+
+	var $minuteValue;
+	
+
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Timestamp_Field
 	//-------------------------------------------------------------------
@@ -32,33 +82,271 @@ class CC_Timestamp_Field extends CC_DateTime_Field
 	 * @param int $defaultMinuteValue The initial minute to use. Expected values are from 0-59.
 	 */
 
-	function CC_Timestamp_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $defaultHourValue = 12, $defaultMinuteValue = 0)
+	function CC_Timestamp_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $defaultHourValue = -1, $defaultMinuteValue = -1)
 	{
-		$this->CC_DateTime_Field($name, $label, $required, $defaultMonthValue, $defaultDateValue, $defaultYearValue, $defaultHourValue, $defaultMinuteValue);
+		$this->CC_Field($name, $label, $required);
 		
 		$this->setAddToDatabase(false);
 		$this->setUpdateFromDatabase(true);
-		$this->setReadOnly(true);
+		
+		$today = getdate();
+		
+		if ($defaultMonthValue == -1)
+		{
+			$defaultMonthValue = $today['mon'];				
+		}
+		
+		if ($defaultDateValue == -1)
+		{
+			$defaultDateValue = $today['mday']; 	
+		}
+		
+		if ($defaultYearValue == -1)
+		{
+			$defaultYearValue = $today['year'];
+		}
+		
+		if ($defaultHourValue == -1)
+		{
+			$defaultHourValue = 12;
+		}
+		
+		if ($defaultMinuteValue == -1)
+		{
+			$defaultMinuteValue = 0;
+		}
+		
+		$this->setMonthValue($defaultMonthValue);
+		
+		$this->setDateValue($defaultDateValue);
+
+		$this->setYearValue($defaultYearValue);
+		
+		$this->setHourValue($defaultHourValue);
+		
+		$this->setMinuteValue($defaultMinuteValue);
 	}
-
+		
 
 	//-------------------------------------------------------------------
-	// METHOD: setReadOnly
+	// METHOD: getViewHTML
 	//-------------------------------------------------------------------
 
-	/**
-     * Sets whether or not the field is read-only, or uneditable.
-     *
-     * @access public
-     * @param bool $fieldReadOnly Whether or not the field is editable.
-     * @see isReadOnly()
-     */	
+	/** 
+	 * This method returns HTML for the month, day, year, hour and minutes CC_SelectList_Fields (in the form September 9, 1974, 10:34am) The values cannot be edited. 
+	 *
+	 * @access public
+	 * @return string The HTML for the field.
+	 */
 
-	function setReadOnly($readonly)
+	function getViewHTML()
 	{
-		parent::setReadOnly(true);
+		return date("F d, Y, g:ia", convertMysqlTimestampToPHPTimestamp($this->getValue()));
 	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: getEditHTML
+	//-------------------------------------------------------------------
 
+	/** 
+	 * This method returns HTML for the month, day, year, hour and minutes CC_SelectList_Fields (in the form September 9, 1974, 10:34am) The values cannot be edited. 
+	 *
+	 * @access public
+	 * @return string The HTML for the field.
+	 */
+
+	function getEditHTML()
+	{
+		return $this->getViewHTML();
+	}
+	
+		
+	//-------------------------------------------------------------------
+	// METHOD: getMonthValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method returns the field's month value.
+	 *
+	 * @access public
+	 * @return int A number from 1-12, depending on the month.
+	 */
+
+	function getMonthValue()
+	{
+		return $this->monthValue;
+	}
+	
+
+	//-------------------------------------------------------------------
+	// METHOD: getDateValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method returns the field's day value.
+	 *
+	 * @access public
+	 * @return int A number from 1-31, depending on the day.
+	 */
+
+	function getDateValue()
+	{
+		return $this->dateValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: getYearValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method returns the field's year value.
+	 *
+	 * @access public
+	 * @return int A number representing a valid year.
+	 */
+
+	function getYearValue()
+	{
+		return $this->yearValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: getHourValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method returns the field's hour value.
+	 *
+	 * @access public
+	 * @return int A number from 0-23, depending on the hour.
+	 */
+
+	function getHourValue()
+	{
+		return $this->hourValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: getMinuteValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method returns the field's minutes value.
+	 *
+	 * @access public
+	 * @return int A number from 0-59, depending on the minutes.
+	 */
+
+	function getMinuteValue()
+	{
+		return $this->minuteValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: setMonthValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method sets the field's month value.
+	 *
+	 * @access public
+	 * @param int A number from 1-12 for the month.
+	 */
+
+	function setMonthValue($monthValue)
+	{
+		return $this->monthValue = $monthValue;
+	}
+	
+
+	//-------------------------------------------------------------------
+	// METHOD: setDateValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method sets the field's date value.
+	 *
+	 * @access public
+	 * @param int A number from 1-31 for the date.
+	 */
+
+	function setDateValue($dateValue)
+	{
+		return $this->dateValue = $dateValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: setYearValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method sets the field's date value.
+	 *
+	 * @access public
+	 * @param int A number from 1-31 for the date.
+	 */
+
+	function setYearValue($yearValue)
+	{
+		return $this->yearValue = $yearValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: setHourValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method sets the field's hour value.
+	 *
+	 * @access public
+	 * @param int A number from 0-23 for the hour.
+	 */
+
+	function setHourValue($hourValue)
+	{
+		return $this->hourValue = $hourValue;
+	}
+	
+	
+	//-------------------------------------------------------------------
+	// METHOD: setMinuteValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * This method sets the field's minutes value.
+	 *
+	 * @access public
+	 * @param int A number from 0-59 for the minutes.
+	 */
+
+	function setMinuteValue($minuteValue)
+	{
+		return $this->minuteValue = $minuteValue;
+	}
+	
+		
+	//-------------------------------------------------------------------
+	// METHOD: getValue
+	//-------------------------------------------------------------------
+
+	/** 
+	 * The method returns the field's value as a string of the form YYYYMMDDHHMM00. 
+	 *
+	 * @access public
+	 * @return string A string of the form YYYYMMDDHHMM00 representing a timestamp.
+	 */
+
+	function getValue()
+	{
+		return $this->getYearValue() . zeroPad($this->getMonthValue()) . zeroPad($this->getDateValue()) . zeroPad($this->getHourValue()) . zeroPad($this->getMinuteValue()) . "00";
+	}
 }
 
 ?>

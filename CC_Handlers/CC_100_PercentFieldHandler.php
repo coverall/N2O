@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_100_PercentFieldHandler.php,v 1.5 2007/04/05 21:24:51 patrick Exp $
+// $Id: CC_100_PercentFieldHandler.php,v 1.4 2003/07/07 05:13:51 jamie Exp $
 //=======================================================================
 
 /**
@@ -24,6 +24,15 @@ class CC_100_PercentFieldHandler extends CC_Action_Handler
 	 
 	var $field;
 	
+	//-------------------------------------------------------------------
+	// CONSTRUCTOR: CC_100_PercentFieldHandler
+	//-------------------------------------------------------------------
+
+	function CC_100_PercentFieldHandler()
+	{
+		$this->CC_Action_Handler();
+	}
+
 
 	//-------------------------------------------------------------------
 	// METHOD: setField()

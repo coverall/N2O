@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_ISO_Country_Field.php,v 1.14 2007/01/07 19:39:28 mike Exp $
+// $Id: CC_ISO_Country_Field.php,v 1.12 2005/02/14 08:58:59 jamie Exp $
 //=======================================================================
 // CLASS: CC_ISO_Country_Field
 //=======================================================================
@@ -29,18 +29,19 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 	 * @param string $defaultValue The value the field should contain before user's submit input. The field is set to '-Select Country-' by default.
 	 */
 	 
-	function CC_ISO_Country_Field($name, $label, $required = false, $defaultValue = '', $unselectedValue = ' - Select - ', $theOptions = null)
+	function CC_ISO_Country_Field($name, $label, $required = false, $defaultValue = '')
 	{
 		global $application;
 		
 		switch ($application->getLanguage())
 		{	
 			case 'French':
+			{				
+				$unselectedValue = '- S&eacute;l&eacute;ctionnez un Pays -';
+			}
+			default:
 			{
-				if ($unselectedValue == ' - Select - ')
-				{
-					$unselectedValue = '- S&eacute;l&eacute;ctionnez un Pays -';
-				}
+				$unselectedValue = '- Select Country -';
 			}
 		}
 
@@ -148,6 +149,7 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 				$countries[] = array('GP', 'Guadeloupe');
 				$countries[] = array('GQ', 'Equatorial Guinea');
 				$countries[] = array('GR', 'Greece');
+				$countries[] = array('GS', 'South Georgia and the South Sandwich Islands');
 				$countries[] = array('GT', 'Guatemala');
 				$countries[] = array('GU', 'Guam');
 				$countries[] = array('GW', 'Guinea-Bissau');
@@ -176,12 +178,12 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 				$countries[] = array('KI', 'Kiribati');
 				$countries[] = array('KM', 'Comoros');
 				$countries[] = array('KN', 'St. Kitts and Nevis');
-				$countries[] = array('KP', 'North Korea');
-				$countries[] = array('KR', 'South Korea');
+				$countries[] = array('KP', 'Korea, Democratic People\'s Republic of');
+				$countries[] = array('KR', 'Korea, Republic of');
 				$countries[] = array('KW', 'Kuwait');
 				$countries[] = array('KY', 'Cayman Islands');
 				$countries[] = array('KZ', 'Kazakhstan');
-				$countries[] = array('LA', 'Laos');
+				$countries[] = array('LA', 'Lao People\'s Democratic Republic');
 				$countries[] = array('LB', 'Lebanon');
 				$countries[] = array('LC', 'Saint Lucia');
 				$countries[] = array('LI', 'Liechtenstein');
@@ -420,11 +422,11 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 				$countries[] = array('KZ', 'Kazakhstan');
 				$countries[] = array('KE', 'Kenya');
 				$countries[] = array('KI', 'Kiribati');
-				$countries[] = array('KP', 'North Korea');
-				$countries[] = array('KR', 'South Korea');
+				$countries[] = array('KP', 'Korea, Democratic People\'s Republic of');
+				$countries[] = array('KR', 'Korea, Republic of');
 				$countries[] = array('KW', 'Kuwait');
 				$countries[] = array('KG', 'Kyrgyzstan');
-				$countries[] = array('LA', 'Laos');
+				$countries[] = array('LA', 'Lao People\'s Democratic Republic');
 				$countries[] = array('LV', 'Latvia');
 				$countries[] = array('LB', 'Lebanon');
 				$countries[] = array('LS', 'Lesotho');
@@ -499,6 +501,7 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 				$countries[] = array('SB', 'Solomon Islands');
 				$countries[] = array('SO', 'Somalia');
 				$countries[] = array('ZA', 'South Africa');
+				$countries[] = array('GS', 'South Georgia and the South Sandwich Islands');
 				$countries[] = array('ES', 'Spain');
 				$countries[] = array('LK', 'Sri Lanka');
 				$countries[] = array('SH', 'St. Helena');
@@ -529,7 +532,7 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 				$countries[] = array('UA', 'Ukraine');
 				$countries[] = array('AE', 'United Arab Emirates');
 				$countries[] = array('GB', 'United Kingdom (Great Britain)');
-				$countries[] = array('UM', 'US Minor Outlying Islands');
+				$countries[] = array('UM', 'United States Minor Outlying Islands');
 				$countries[] = array('UY', 'Uruguay');
 				$countries[] = array('UZ', 'Uzbekistan');
 				$countries[] = array('VU', 'Vanuatu');
@@ -550,6 +553,5 @@ class CC_ISO_Country_Field extends CC_SelectList_Field
 	
 		return $countries;
 	}
-
 }
 ?>

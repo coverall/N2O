@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Expiry_Date_Field.php,v 1.23 2009/09/11 01:23:03 patrick Exp $
+// $Id: CC_Expiry_Date_Field.php,v 1.18 2004/04/14 17:39:39 patrick Exp $
 //=======================================================================
 // CLASS: CC_Expiry_Date_Field
 //=======================================================================
@@ -35,7 +35,7 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 	 * @param int $endYear The end year in the year select list's range.	
 	 */
 
-	function CC_Expiry_Date_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = 1, $defaultYearValue = -1, $startYear = 2007, $endYear = 2012)
+	function CC_Expiry_Date_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = 1, $defaultYearValue = -1, $startYear = 2004, $endYear = 2012)
 	{
 		$today = getdate(strtotime('today +1 month'));
 
@@ -109,7 +109,7 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 
 	function getEditHTML()
 	{
-		return $this->getMonthHTML() . ' ' . $this->getYearHTML() . '<input type="hidden" name="' . $this->dateField->getRequestArrayName() . '" value="01">';
+		return $this->getMonthHTML() . ' ' . $this->getYearHTML();
 	}
 
 
@@ -159,34 +159,6 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 		}
 
 		return checkdate($this->getMonthValue(), $this->getDateValue(), $this->getYearValue());
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		if (!isset($args->startYear))
-		{
-			$today = getdate();
-	
-			$args->startYear = $today['year'];
-		}
-		
-		$field = &parent::getInstance($className, $name, $label, $value, $args, $required);
-		$field->setAllowBlankValue(false);
-		
-		return $field;
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Insert_Record_Handler.php,v 1.20 2008/08/30 20:02:01 jamie Exp $
+// $Id: CC_Insert_Record_Handler.php,v 1.18 2004/08/25 03:15:22 patrick Exp $
 //=======================================================================
 
 /**
@@ -69,7 +69,7 @@ class CC_Insert_Record_Handler extends CC_Action_Handler
 
 	function CC_Insert_Record_Handler(&$recordToUpdate, $insertAction = '', $unregisterWindow = true)
 	{	
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		$this->recordToUpdate = &$recordToUpdate;
 		
@@ -106,15 +106,14 @@ class CC_Insert_Record_Handler extends CC_Action_Handler
 	{
 		if ($multipleClick === false)
 		{
-			global $application;
+			$application = &$_SESSION['application'];
 			
 			$this->insertedRecordId = $application->db->doInsert($this->recordToUpdate->buildInsertQuery());
 			
 			if (PEAR::isError($this->insertedRecordId))
 			{
-				$window = &$application->getCurrentWindow();
 				$window->setErrorMessage('Could not add record. (' . $this->insertedRecordId->getMessage() . ')');
-				error_log('CC_Insert_Record_Handler: Could not add record. (' . $this->insertedRecordId->getMessage() . ')');
+				
 				return false;
 			}
 			else

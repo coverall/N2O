@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Delete_Ordered_Confirm_Window.php,v 1.13 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Delete_Ordered_Confirm_Window.php,v 1.11 2004/08/19 04:25:26 patrick Exp $
 if ($application->hasArgument('displayNameForDeleteOrdered'))
 {
 	$displayName = $application->getArgument('displayNameForDeleteOrdered');
@@ -17,11 +17,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 	$application->registerWindow($window);
 
@@ -29,11 +29,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// ------------------------------------------------------------------
 	// (1) Create our buttons
 	//
-	$cancelButton = new CC_Cancel_Button();
+	$cancelButton = &new CC_Cancel_Button();
 	$cancelButton->setFieldUpdater(false);
 	$cancelButton->setValidateOnClick(false);
 	
-	$deleteButton = new CC_Button("Delete", false);
+	$deleteButton = &new CC_Button("Delete", false);
 	$deleteButton->setFieldUpdater(false);
 	$deleteButton->setValidateOnClick(false);
 	
@@ -41,8 +41,8 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// ------------------------------------------------------------------
 	// (2) Create our handlers
 	//
-	$deleteHandler = new CC_Delete_Ordered_Record_Handler($application->getArgument('tableNameForDelete'), $application->getArgument('deleteRecordId'),$application->getArgument('deleteSortId'));
-	$unregisterWindowHandler = new CC_Unregister_Window_Handler();
+	$deleteHandler = &new CC_Delete_Ordered_Record_Handler($application->getArgument('tableNameForDelete'), $application->getArgument('deleteRecordId'),$application->getArgument('deleteSortId'));
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 	
 	
 	// ------------------------------------------------------------------
@@ -56,7 +56,7 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// ------------------------------------------------------------------
 	// (4) Register the CC_Record component with the application
 	//
-	$defaultDeleteRecord = new CC_Record(getFieldListFromTable($application->getArgument('tableNameForDelete'), array('ID')), $application->getArgument('tableNameForDelete'), false, $application->getArgument('deleteRecordId'));
+	$defaultDeleteRecord = &new CC_Record(getFieldListFromTable($application->getArgument('tableNameForDelete'), array(ID)), $application->getArgument('tableNameForDelete'), false, $application->getArgument('deleteRecordId'));
 	
 	
 	// ------------------------------------------------------------------
@@ -82,7 +82,7 @@ else
 	
 	if (!($window->isRecordRegisteredAtIndex($index)))
 	{
-		$defaultDeleteRecord = new CC_Record(getFieldListFromTable($application->getArgument("tableNameForDelete")), $application->getArgument("tableNameForDelete"), false, $application->getArgument("deleteRecordId"));
+		$defaultDeleteRecord = &new CC_Record(getFieldListFromTable($application->getArgument("tableNameForDelete")), $application->getArgument("tableNameForDelete"), false, $application->getArgument("deleteRecordId"));
 	}
 	else
 	{
@@ -121,10 +121,10 @@ else
 <?php 
 
 $keys = array_keys($defaultDeleteRecord->fields);
-
+	
 for ($i = 0; $i < sizeof($keys); $i++)
 {
-	if ($i % 2 == 0)
+	if ($shaded)
 	{
 		$rowColour = $ccRecordOddRowColour;
 	}
@@ -142,6 +142,8 @@ for ($i = 0; $i < sizeof($keys); $i++)
 		echo ' </tr>' . "\n";
 
 		unset($field);
+
+		$shaded = !$shaded;
 	}
 }
 ?>

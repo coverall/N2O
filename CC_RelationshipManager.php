@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_RelationshipManager.php,v 1.34 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_RelationshipManager.php,v 1.25 2004/08/19 04:24:43 patrick Exp $
 //=======================================================================
 // CLASS: CC_RelationshipManager
 //=======================================================================
@@ -144,8 +144,7 @@ class CC_RelationshipManager
 		}
 		else
 		{
-			error_log("N2O could not find the following foreign key: $foreignKey");
-			return false;
+			trigger_error('N2O could not find the following foreign key: $foreignKey', E_USER_ERROR);
 		}
 	}
 	
@@ -195,10 +194,8 @@ class CC_RelationshipManager
 	 * @see CC_Record::createFieldObject()
 	 */
 
-	function &getField($foreignKey, $foreignKeyValue, $displayLabel, $showButton = true, $orderBy = '', $handlerClass = 'CC_Manage_FK_Table_Handler', $additionalWhereClause = '', $unselectedValue = '- Select -', $displayColumn = '', $required = false)
+	function &getField($foreignKey, $foreignKeyValue, $displayLabel, $showButton = true, $orderBy = '', $handlerClass = 'CC_Manage_FK_Table_Handler', $additionalWhereClause = '')
 	{
-		global $application;
-		
 		if (!isset($this->foreignKeysOneToOne[$foreignKey]))
 		{
 			trigger_error('No one-to-one relationship exists for ' . $foreignKey, E_USER_WARNING);
@@ -213,32 +210,11 @@ class CC_RelationshipManager
 				$orderBy = $columnData[1];
 			}
 			
-			if (strlen($columnData[2]) > 0)
-			{
-				$args = $columnData[2];
-				
-				$rawArgs = explode('&', $args);
-				
-				$size = sizeof($rawArgs);
-				
-				for ($i = 0; $i < $size; $i++)
-				{
-					if ($index = strpos($rawArgs[$i], '='))
-					{
-						$key = substr($rawArgs[$i], 0, $index);
-						$value = substr($rawArgs[$i], $index + 1);
-						
-						$$key = $value;
-					}
-				}
-				unset($args, $size);
-			}
-			
 			if (sizeof($columnData) != 0)
 			{
 				$query = 'select ID, ' . $columnData[1] . ' from ' . $columnData[0] . ' ' . $additionalWhereClause . ' order by ' . $orderBy;
 				
-				$result = $application->db->doSelect($query);
+				$result = $this->dbManager->doSelect($query);
 
 				$options = array();
 				
@@ -254,13 +230,13 @@ class CC_RelationshipManager
 					}
 				}
 
-				$field = new CC_Foreign_Key_Field($foreignKey, $displayLabel, $columnData[0], $required, $foreignKeyValue, $unselectedValue, $options, $showButton, $handlerClass);
+				$field = &new CC_Foreign_Key_Field($foreignKey, $displayLabel, $columnData[0], false, $foreignKeyValue, ' - Select - ', $options, $showButton, $handlerClass);
 
 				unset($options);
 			}
 			else
 			{
-				$field = new CC_Foreign_Key_Field($foreignKey, $displayLabel, $columnData[0], $required, $foreignKeyValue, ' - EMPTY - ', array());
+				$field = &new CC_Foreign_Key_Field($foreignKey, $displayLabel, $columnData[0], false, $foreignKeyValue, ' - EMPTY - ', array());
 			}
 			
 			$field->whereClause = $additionalWhereClause;
@@ -288,7 +264,7 @@ class CC_RelationshipManager
 	 * @see CC_Record::createFieldObject()
 	 */
 
-	function &getOneToManyField($foreignKey, $foreignKeyValue, $displayLabel, $showButton = true, $handlerClass = 'CC_Manage_FK_Table_Handler', $whereClause = "", $orderBy = "", $setTable = "", $setTableMainKey = "", $setTableSourceKey = "", $sourceTable = "", $displayColumn = "", $minRequired = "0", $numColumns = "1")
+	function &getOneToManyField($foreignKey, $foreignKeyValue, $displayLabel, $showButton = true, $handlerClass = 'CC_Manage_FK_Table_Handler', $oneToManyFieldClass = 'CC_OneToMany_Field')
 	{
 		if (!isset($this->foreignKeysOneToMany[$foreignKey]))
 		{
@@ -303,9 +279,9 @@ class CC_RelationshipManager
 			{
 				$foreignKeyValue = '-1';
 			}
+	
+			$field = &new $oneToManyFieldClass($foreignKey, $displayLabel, $columnData[0], $columnData[1], $columnData[2], false, $foreignKeyValue);
 			
-			$field = new CC_Foreign_Key_Multiple_Field($foreignKey, $displayLabel, $setTable, $setTableMainKey, $setTableSourceKey, $sourceTable, $displayColumn, $minRequired, $numColumns);
-						
 			return $field;
 		}
 	}
@@ -321,13 +297,12 @@ class CC_RelationshipManager
 	 * @param string $key The column key.
 	 * @param string $relatedTable The related table.
 	 * @param string $displayColumn The column in the related table holding the displayable value.
-	 * @param string $whereClause additional where clause.
 	 *
 	 */
 	
-	function addRelationship($key, $relatedTable, $displayColumn, $whereClause = '')
+	function addRelationship($key, $relatedTable, $displayColumn)
 	{
-		$this->foreignKeysOneToOne[$key] = array($relatedTable, $displayColumn, $whereClause);
+		$this->foreignKeysOneToOne[$key] = array($relatedTable, $displayColumn);
 	}
 
 
@@ -346,9 +321,9 @@ class CC_RelationshipManager
 	 *
 	 */
 	
-	function addManyRelationship($key, $setTable, $setTableMainKey, $setTableSourceKey, $sourceTable, $displayColumn)
+	function addManyRelationship($key, $setTable, $sourceTable, $displayColumn)
 	{
-		$this->foreignKeysOneToMany[$key] = array($setTable, $setTableMainKey, $setTableSourceKey, $sourceTable, $displayColumn);
+		$this->foreignKeysOneToMany[$key] = array($setTable, $sourceTable, $displayColumn);
 	}
 
 

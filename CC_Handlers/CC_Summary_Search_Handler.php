@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Summary_Search_Handler.php,v 1.20 2008/07/23 02:28:35 jamie Exp $
+// $Id: CC_Summary_Search_Handler.php,v 1.15 2004/12/08 02:54:19 mike Exp $
 //=======================================================================
 // CLASS: CC_Summary_Search_Handler
 //=======================================================================
@@ -65,69 +65,37 @@ class CC_Summary_Search_Handler extends CC_Action_Handler
 
 	function process()
 	{
+		$searchValue = $this->_searchField->getValue();
+		
 		$queryAddition = '';
 		$downloadAllQueryAddition = '';
 		
-		$searchFieldString = $this->_searchField->getValue();
-		$searchValues = explode($this->_searchComponent->_orDelimiter, $searchFieldString);
-		
-		if ((sizeof($searchValues) > 0) && !((sizeof($searchValues) == 1) && (strlen($searchValues[0]) == '')))
+		if (strlen($searchValue) > 0)
 		{
 			$application = &getApplication();
 			
 			$like = ($application->db->isPostgres()) ? 'ilike' : 'like';
 			
-			for ($j = 0; $j < sizeof($searchValues); $j++)
+			$queryAddition .= (!stristr($this->_originalQuery, 'where')) ? ' where (' : ' and (';
+			$downloadAllQueryAddition .= (!stristr($this->_originalDownloadAllQuery, 'where')) ? ' where (' : ' and (';
+			
+			$size = sizeof($this->_columns);
+			for ($i = 0; $i < $size; $i++)
 			{
-				$searchValue = $searchValues[$j];
-				
-				if (strlen($searchValue) > 0)
+				$column = $this->_columns[$i];
+
+				$queryAddition .= $column . ' ' . $like  . ' \'%' . $searchValue . '%\'';
+				$downloadAllQueryAddition .= $column . ' ' . $like  . ' \'%' . $searchValue . '%\'';
+
+				if ($i + 1 < sizeof($this->_columns))
 				{
-					//the first section
-					if ($j == 0)
-					{
-						if (sizeof($searchValues) == 1)
-						{
-							$queryAddition .= (!stristr($this->_originalQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where (' : ' and (';
-							$downloadAllQueryAddition .= (!stristr($this->_originalDownloadAllQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where (' : ' and (';
-						}
-						else
-						{
-							$queryAddition .= (!stristr($this->_originalQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where ((' : ' and ((';
-							$downloadAllQueryAddition .= (!stristr($this->_originalDownloadAllQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where ((' : ' and ((';
-						}
-					}
-					else
-					{
-						$queryAddition .= ' or (';
-						$downloadAllQueryAddition .= ' or (';
-					}
-					
-					$size = sizeof($this->_columns);
-					for ($i = 0; $i < $size; $i++)
-					{
-						$column = $this->_columns[$i];
-		
-						$queryAddition .= $column . ' ' . $like  . ' \'%' . $searchValue . '%\'';
-						$downloadAllQueryAddition .= $column . ' ' . $like  . ' \'%' . $searchValue . '%\'';
-		
-						if ($i + 1 < sizeof($this->_columns))
-						{
-							$queryAddition .= ' or ';
-							$downloadAllQueryAddition .= ' or ';
-						}
-					}
-					
-					$queryAddition .= ')';
-					$downloadAllQueryAddition .= ')';
-						
-					if ((sizeof($searchValues) > 1) && ($j == (sizeof($searchValues) - 1)))
-					{
-						$queryAddition .= ')';
-						$downloadAllQueryAddition .= ')';
-					}
+					$queryAddition .= ' or ';
+					$downloadAllQueryAddition .= ' or ';
 				}
 			}
+			
+			$queryAddition .= ')';
+			$downloadAllQueryAddition .= ')';
 			
 			$queryAddition .= $this->getQueryAdditions();
 			$downloadAllQueryAddition .= $this->getQueryAdditions();
@@ -138,16 +106,16 @@ class CC_Summary_Search_Handler extends CC_Action_Handler
 			
 			if (strlen($addition))
 			{
-				$queryAddition .= (!stristr($this->_originalQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where ' : ' and ';
+				$queryAddition .= (!stristr($this->_originalQuery, 'where')) ? ' where ' : ' and ';
 				$queryAddition .= $addition;
 
-				$downloadAllQueryAddition .= (!stristr($this->_originalDownloadAllQuery, 'where') || $this->_searchComponent->_assumeNoWhereClause) ? ' where ' : ' and ';
+				$downloadAllQueryAddition .= (!stristr($this->_originalDownloadAllQuery, 'where')) ? ' where ' : ' and ';
 				$downloadAllQueryAddition .= $addition;
 			}
 		}
 		
 		$this->_summary->query = $this->_originalQuery . $queryAddition;
-		$this->_summary->setDownloadAllQuery($this->_originalDownloadAllQuery . $downloadAllQueryAddition);
+		$this->_summary->downloadAllQuery = $this->_originalDownloadAllQuery . $downloadAllQueryAddition;
 		
 		$this->_summary->update(true);
 	}

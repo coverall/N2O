@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Delete_Ordered_Record_Handler.php,v 1.7 2006/05/19 00:28:37 jamie Exp $
+// $Id: CC_Delete_Ordered_Record_Handler.php,v 1.6 2004/07/31 23:54:08 mike Exp $
 //=======================================================================
 
 /**
@@ -127,10 +127,6 @@ class CC_Delete_Ordered_Record_Handler extends CC_Action_Handler
 				$field = &$deletedRecord->getField($keys[$i]);
 				$field->deleteCleanup();			
 			}
-			
-			error_log('table: ' . $this->tableNameToDelete);
-			error_log('record id: ' . $this->recordIdToDelete);
-			error_log('sort id: ' . $this->deleteSortId);
 			
 			$application->db->doOrderedDelete($this->tableNameToDelete, $this->recordIdToDelete, $this->deleteSortId);
 					

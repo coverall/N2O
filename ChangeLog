@@ -1,1832 +1,3 @@
-2008-03-17 16:13  patrick
-
-	* CC_Fields/CC_AutoSubmit_Select_Field.php: Use <span
-	style="white-space:nowrap">...</span> instead of the old
-	<nobr>...</nobr> way.
-
-2008-03-14 10:04  patrick
-
-	* CC_ErrorManager.php: Remove "client" from the error_log() string.
-
-2008-03-14 10:03  patrick
-
-	* CC_Fields/CC_Credit_Card_Field.php: Remove an error_log() call
-	that was driving me crazy!!
-
-2008-03-14 08:58  patrick
-
-	* CC_Fields/CC_Email_Field.php: Removed some parentheses.
-
-2008-03-14 08:57  patrick
-
-	* CC_Summary.php: Some extra cleanup.
-
-2008-02-07 17:59  patrick
-
-	* CC_Fields/CC_Credit_Card_Field.php: Allow one to force the
-	masking of the number in getEditHTML().
-
-2008-01-08 16:03  patrick
-
-	* CC_Database.php: If $ccDatabaseAlertPrefix is set, prepend it to
-	the email subject. This way we can tag email alerts to correspond
-	to a given application.
-
-2008-01-08 13:42  patrick
-
-	* CC_Database.php: Pass the query into openDatabase() so that if
-	there is a connection error, we'll get that query in the alert
-	email.
-
-2007-09-14 11:01  mike
-
-	* CC_Handlers/CC_Summary_Search_Handler.php: assume no where clause
-	for download all...
-
-2007-09-10 14:24  patrick
-
-	* CC_Components/CC_Summary_Search_Component.php,
-	CC_Handlers/CC_Summary_Search_Handler.php: Added
-	setAssumeNoWhereClause() to CC_Summary_Search_Component. When set
-	to true, it will always use add "where" before the query additions
-	instead of looking to see if the string "where" exists in the
-	query. This will work-around the problem with complex queries that
-	contain subselects which have their own where clauses.
-
-2007-08-01 11:56  patrick
-
-	* CC_Summary.php: Finally fix those damn IE errors!
-
-2007-07-26 22:17  jamie
-
-	* CC_Summary.php: Export timestamp in sortable format in
-	getRawSummary().
-
-2007-07-19 20:36  jamie
-
-	* CC_Fields/: CC_Currency_Field.php, CC_Dollar_Field.php:
-	CC_Currency_Field for other currencies.
-
-2007-07-19 10:11  patrick
-
-	* CC_Application.php: Construct session query string manually
-	instead of relying on SID constant.
-
-2007-07-19 10:09  patrick
-
-	* CC_Handlers/CC_InternalRewriteUrl_Handler.php: SID constant
-	doesn't seem to be set sometimes after using
-	session_regenerate_id().
-
-2007-07-16 11:35  jamie
-
-	* CC_Application.php: Add ability to include an onSubmit handler to
-	the CC_Form using setOnSubmit().
-
-2007-06-06 11:59  mike
-
-	* CC_Fields/CC_SelectList_Field.php: don't return nothing if there
-	is a value for the select list (even though it may not be an item
-	in the options... return the value.
-
-2007-05-17 16:57  mike
-
-	* CC_Window.php: Defer validation of CC_Checkbox associated field.
-
-2007-05-15 10:12  patrick
-
-	* CC_Utilities.php: Update cc_mail() to accept an array of
-	recipients as well as a regular string.
-
-2007-05-12 18:12  mike
-
-	* CC_Fields/CC_RadioButton_Field.php: Create a radio button
-	delimiter, so it's easy to put them veritcal &nbsp; or horizontal
-	<br>
-
-2007-05-01 18:03  jamie
-
-	* CC_Fields/CC_TextArea_Field.php: Maxwords needs to get even if
-	auto-link is off.
-
-2007-04-26 12:02  jamie
-
-	* CC_Fields/CC_Checkbox_Field.php: Added setAssociatedField to
-	checkboxes. Use 1 for Yes, 0 for No.
-
-2007-04-25 13:28  mike
-
-	* CC_Record.php: Added getRecordKey to the Record so you can get
-	the record key without having to call this method through a field.
-
-2007-04-24 15:03  mike
-
-	* CC_Summary.php: get the download all filename.
-
-2007-04-23 17:57  patrick
-
-	* CC_Fields/CC_TextArea_Field.php: Added setMaxWords() method.
-
-2007-04-21 17:06  patrick
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: A little fix in
-	getEditHTML() to rid us of a warning.
-
-2007-04-21 15:11  patrick
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: Add support in
-	getHTML() for id="" using CC_Field's setId().
-
-2007-04-20 17:31  patrick
-
-	* CC_Window.php: Fixed updateFieldsFromPage() such that if a field
-	has associated fields, it defers validation until the end so that
-	we have the updated values for the associated fields before the
-	parent field is validated. No more cockamaney ordering of fields!!
-
-2007-04-20 17:26  patrick
-
-	* CC_Fields/CC_Multiple_Choice_Field.php: Remove two lines of code
-	that didn't need to be there.
-
-2007-04-12 14:33  patrick
-
-	* CC_Fields/CC_SelectList_Field.php: Remove an error_log() line in
-	getInstance().
-
-2007-04-05 14:25  patrick
-
-	* CC_Record.php: Eliminate PHP warning for newer versions of PHP.
-
-2007-04-05 14:24  patrick
-
-	* CC_Handlers/CC_100_PercentFieldHandler.php: Removed useless
-	constructor.
-
-2007-03-21 20:35  patrick
-
-	* CC_Fields/CC_TextArea_Field.php: Fix a bug in getEditHTML().
-
-2007-01-26 14:15  patrick
-
-	* CC_Fields/CC_TextArea_Field.php: Add a class="" to getEditHTML().
-
-2007-01-08 13:08  mike
-
-	* CC_Fields/CC_SelectList_Field.php: don't need debug output! :O
-
-2007-01-07 11:39  mike
-
-	* CC_Fields/CC_ISO_Country_Field.php: Finished (some were missing)
-	the signature of the constructor so the args of the parent object
-	will be used.
-
-2007-01-06 13:39  patrick
-
-	* CC_Fields/CC_Expiry_Date_Field.php: Only set startYear if it's
-	not already specified.
-
-2007-01-06 13:38  patrick
-
-	* CC_Fields/CC_Expiry_Date_Field.php: Start year for expiry date
-	should always be current year.
-
-2006-12-28 13:59  mike
-
-	* CC_Fields/: CC_Dollar_Field.php, CC_FloatNumber_Field.php: Allow
-	negatives.
-
-2006-12-10 16:06  jamie
-
-	* CC_Summary_Filters/CC_Id_Link_Filter.php: Ability to specify a
-	target for the link.
-
-2006-11-23 18:00  patrick
-
-	* CC_Database.php: Cancel that.
-
-2006-11-23 17:57  patrick
-
-	* CC_Database.php: free() the $result in doInsert().
-
-2006-11-23 17:40  patrick
-
-	* CC_Database.php: More fixes.
-
-2006-11-23 17:36  patrick
-
-	* CC_Database.php: Free the prepared statement in
-	doPreparedSelect().
-
-2006-11-23 17:28  patrick
-
-	* CC_Database.php: Fix doPreparedSelect() to return the PEAR_Error
-	object when there's an error instead of false.
-
-2006-11-09 17:01  patrick
-
-	* CC_Index.php: Remove the old $requireAllAdditionalFolders thang.
-
-2006-11-06 15:28  mike
-
-	* CC_Fields/CC_SelectList_Field.php: Set an argument to choose the
-	delimiter.
-
-2006-11-02 10:38  mike
-
-	* CC_RelationshipManager.php: We can now use args to set variables
-	in the getField function of this object, boo-yaa!
-
-2006-11-02 10:36  mike
-
-	* CC_RelationshipManager.php: syntax error.
-
-2006-11-02 10:35  mike
-
-	* CC_RelationshipManager.php: one last try...
-
-2006-11-02 10:32  mike
-
-	* CC_RelationshipManager.php: Trying to set args...
-
-2006-11-02 10:04  mike
-
-	* CC_RelationshipManager.php: Additional where clause when adding
-	relationships.
-
-2006-10-30 18:08  patrick
-
-	* CC_Fields/CC_File_Upload_Field.php: Fixed an infinite loop bug in
-	moveTempFileToUploadsFolder().
-
-2006-10-25 16:05  jamie
-
-	* CC_Fields/CC_Dollar_Field.php: Strip out all non-number and
-	decimal characters.
-
-2006-10-25 16:04  jamie
-
-	* CC_Fields/CC_FloatNumber_Field.php: Strip out all non number and
-	decimal characters.
-
-2006-10-25 14:27  mike
-
-	* CC_Fields/CC_Multiple_File_Upload_Field.php: Find the next file
-	to upload to based on the number of fields we have, not the number
-	of files being uploaded.
-
-2006-10-18 17:53  patrick
-
-	* pngfix.js: Set the width and the height of the fixed image to
-	that of the original.
-
-2006-10-17 10:56  patrick
-
-	* CC_Index.php: Add a hook for applications like events.confreg.com
-	to require additional folders/files...
-	
-	If the function _n2o_init() exists, N2O will load it before
-	starting the application.
-
-2006-09-29 17:10  patrick
-
-	* CC_Application.php: Fixed a JavaScript error in getFormClose()
-	that seems to only be a problem in Firecrap.
-
-2006-09-28 13:25  jamie
-
-	* CC_Handlers/CC_Download_XLS_Summary_Handler.php: Removed double
-	quotes from Excel download filename.
-
-2006-07-23 23:11  jamie
-
-	* CC_Components/CC_Query_Additions/CC_Date_Query_Addition.php:
-	Added Date Query Addition.
-
-2006-07-12 12:01  mike
-
-	* CC_Index.php: Parse error... crap!
-
-2006-07-12 12:00  mike
-
-	* CC_Index.php: Require once variable defined folders to decrease
-	memory usage, boo-yaa!
-
-2006-05-29 12:42  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: Remove some debug
-	output.
-
-2006-05-24 16:23  patrick
-
-	* CC_Database.php: Added a stack trace to the email.
-
-2006-05-18 17:28  jamie
-
-	* CC_Handlers/CC_Delete_Ordered_Record_Handler.php,
-	CC_Summaries/CC_Ordered_Summary.php,
-	CC_Windows/CC_Delete_Ordered_Confirm_Window.php: Fixed the ordered
-	summary so it works.
-
-2006-05-18 11:08  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: Don't display
-	bar-end.png if percent == 0.
-
-2006-05-18 09:28  patrick
-
-	* cc_styles.css, CC_Images/bar-100.gif, CC_Images/bar-empty.gif,
-	CC_Images/bar-end.png, CC_Images/bar-orange.gif,
-	CC_Images/bar-red.gif, CC_Images/bar-yellow.gif,
-	CC_Summary_Filters/CC_Percentage_Filter.php: A long-overdue update
-	to the percentage thingy...
-
-2006-05-17 17:23  patrick
-
-	* CC_Summary_Filters/CC_Month_Filter.php: Waste of space/memory...
-
-2006-05-12 16:37  mike
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: Round to avoid...
-	66.666666666667%
-
-2006-05-09 16:36  patrick
-
-	* CC_Database.php: Get rid of instance variables we don't need to
-	store, and don't try to close the database connection if it's an
-	error!
-
-2006-05-09 16:24  patrick
-
-	* CC_Database.php: Don't close the database connection until the
-	object is serialized.
-
-2006-02-17 18:15  patrick
-
-	* CC_Summary.php, CC_Handlers/CC_Download_ZIP_Summary_Handler.php,
-	CC_Images/cc_summary.excel-tab.png: A few fixes for
-	text-downloading.
-
-2005-12-31 10:31  jamie
-
-	* CC_Summary.php: Problem: GetRawSummary was indexing the
-	LAST_MODIFIED column by name, instead of by number.
-	
-	Solution: Index it by number, so it can be display in the XLS
-	Spreadsheet Writer.
-
-2005-12-09 11:57  jamie
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: More fixes to ensure
-	that the array is maintained as the value.
-
-2005-12-09 11:04  jamie
-
-	* CC_Graph.php: Commited this file be-a-steak.
-
-2005-12-08 19:57  jamie
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: SetValue overriden to
-	ensure that the value is always an array.
-
-2005-12-08 19:56  jamie
-
-	* CC_Graph.php, CC_Pie_Chart.php,
-	CC_Components/CC_MultipleKey_Record.php: Problem:
-	
-	Solution:
-
-2005-12-07 21:19  patrick
-
-	* CC_Summaries/CC_Ordered_Summary.php: Bug fixes.
-
-2005-12-07 10:44  patrick
-
-	* .htaccess: Fixed access to css, js, and htc files.
-
-2005-12-06 18:48  jamie
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: Update the value if
-	no selections are made. Previously it was retaining the old values.
-
-2005-12-06 18:32  jamie
-
-	* CC_Fields/CC_Multiple_SelectList_Field.php: Make sure that value
-	is maintained as an array.
-
-2005-11-28 19:32  patrick
-
-	* CC_Application.php: Make sure document.getElementsByTagName
-	exists (if it doesn't, we're dealing with a browser that isn't
-	DOM1-compliant.
-
-2005-11-28 19:26  patrick
-
-	* CC_Application.php: No more CC_Form reference in Javascript.
-
-2005-11-28 17:47  patrick
-
-	* CC_Fields/CC_RadioButton.php: Fix the javascript.
-
-2005-11-28 17:18  patrick
-
-	* CC_Fields/CC_AutoSubmit_Select_Field.php: Fixed a boo-boo.
-
-2005-11-28 17:15  patrick
-
-	* CC_Fields/: CC_AutoSubmit_Select_Field.php,
-	CC_Checkbox_Field.php, CC_RadioButton.php: Javascript fixes to not
-	be dependent on a form called "CC_Form".
-
-2005-11-16 12:13  jamie
-
-	* CC_Fields/CC_ProvinceState_Field.php (PHP5): Targ it. Starts
-	Farst.
-
-2005-11-16 12:08  jamie
-
-	* CC_Record.php, CC_Fields/CC_ProvinceState_Field.php (PHP5): PHP%
-	Chanrnges for GOAL!
-
-2005-10-06 15:42  patrick
-
-	* cc_styles.css, CC_Components/CC_Folder_Component.php,
-	CC_Components/CC_Image_Folder_Component.php, CC_Images/folder.png:
-	Clean up these components a bit to use styles instead of the
-	archaic HTML way.
-
-2005-10-04 16:10  patrick
-
-	* .htaccess, pngfix.js: Added my pngfix.js to N2O so that anything
-	can easily include it, as N2O uses some nice 24-bit PNGs in
-	CC_Summary and other places...
-	
-	Just throw the following line into your header:
-	
-	<!--[if IE]><script language="JavaScript" type="text/javascript"
-	src="/N2O/pngfix.js"></script><![endif]-->
-	
-	This way, you don't have to add the special style="" thing to every
-	PNG image.
-
-2005-09-29 14:54  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: One more minor fix
-	with 0%.
-
-2005-09-29 14:31  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: Fix for 100%.
-
-2005-09-29 14:25  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: Simplified filter,
-	and added border="0" to the img tags.
-
-2005-09-29 14:14  patrick
-
-	* CC_Components/CC_Summary_Search_Component.php: Make any
-	CC_SelectList_Query_Addition's automatically click on the search
-	button when their value is changed.
-
-2005-09-26 12:44  patrick
-
-	* CC_Window.php: Simplified getButton() slightly.
-
-2005-09-26 12:43  patrick
-
-	* CC_Record.php: Fixed constructor to use doGetRow() instead of
-	doSelect() plus cc_fetch_row(), and also removed duplicate call to
-	setRecord() on the fields in initialize().
-
-2005-09-26 12:41  patrick
-
-	* CC_Button.php: If a button is not clickable, don't allow the
-	click() method to be called.
-
-2005-09-26 12:40  patrick
-
-	* cc_styles.css: width: 100% on ccSummaryControl style.
-
-2005-09-26 12:39  patrick
-
-	* CC_Fields/CC_Text_Field.php: Updated documentation.
-
-2005-09-24 17:21  jamie
-
-	* CC_Fields/CC_ProvinceState_Field.php: Typo. narArray -> naArray.
-
-2005-09-20 17:52  patrick
-
-	* CC_Summary.php: Removed a crude message that got displayed to IE
-	users when you clicked on a row.
-
-2005-09-20 11:32  patrick
-
-	* CC_Summary.php: Don't use getLabel() in getSummaryControlRow()
-	for the Page: thing because the right side (Records Per Page)
-	doesn't. The reason being that you should be able to easily set the
-	style on both sets of text without other styles
-	(ccNotRequiredField) getting in the way.
-
-2005-09-14 16:53  patrick
-
-	* CC_Handlers/CC_Summary_PreviousNext_Handler.php: Forgot to fix
-	the constructor name.
-
-2005-09-14 16:43  patrick
-
-	* CC_Handlers/: CC_Summary_Next_Handler.php,
-	CC_Summary_PreviousNext_Handler.php,
-	CC_Summary_Previous_Handler.php: Rather than have two
-	virtually-identical handlers, lets just have one flexible one.
-
-2005-09-14 16:41  patrick
-
-	* CC_Summary.php: Change the summary control table to not set an
-	explicit width or colour; instead, the respective style in
-	cc_styles.css is used, which can more easily be overridden.
-	
-	Also update the next and previous buttons to use a unified handler.
-
-2005-09-14 16:35  patrick
-
-	* CC_Fields/CC_AutoSubmit_Select_Field.php: Fixed a bug in
-	handleUpdateFromRequest() that was causing the associated button to
-	be click()ed when it was hidden, without checking for a change in
-	value. The biggest effect this bug had was in rendering the
-	CC_Summary last and next page buttons to battle with the jump to
-	page lists.
-
-2005-09-14 16:07  patrick
-
-	* cc_styles.css: Get regular text in ccSummaryHeadings rows, too.
-
-2005-09-14 16:04  patrick
-
-	* .htaccess: Fixed to allow pngfix.htc and cc_styles.css.
-
-2005-09-13 14:02  patrick
-
-	* cc_styles.css: The background-color style takes "transparent"
-	instead of "none".
-
-2005-09-13 13:06  patrick
-
-	* .htaccess, cc_styles.css, CC_Buttons/CC_Sort_Button.php,
-	CC_Components/CC_Summary_Search_Component.php, CC_Images/add.png,
-	CC_Images/cc_summary.delete.png, CC_Images/cc_summary.edit.png,
-	CC_Images/cc_summary.view.png, CC_Images/clear.png,
-	CC_Images/down_arrow.png, CC_Images/go.png,
-	CC_Images/next.inactive.png, CC_Images/next.png,
-	CC_Images/previous.inactive.png, CC_Images/previous.png,
-	CC_Images/refresh.png, CC_Images/search.png,
-	CC_Images/up_arrow.png: Updated the look of things slightly.
-	
-	Also, CC_Summary now uses styles for defining the row colours
-	rather than the now deprecated $ccRecordEvenRowColour and
-	$ccRecordOddRowColour. See the "table.ccSummary tr.even" and
-	"table.ccSummary tr.odd" styles in cc_styles.css. You can override
-	this more easily now in your site stylesheet, and you can also do
-	it on a per-CC_Summary basis by giving the summary a DOM ID
-	($ccSummary->setId('foo')), and then setting a style for #foo
-	tr.even, #foo tr.odd.
-
-2005-09-13 13:00  patrick
-
-	* CC_Database.php: Output an error to the logs if we couldn't
-	connect to the DB.
-
-2005-09-13 12:58  patrick
-
-	* CC_Summary.php: Updated setIdColumn() to also update the
-	sortByColumn, which defaults to "ID". Thanks to James Nedila of
-	Fatport for pointing this out.
-
-2005-07-26 11:57  patrick
-
-	* CC_Fields/CC_ISO_Country_Field.php: Removed "South Georgia and
-	the South Sandwich Islands" since it has no inhabitants
-	(http://www.cia.gov/cia/publications/factbook/geos/sx.html), and
-	also shortened the Koreas to their more commonly used names of
-	"North" and "South" and "Lao People's Democratic Republic" to
-	"Laos".
-
-2005-07-25 14:21  patrick
-
-	* CC_Window.php: getErrorMessage() was placing an opening "<p>" tag
-	after the error message which screws up and invalidates HTML. The
-	removal of this may have some adverse effects initially, but it
-	will all be correctable with styles.
-
-2005-07-25 13:58  patrick
-
-	* CC_Fields/CC_SelectList_Field.php: Deprecated setVisibleValue()
-	-- added setDisplayValue() to match getDisplayValue().
-
-2005-07-19 18:04  patrick
-
-	* CC_Summary.php, cc_styles.css, CC_Buttons/CC_Sort_Button.php:
-	Fixed the styles for ccSummaryHeadings, and removed the redundant
-	style stuff in the <td>'s and in the CC_Sort_Button.
-
-2005-07-15 12:47  patrick
-
-	* CC_Fields/CC_SelectList_Field.php: Improve the $isArray setting
-	in getSelectedIndex() to reduce erroneous warnings.
-
-2005-07-15 12:43  patrick
-
-	* CC_Components/CC_Summary_Search_Component.php,
-	CC_Fields/CC_Safari_Search_Field.php: When Safari is detected, use
-	the Safari search field. It's *so* cool!!
-
-2005-07-15 12:27  patrick
-
-	* CC_Fields/CC_Time_Field.php: Fix getInstance() so that it honours
-	the value no matter what it is.
-
-2005-07-14 17:14  jamie
-
-	* CC_Fields/CC_RadioButton_Field.php: GetInstance sets index to 0
-	by default.
-
-2005-07-13 12:10  jamie
-
-	* CC_Utilities.php: Problem: There was already a $mode variable.
-	
-	Solution: Renamed the file mode to $fileMode :).
-
-2005-07-13 11:59  jamie
-
-	* CC_Utilities.php: Problem: writeFile only used the 'w' mode.
-	
-	Solution: Added support for any writing mode. Default is 'w'.
-
-2005-07-13 10:47  patrick
-
-	* CC_Index.php: When we update the expiry date/time for the session
-	cookie, we also now include the configured session path and domain.
-
-2005-07-12 18:59  patrick
-
-	* CC_Index.php: A fix to update the session expiration on every
-	request.
-	
-	This was accomplished by calling session_cache_expire() and when
-	the session already exists, setcookie(session_name(), session_id(),
-	time() + $session_expiry).
-
-2005-07-12 18:34  jamie
-
-	* CC_Fields/: CC_Foreign_Key_Field.php, CC_SelectList_Field.php:
-	Problem: getViewHTML was not always taking account the unselected
-	value.
-	
-	Solution: getViewHTML is now taking into account the unselected
-	value and returning nothing if there is no selected value.
-
-2005-07-08 15:38  patrick
-
-	* CC_Fields/CC_Time_Field.php: Fixed handleUpdateFromRequest() to
-	work properly. The test to see if the hour field was in the request
-	had a typo.
-
-2005-07-07 15:09  jamie
-
-	* CC_Handlers/CC_Delete_Record_Handler.php: Added support for
-	passing in a custom deleteAction.
-
-2005-07-07 15:07  jamie
-
-	* CC_RelationshipManager.php: Problem: - Select - was being used as
-	the default unselected value bypassing the passed-in value.
-	
-	Solution: removed the hard-coded value and replaced it with the
-	parameter from the constructor.
-
-2005-07-07 14:58  jamie
-
-	* CC_Fields/: CC_PostalCode_Field.php, CC_PostalZipCode_Field.php,
-	CC_ZipCode_Field.php: Added support for country-based validation
-	with the setCountryField method.
-
-2005-07-05 15:23  mike
-
-	* CC_Fields/CC_Dollar_Field.php: Added an id="" to the html tag so
-	this field will work with field->setId('asdf');
-
-2005-07-05 12:17  patrick
-
-	* CC_Fields/CC_Foreign_Key_Field.php: Removed the unnecessary
-	reference to the current window.
-
-2005-06-30 14:20  patrick
-
-	* CC_Fields/CC_SelectList_Field.php: Added documentation of field
-	manager args.
-
-2005-06-30 14:20  patrick
-
-	* CC_Fields/CC_Foreign_Key_Field.php: Add support for
-	unselectedValue= in the field manager. Also added documentation of
-	field manager args.
-
-2005-06-30 11:55  patrick
-
-	* CC_Summary.php: When we display the note about a missing ID
-	column in the query, also include the name of the summary so it's
-	easier to locate.
-
-2005-06-29 13:14  mike
-
-	* CC_Components/CC_MultipleKey_Record.php: Fixed buildInsertQuery
-	to take into account the record keys (and not display them twice).
-
-2005-06-27 15:26  patrick
-
-	* CC_Fields/CC_Password_Field.php: Forgot some ()'s.
-
-2005-06-27 15:18  patrick
-
-	* CC_Fields/CC_Password_Field.php: Override setValue() to be smart
-	enough to not erase the password if the field has a value, an empty
-	value was passed in, and showPassword is false.
-
-2005-06-26 17:01  patrick
-
-	* CC_ErrorManager.php,
-	CC_Components/CC_Summary_Search_Component.php: Rolling back due to
-	accidental checkin. Whoops!
-
-2005-06-26 16:55  patrick
-
-	* CC_ErrorManager.php, CC_Field.php, ChangeLog,
-	CC_Buttons/CC_Text_Button.php,
-	CC_Components/CC_Summary_Search_Component.php,
-	CC_Windows/CC_Add_Record_Window.php,
-	CC_Windows/CC_Edit_Record_Window.php,
-	CC_Windows/CC_View_Record_Window.php: [no log message]
-
-2005-06-26 16:50  patrick
-
-	* CC_Summary.php: Phase out CC_Summary->columnHeaderColour, which
-	was set from the CC_Config variable, $ccTitleBarColour. You can
-	just set the background-color style for "tr.ccSummaryHeadings td".
-	From N2O/cc_styles.css:
-	
-	/* Style for CC_Summary column headings row. */
-	tr.ccSummaryHeadings td {	font-weight: bold;	color:
-	#ffffff;	 background-color: #666666; }
-
-2005-06-26 16:47  patrick
-
-	* CC_Config.php: Get rid of $application_name, $version_number, and
-	the never implemented $show_action_in_url. Also, added the
-	$require_admin variable to include additional classes like
-	CC_Summary.
-
-2005-06-26 16:45  patrick
-
-	* CC_Handlers/CC_Download_XLS_Summary_Handler.php: Quote the
-	filename so it works better for WinIE.
-
-2005-06-26 16:42  patrick
-
-	* CC_Fields/CC_Expiry_Date_Field.php: Make the default start year
-	be 2005. This should probably just get the current year
-	dynamically.
-
-2005-06-26 16:41  patrick
-
-	* CC_Fields/CC_Date_Field.php: Make the default start year be 2000.
-
-2005-06-26 16:40  patrick
-
-	* cc_styles.css: CC_Summary column headings default to a #666666
-	background colour.
-
-2005-06-26 16:39  patrick
-
-	* CC_Window.php: Minor formatting diffs...
-
-2005-06-22 15:15  patrick
-
-	* CC_Fields/CC_Checkbox_Field.php: Removed getLiarValue() -- it was
-	exactly the same as getYesNoValue(), and it was too weird to keep.
-	getLiarValue? Weird.
-
-2005-06-15 12:55  patrick
-
-	* CC_Fields/CC_AutoSubmit_Select_Field.php: Fixd a bug in
-	getEditHTML() that was not calling the correct javascript when the
-	go button was visible and the select list was changed.
-
-2005-06-15 12:36  patrick
-
-	* CC_Window.php: Typo in variable name in
-	updateFieldFromDatabase().
-
-2005-06-15 12:34  patrick
-
-	* CC_Components/CC_MultipleKey_Record.php: It's best if we only
-	check in code that compiles!!
-
-2005-06-15 12:04  patrick
-
-	* CC_Field.php: Removed a debug line in getInstance().
-
-2005-06-14 18:00  mike
-
-	* CC_Application.php, CC_Components/CC_MultipleKey_Record.php:
-	Added clearObject($name) method to CC_Application.
-	
-	Fixed error message for CC_MultipleKey_Record to take into account
-	the multiple keys!
-
-2005-06-14 17:51  jamie
-
-	* CC_Fields/CC_SelectList_Field.php: Problem: Was returning the
-	options array after unsetting it in getViewHTML.
-	
-	Solution: Assigned it to a variable, then unset it.
-
-2005-06-08 13:50  mike
-
-	* CC_Fields/CC_Checkbox_Field.php: Problem: when field is disabled
-	we needed to keep its value.
-	
-	Solution: checked if disabled and if so don't update the value.
-
-2005-06-07 13:29  patrick
-
-	* cc_styles.css, CC_Fields/CC_File_Upload_Field.php,
-	CC_Fields/CC_Multiple_File_Upload_Field.php: Making this field
-	work!
-	
-	Instead of removing the field from the uploadFieldArray when it is
-	deleted, we're just calling resetField() on it.
-
-2005-06-07 13:27  patrick
-
-	* CC_Index.php: Removed a redundant check for $newSession.
-
-2005-06-06 16:10  patrick
-
-	* CC_Fields/CC_Percentage_Field.php: The width of the percentage
-	bar was off by 4 pixels.
-
-2005-06-06 11:48  patrick
-
-	* bin/encodeN2O.sh: Don't delete CC_Database and CC_Utilities after
-	merging so that they can be included in scripts.
-
-2005-06-02 19:47  patrick
-
-	* CC_Summary.php, CC_Handlers/CC_Summary_Num_Rows_Handler.php,
-	CC_Summaries/CC_Safe_Summary.php: Fixed the safe summary to support
-	the not updating if there was already an update in the last two
-	seconds.
-
-2005-06-02 19:43  patrick
-
-	* CC_Window.php: Removed two old, unused lines of code from
-	updateFieldFromPage().
-
-2005-06-02 19:43  patrick
-
-	* CC_Button.php: Removed the contents of setFieldsToUpdate()
-	because it's deprecated and no one uses it.
-
-2005-06-02 18:00  patrick
-
-	* CC_Record.php: Retired saveAndDuplicateRecord() -- it's never
-	used, and not even that useful...
-
-2005-06-02 17:58  patrick
-
-	* CC_Fields/CC_ProvinceState_Field.php: Fixed the province/state
-	first thingy.
-
-2005-06-02 17:51  patrick
-
-	* CC_Fields/CC_ProvinceState_Field.php: Forgot to add support for
-	the abbreviated= argument. Also added documentation for the
-	possible arguments with CC_FieldManager's addField().
-
-2005-06-02 17:18  patrick
-
-	* CC_Application.php: Added some nifty Javascript that fixes all of
-	the stupid browsers (pretty much all of them!) when it comes to
-	pressing enter in a field. Browsers *used* to just submit the form,
-	but now they all seem to also send along the name of the first
-	found button on the form. >:*(
-	
-	The new Javascript assigns an event handler to all of the input
-	fields that detect when the enter key is pressed. When it is
-	pressed, it looks for a default button on the page, and clicks it.
-	If no default button was found ($window->setDefaultButton()), it
-	will just act as it normally would.
-
-2005-06-02 17:11  jamie
-
-	* CC_Fields/: CC_IntegerNumber_Field.php, CC_Password_Field.php:
-	Problem: Missing some args in getInstance for CC_PassworidField
-	(saveAsPlainText) and CC_IntegerNumber_Field(min and max values).)
-	
-	Solution: Added these old school.
-
-2005-06-02 17:08  patrick
-
-	* CC_Window.php: Register the field in registerField() using an
-	index of $field->getRequestArrayName() instead of
-	$field->getName().
-
-2005-06-02 14:01  patrick
-
-	* CC_Fields/: CC_Multiple_SelectList_Field.php,
-	CC_SelectList_Field.php: Numerous optimizations and simplifications
-	of iterative methods.
-	
-	These fields both were both using array_keys() with the options
-	array, but the options array is always numerically indexed, so this
-	was unnecessary.
-
-2005-06-02 13:36  patrick
-
-	* CC_Fields/CC_Percentage_Field.php: To avoid warning messages, we
-	now use isset() instead of array_key_exists() when checking the
-	request array in handleUpdateFromRequest().
-
-2005-06-02 13:34  patrick
-
-	* CC_Fields/CC_Foreign_Key_Field.php: Defer constructing the add
-	button and registering the handler from the constructor to the
-	register() callback method.
-
-2005-06-02 13:30  patrick
-
-	* CC_Summary_Filters/CC_Percentage_Filter.php: You can now specify
-	the width of the filter in the constructor should you want
-	something other than the default.
-
-2005-06-01 20:43  patrick
-
-	* CC_Field.php, CC_Fields/CC_Text_Field.php: Updated documentation
-	for reference for CC_FieldManager's addField() method.
-
-2005-06-01 20:38  patrick
-
-	* CC_FieldManager.php: Fix documentation for addField().
-
-2005-06-01 20:32  patrick
-
-	* CC_Record.php: You can now add a value=the_value as the arguments
-	in the field manager's addField() method for all fields.
-
-2005-06-01 20:31  jamie
-
-	* CC_Fields/CC_Text_Field.php: Awww pooo!
-
-2005-06-01 20:28  jamie
-
-	* CC_Fields/CC_Text_Field.php: Added the value back. Thanks
-	Patrick!
-
-2005-06-01 12:28  patrick
-
-	* CC_Component.php: Typo.
-
-2005-06-01 10:14  patrick
-
-	* CC_Component.php: Display a warning if you construct a component
-	using a period "." because it will cause you many problems.
-
-2005-05-30 17:58  patrick
-
-	* CC_Buttons/CC_Image_Button.php: Improve click() to access the
-	$_REQUEST array just once, and to check that the keys exist before
-	getting them so that we don't clutter the error logs with stupid
-	warnings.
-
-2005-05-30 16:53  patrick
-
-	* CC_Button.php: Renamed getClickable() to the more appropriate
-	isClickable().
-
-2005-05-30 14:58  patrick
-
-	* CC_Buttons/CC_Image_Button.php: Added setDisabledImagePath() so
-	that you can have it use a different image when the button is
-	disabled with setClickable(false).
-
-2005-05-27 17:15  patrick
-
-	* CC_Record.php: IMPORTANT CHANGE!
-	
-	If an error happens in the constructor (ie. bad query or
-	non-existent ID), you will get a PEAR_Error object instead of a
-	CC_Record.
-	
-	Example:
-	
-	$record = &new CC_Record('NAME,EMAIL,PASSWORD', 'MY_TABLE', true,
-	42);
-	
-	if (PEAR::isError($record)) {	echo "No record existed with the
-	passed ID.";   $application->unregisterCurrentWindow();       
-	exit(); }
-
-2005-05-27 16:59  patrick
-
-	* CC_Images/percentBar.gif: It was time for an updated look.
-
-2005-05-26 17:27  jamie
-
-	* CC_Application.php: Problem: There was no way to reset all fields
-	and stuff.
-	
-	Solution: The reset() function saves the day.
-
-2005-05-26 16:53  patrick
-
-	* CC_Fields/CC_Percentage_Field.php: The buttons contained in this
-	field needed setValidateOnClick(false) called on them, as you
-	should be able to use them even if other fields on the page don't
-	pass validation.
-
-2005-05-26 16:51  patrick
-
-	* CC_Button.php, CC_Window.php: Fixed a somewhat obscure bug that
-	prevented the window from passing validation if you had two records
-	in a window, both with a field using the same key, and a button
-	that had setRecordsToValidate() called using the first record, and
-	the second record's field with the same name was required and was
-	not entered.
-
-2005-05-26 13:04  patrick
-
-	* CC_Handlers/: CC_Unregister_Window_Handler.php,
-	CC_Unregister_Window_Handlr.php: Renamed file to match the class
-	name. This must be left over from when we were on Mac OS 9!!
-
-2005-05-25 18:36  jamie
-
-	* CC_Fields/: CC_Password_Field.php, CC_RadioButton.php: Problem:
-	Password field had no way to set minLength and alphaNumeric in the
-	Application. RadioButton field wasn't selecting via the label.
-	
-	Solution: Fixed both these problems.
-
-2005-05-24 16:51  patrick
-
-	* CC_Fields/CC_Percentage_Field.php: Resolved a reference issue
-	that was causing the 100% button not to function.
-
-2005-05-24 16:22  patrick
-
-	* CC_Summary.php: Another minor typo in update().
-
-2005-05-24 16:14  patrick
-
-	* CC_Handlers/CC_Update_Record_Handler.php: Stupid typos.
-
-2005-05-24 16:11  patrick
-
-	* CC_Handlers/: CC_Insert_Record_Handler.php,
-	CC_Update_Record_Handler.php: Fixed a member call on non-object
-	error that would occur if there was an error in the insert or
-	update query (which would be caused if you specified a non-existent
-	column or table in your record).
-
-2005-05-24 15:52  patrick
-
-	* CC_Summary.php: Typo.
-
-2005-05-24 15:49  patrick
-
-	* CC_Summary.php: Minor simplification in update() using
-	db->doGetOne() instead of the longer way.
-
-2005-05-24 15:07  patrick
-
-	* CC_Fields/CC_Date_Field.php: Fixed a bug where setMonthValue()
-	and setDateValue() were not working if the number passed in was
-	0-padded.
-
-2005-05-19 16:59  patrick
-
-	* CC_Components/CC_MultipleKey_Record.php: Define $size in the
-	right place.
-
-2005-05-19 16:54  patrick
-
-	* CC_User.php: Changed [g|s]etUserName() to [g|s]etUsername()
-	because they were bugging me.
-
-2005-05-19 16:53  patrick
-
-	* CC_Record.php, CC_Components/CC_MultipleKey_Record.php: Fixed the
-	multiple key record to do things the new way.
-
-2005-05-19 16:44  patrick
-
-	* CC_Record.php: Use the field name for the label when there's no
-	field data.
-
-2005-05-19 16:37  patrick
-
-	* CC_Record.php: Handle things gracefully if no field data exists
-	for a field by constructing a cc_text_field with a generic label.
-
-2005-05-11 10:54  patrick
-
-	* CC_Fields/CC_SelectList_Field.php: Fixed a bug in getViewHTML()
-	where if you had an unselectedValue set, and the field had no value
-	set (eg. getSelectedIndex() == 0), a warning would be produced in
-	the logs because we were trying to look up an index of -1 in the
-	options array.
-
-2005-05-11 10:42  patrick
-
-	* CC_Fields/CC_Date_Field.php: Fixed a new bug in setValue() that I
-	introduced when I optimized the parsing of the passed in value.
-
-2005-05-10 22:30  patrick
-
-	* CC_Fields/CC_Credit_Card_Field.php: Simplified getEditHTML(),
-	fixed it to support the tabindex.
-
-2005-05-10 17:39  patrick
-
-	* bin/: encodeN2O.sh, switchN2O.sh: Updated scripts for you guyz.
-	
-	You'll need the new encodeN2O.sh to handle the new
-	_RequireOnceAdminFiles.php file, and the switchN2O.sh is superior
-	than before in that it just uses a symbolic link when you're using
-	your dev tree.
-
-2005-05-10 17:31  patrick
-
-	* CC_Application.php, CC_Component.php, CC_Field.php,
-	CC_FieldManager.php, CC_Index.php, CC_Record.php, CC_Utilities.php,
-	CC_Window.php, ChangeLog, _RequireOnceAdminFiles.php,
-	_RequireOnceFiles.php, CC_Fields/CC_AutoSubmit_Select_Field.php,
-	CC_Fields/CC_Checkbox_Field.php,
-	CC_Fields/CC_Credit_Card_Field.php,
-	CC_Fields/CC_DateTime_Field.php, CC_Fields/CC_Date_Added_Field.php,
-	CC_Fields/CC_Date_Field.php, CC_Fields/CC_Email_Field.php,
-	CC_Fields/CC_Expiry_Date_Field.php,
-	CC_Fields/CC_Foreign_Key_Field.php, CC_Fields/CC_Hidden_Field.php,
-	CC_Fields/CC_Hidden_Number_Field.php,
-	CC_Fields/CC_Multiple_File_Upload_Field.php,
-	CC_Fields/CC_Multiple_SelectList_Field.php,
-	CC_Fields/CC_OneToMany_Field.php, CC_Fields/CC_Password_Field.php,
-	CC_Fields/CC_Percentage_Field.php,
-	CC_Fields/CC_ProvinceState_Field.php,
-	CC_Fields/CC_RadioButton_Field.php,
-	CC_Fields/CC_Related_Table_Field.php,
-	CC_Fields/CC_SelectList_Field.php, CC_Fields/CC_TextArea_Field.php,
-	CC_Fields/CC_Text_Field.php, CC_Fields/CC_Time_Field.php,
-	CC_Fields/CC_Timestamp_Field.php, CC_Fields/CC_Username_Field.php,
-	CC_Handlers/CC_Cancel_Cleanup_Handler.php: The initial check-in of
-	a rather large overhaul to N2O.
-	
-	Changes include:
-	
-	1. Fields now construct themselves using a static method (see
-	CC_Field::getInstance()). Next step will be to add documentation to
-	all of the fields to show what arguments they accept when
-	constructed by a CC_Record (eg. size=, maxlength=, etc). This
-	completely eliminates createFieldObject() and
-	createOtherFieldObject(). As such, custom record classes are no
-	longer necessary, and are in fact basically useless.
-	
-	Because of this change, it is now necessary that the classnames of
-	the fields you add to the field manager (addField()) actually
-	exist. We previously had a few shortcuts like CC_FK_Field for
-	CC_Foreign_Key_Field, and various permutations of the
-	province/state field. In the case of the latter, you must define it
-	as "CC_ProvinceState_Field", and then you can use the "type"
-	argument to define what sort of field it is: type=state,
-	type=province, type=stateprovince.
-	
-	2. Fields handle the updating of themselves using
-	handleUpdateFromRequest(). Custom fields that need special updating
-	will need to override this method.
-	
-	3. Before, fields that were in a record were not registered with
-	the window. Instead, CC_Window did a loop on stray fields, and then
-	a loop on each record with an inner loop on each field in the
-	record. Now, records register their fields with the window, and the
-	window does only one loop. This has the added benefit that the
-	register() call-back method in the fields is now properly called,
-	fixing a bug where an auto-submit select list field would not
-	function properly if constructed by a record.
-	
-	4. CC_Window has a new method: setUnregisterOnLeave(). If called,
-	the window will automatically be unregistered by the application
-	when the application switches away from said window. By setting
-	this on your windows, you can reduce the overall memory footprint
-	of the session.
-	
-	5. There is a new config option: $require_admin. When set to false
-	(defaults to true), the application will not load admin classes
-	such as CC_Summary (and every class/handler that CC_Summary uses),
-	CC_Graph, CC_Pie_Chart, CC_Zip_File, CC_Image_Utilities, and all of
-	the classes in the CC_Components folder. Most front-end
-	applications do not need these classes, and including them in the
-	session just adds unnecessary overhead.
-	
-	6. A bunch of useless fields have been removed including
-	CC_Date_Added_Field.php, CC_Hidden_Field, CC_Hidden_Number_Field,
-	CC_Related_Table_Field, and CC_Username_Field.
-	
-	Please test away, as I don't think it's quite ready for a STABLE
-	declaration.
-
-2005-05-02 11:56  patrick
-
-	* CC_Record.php: Fixed a bug introduced by a previous commit
-	whereby an older variable was still being referenced in the
-	constructor.
-
-2005-04-27 19:28  patrick
-
-	* CC_FieldManager.php, CC_Record.php, CC_Window.php: Consolidated a
-	bunch of the code in CC_Record::createFieldObject() so that more
-	fields take advantage of the field manager arguments like size=,
-	maxlength=, etc.
-
-2005-04-27 19:27  patrick
-
-	* CC_Fields/CC_Credit_Card_Field.php: Updated the constructor so
-	you can set the maxlength.
-
-2005-04-27 19:26  patrick
-
-	* CC_Fields/CC_ProvinceState_Field.php: Moved the unselected value
-	setting into the field rather than in CC_Record.
-
-2005-04-27 19:22  patrick
-
-	* CC_Summary_Filters/CC_Relative_Timestamp_Filter.php: file
-	CC_Relative_Timestamp_Filter.php was initially added on branch
-	PHP5.
-
-2005-04-27 19:21  patrick
-
-	* .htaccess, CC_Action_Handler.php, CC_Application.php,
-	CC_Button.php, CC_Component.php, CC_Database.php, CC_Error.php,
-	CC_ErrorManager.php, CC_Field.php, CC_FieldManager.php,
-	CC_Graph.php, CC_Image_Source.php, CC_Index.php, CC_Pie_Chart.php,
-	CC_Record.php, CC_RelationshipManager.php, CC_Summary.php,
-	CC_Summary_Content_Provider.php, CC_Summary_Filter.php,
-	CC_User.php, CC_Utilities.php, CC_Window.php, CC_ZIP_File.php,
-	ChangeLog, clear_eaccelerator.php, eaccelerator.php,
-	CC_Buttons/CC_AnchorImage_Button.php,
-	CC_Buttons/CC_AnchorText_Button.php,
-	CC_Buttons/CC_Image_Button.php, CC_Buttons/CC_Sort_Button.php,
-	CC_Components/CC_Folder_Component.php,
-	CC_Components/CC_Image_Folder_Component.php,
-	CC_Components/CC_MultipleKey_Record.php,
-	CC_Components/CC_Summary_Search_Component.php,
-	CC_Components/CC_Query_Additions/CC_Checkbox_Query_Addition.php,
-	CC_Components/CC_Query_Additions/CC_SelectList_Query_Addition.php,
-	CC_Fields/CC_AutoSubmit_Select_Field.php,
-	CC_Fields/CC_Checkbox_Field.php,
-	CC_Fields/CC_Credit_Card_Field.php,
-	CC_Fields/CC_DateTime_Field.php, CC_Fields/CC_Date_Field.php,
-	CC_Fields/CC_Dependant_Checkbox_Field.php,
-	CC_Fields/CC_Email_Field.php, CC_Fields/CC_Expiry_Date_Field.php,
-	CC_Fields/CC_File_Upload_Field.php,
-	CC_Fields/CC_Foreign_Key_Field.php,
-	CC_Fields/CC_Image_Upload_Field.php,
-	CC_Fields/CC_Multiple_Choice_Field.php,
-	CC_Fields/CC_Multiple_File_Upload_Field.php,
-	CC_Fields/CC_OneToMany_Field.php, CC_Fields/CC_Password_Field.php,
-	CC_Fields/CC_Percentage_Field.php,
-	CC_Fields/CC_ProvinceState_Field.php, CC_Fields/CC_RadioButton.php,
-	CC_Fields/CC_RadioButton_Field.php,
-	CC_Fields/CC_Related_Table_Field.php,
-	CC_Fields/CC_SelectList_Field.php, CC_Fields/CC_TextArea_Field.php,
-	CC_Fields/CC_Text_Field.php, CC_Fields/CC_Time_Field.php,
-	CC_Fields/CC_Timestamp_Field.php,
-	CC_Handlers/CC_100_PercentFieldHandler.php,
-	CC_Handlers/CC_AddFileUploadField_Handler.php,
-	CC_Handlers/CC_Add_FK_Record_Handler.php,
-	CC_Handlers/CC_Add_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Add_Record_Handler.php,
-	CC_Handlers/CC_Back_Button_Handler.php,
-	CC_Handlers/CC_Button_Click_Handler.php,
-	CC_Handlers/CC_Cancel_Button_Handler.php,
-	CC_Handlers/CC_Cancel_Cleanup_Handler.php,
-	CC_Handlers/CC_Click_Button_Handler.php,
-	CC_Handlers/CC_Delete_Confirm_Handler.php,
-	CC_Handlers/CC_Delete_File_Handler.php,
-	CC_Handlers/CC_Delete_Folder_File_Handler.php,
-	CC_Handlers/CC_Delete_Multiple_Records_Handler.php,
-	CC_Handlers/CC_Delete_Ordered_Confirm_Handler.php,
-	CC_Handlers/CC_Delete_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Delete_Record_Handler.php,
-	CC_Handlers/CC_Download_File_Handler.php,
-	CC_Handlers/CC_Download_XLS_Handler.php,
-	CC_Handlers/CC_Download_XLS_Summary_Handler.php,
-	CC_Handlers/CC_Download_ZIP_Summary_Handler.php,
-	CC_Handlers/CC_Edit_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Edit_Record_Handler.php,
-	CC_Handlers/CC_Insert_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Insert_Record_Handler.php,
-	CC_Handlers/CC_InternalRewriteUrl_Handler.php,
-	CC_Handlers/CC_Manage_FK_Table_Handler.php,
-	CC_Handlers/CC_Manage_OneToMany_Handler.php,
-	CC_Handlers/CC_Multiple_Selections_Handler.php,
-	CC_Handlers/CC_Redirect_Handler.php,
-	CC_Handlers/CC_Related_Table_Handler.php,
-	CC_Handlers/CC_RemoveFileFromPathHandlr.php,
-	CC_Handlers/CC_Remove_File_Handler.php,
-	CC_Handlers/CC_Rewrite_Url_Handler.php,
-	CC_Handlers/CC_Save_Record_Handler.php,
-	CC_Handlers/CC_Select_All_Checkboxes_Handler.php,
-	CC_Handlers/CC_Summary_ClearSearch_Handler.php,
-	CC_Handlers/CC_Summary_Jump_To_Page_Handler.php,
-	CC_Handlers/CC_Summary_Next_Handler.php,
-	CC_Handlers/CC_Summary_Num_Rows_Handler.php,
-	CC_Handlers/CC_Summary_Previous_Handler.php,
-	CC_Handlers/CC_Summary_Record_Handler.php,
-	CC_Handlers/CC_Summary_Refresh_Handler.php,
-	CC_Handlers/CC_Summary_Reorder_Handler.php,
-	CC_Handlers/CC_Summary_Search_Handler.php,
-	CC_Handlers/CC_Summary_Sort_Handler.php,
-	CC_Handlers/CC_Unregister_Window_Handlr.php,
-	CC_Handlers/CC_Update_OneToMany_Handler.php,
-	CC_Handlers/CC_Update_Record_Handler.php,
-	CC_Handlers/CC_View_Ordered_Record_Handler.php,
-	CC_Handlers/CC_View_Record_Handler.php,
-	CC_Handlers/CC_Multiple_Selections_Handlers/CC_Delete_Multiple_Selections_Handler.php,
-	CC_Summaries/CC_Ordered_Summary.php,
-	CC_Summaries/CC_Safe_Summary.php,
-	CC_Summary_Content_Providers/CC_OneToMany_Check_Provider.php,
-	CC_Summary_Filters/CC_Boolean_Filter.php,
-	CC_Summary_Filters/CC_DateTime_Filter.php,
-	CC_Summary_Filters/CC_Dollar_Filter.php,
-	CC_Summary_Filters/CC_File_Size_Filter.php,
-	CC_Summary_Filters/CC_Id_Link_Filter.php,
-	CC_Summary_Filters/CC_Month_Filter.php,
-	CC_Summary_Filters/CC_Relative_Date_Filter.php,
-	CC_Summary_Filters/CC_Relative_Timestamp_Filter.php,
-	CC_Summary_Filters/CC_Reltve_Timestamp_Fltr.php,
-	CC_Summary_Filters/CC_Sprintf_Filter.php,
-	CC_Summary_Filters/CC_Text_Gutting_Filter.php,
-	CC_Summary_Filters/CC_Text_Shortening_Filter.php,
-	CC_Summary_Filters/CC_Text_Shortening_Popup_Filter.php,
-	CC_Summary_Filters/CC_Timestamp_Filter.php,
-	CC_Windows/CC_Add_FK_Record_Window.php,
-	CC_Windows/CC_Add_Ordered_Record_Window.php,
-	CC_Windows/CC_Add_Record_Window.php,
-	CC_Windows/CC_Delete_Confirm_Window.php,
-	CC_Windows/CC_Delete_Multiple_Confirm_Window.php,
-	CC_Windows/CC_Delete_Ordered_Confirm_Window.php,
-	CC_Windows/CC_Edit_Ordered_Record_Window.php,
-	CC_Windows/CC_Edit_Record_Window.php,
-	CC_Windows/CC_Manage_FK_Table_Window.php,
-	CC_Windows/CC_OneToMany_Window.php,
-	CC_Windows/CC_Remove_File_Confirmation_Window.php,
-	CC_Windows/CC_View_Ordered_Record_Window.php,
-	CC_Windows/CC_View_Record_Window.php (PHP5): More changes for PHP
-	5...
-
-2005-04-23 16:07  patrick
-
-	* CC_Utilities.php: Improve strSlide13 a great deal to make the
-	"encoded" strings a lot less easy to recognize what is happening.
-	Before, the string "4111111111111111" would encode to
-	"5222222222222222". Now, the same string encodes to
-	"jccccccccccccccc". An average credit card number like
-	"5191230074364956" used to encode to "4808769925635043", and now
-	encodes to "EcZcUfQQijfSjZES".
-	
-	One caveat of changing this is we will likely need to clear all
-	sessions the next time N2O is deployed because the active database
-	DSNs and credit card numbers previously encoded with the old
-	version of strSlide13() will not slide to their original state
-	properly.
-	
-	To create the new sliding string, I wrote a little algorithm:
-	
-	<?php
-	
-	$source =
-	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+:/?.;~
-	='; $array1 = array();
-	
-	if (strlen($source) % 2 != 0) { 	echo "Source string must be
-	an even number of characters. (Length: " . strlen($source) . ")\n";
-		exit(); }
-	
-	// Create an array of our source string for ($i = 0; $i <
-	strlen($source); $i++) {      $array1[] = substr($source, $i, 1); }
-	
-	// Make a copy of the array that will be used for the slide $array2
-	= $array1;
-	
-	// Create a tracker array to keep track of which positions we've
-	used $tracker = array(); $max = sizeof($array1);
-	
-	for ($i = 0; $i < $max; $i++) { 	$tracker[] = true; }
-	
-	// Do the swapping work...  for ($i = 0; $i < ($max / 2); $i++) {  
-	    do	    {		    $swap = rand($max / 2, $max - 1);
-	
-			if ($tracker[$swap] && $swap != $i)
-			{
-				break;
-			}
-		}
-		while (true);
-	
-		$tracker[$i] = false;
-		$tracker[$swap] = false;
-	
-		$tmp1 = $array2[$i];
-		$tmp2 = $array2[$swap];
-	
-		$array2[$i] = $tmp2;
-		$array2[$swap] = $tmp1;
-	}
-	
-	// Output the source echo "$source\n";
-	
-	// Output the slid source for ($i = 0; $i < $max; $i++) {      
-	echo $array2[$i]; }
-	
-	echo "\n";
-	
-	?>
-
-2005-04-21 21:31  patrick
-
-	* CC_Utilities.php: Removed conditional declaration of is_a() since
-	we always use PHP 4.2+.
-
-2005-04-01 13:00  patrick
-
-	* CC_Fields/CC_Date_Field.php: Removed the monthsArray from the
-	instance variables because it's only needed once.
-
-2005-04-01 12:59  patrick
-
-	* CC_Summary.php: Renamed a variable in setDownloadAllQuery() so
-	it's more understandable.
-
-2005-03-31 13:20  patrick
-
-	* CC_Handlers/CC_Summary_Search_Handler.php: Get the download query
-	using getDownloadAllQuery() rather than pulling it from the private
-	variable which may or may not be set.
-
-2005-03-30 15:51  jamie
-
-	* CC_Handlers/CC_Summary_Search_Handler.php: Added support for
-	ORing delimiter separated values in the text search field.
-
-2005-03-30 15:50  jamie
-
-	* CC_Components/CC_Summary_Search_Component.php: Added orDelimiter
-	for delimiter-separated OR support.
-
-2005-03-29 19:18  jamie
-
-	* CC_Fields/CC_DateTime_Field.php: Changed format string BACK for
-	BACKwards compatibility.
-
-2005-03-29 19:14  jamie
-
-	* CC_Fields/CC_DateTime_Field.php: Fixed the format string for
-	hours and minutes.
-
-2005-03-29 18:32  patrick
-
-	* CC_Fields/CC_Date_Field.php: Remove getMySQLValue(). Instead, use
-	getValue(), passing it a format string: getValue('%04u-%02u-%02u
-	00:00:00');
-
-2005-03-29 18:31  patrick
-
-	* CC_Fields/CC_DateTime_Field.php: Removed getMySQLValue().
-	Instead, getValue() takes an option $format string. To do what
-	getMySQLValue() did, call getValue('%u-%0u-%0u %0u:%0u:00'), or
-	define a constant in your application:
-	
-	define('MYSQL_DATETIME', '%u-%0u-%0u %0u:%0u:00');
-	
-	$field->getValue(MYSQL_DATETIME);
-
-2005-03-29 17:59  jamie
-
-	* CC_Fields/: CC_DateTime_Field.php, CC_Date_Field.php: Added
-	getMySQLValue to return a MySQL friendly date.
-
-2005-03-28 20:12  jamie
-
-	* CC_Summary.php: In getDownloadAllQuery, added an option to
-	optionally return the sorted query. Defaults to false.
-
-2005-03-27 13:57  patrick
-
-	* clear_eaccelerator.php: First argument is now the full URL to
-	eaccelerator.php rather than just the host.
-
-2005-03-24 18:08  patrick
-
-	* .htaccess, clear_eaccelerator.php, eaccelerator.php: Added
-	scripts to clear eaccelerator's cache for when we re-deploy N2O. No
-	more restarting stupid Apache!!
-
-2005-03-24 18:07  patrick
-
-	* ChangeLog, bin/cvs2cl.pl: ChangeLog updates.
-
-2005-03-24 17:44  jamie
-
-	* CC_Summary.php: A check in CC_Summary if the cookie value for the
-	'SORT BY' column exists in the query.
-
-2005-03-23 21:18  jamie
-
-	* CC_Fields/CC_Multiple_File_Upload_Field.php: Removed debug code.
-
-2005-03-23 21:11  jamie
-
-	* CC_Fields/CC_Multiple_File_Upload_Field.php: Fixed this field to
-	work better.
-
-2005-03-20 17:55  patrick
-
-	* CC_Index.php: No longer look for the ?err in the request, no
-	longer define CURRENT_VERSION, and no longer output a logout button
-	if DEBUG is 1.
-
-2005-03-20 11:15  patrick
-
-	* classes.conf.php: We don't need this anymore.
-
-2005-03-16 15:38  patrick
-
-	* CC_Graph.php: Create an indexed .png instead of true-colour to
-	fix god damn IE + Norton Personal Firecrap. Hope it doesn't break
-	anything!
-
-2005-03-16 13:58  patrick
-
-	* CC_Summary_Filters/CC_Id_Link_Filter.php: Fixed to work without
-	cookies.
-
-2005-03-16 12:43  patrick
-
-	* CC_Application.php, CC_Buttons/CC_AnchorImage_Button.php,
-	CC_Buttons/CC_Sort_Button.php, CC_Buttons/CC_Text_Button.php: A few
-	fixes to get things working properly when cookies are disabled.
-
-2005-03-14 15:18  patrick
-
-	* CC_Graph.php: Removed accidental checkin.
-
-2005-03-14 10:36  jamie
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: Dealt with
-	doube-quotes properly.
-
-2005-03-11 19:53  jamie
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: Dumb ASS FUCK.
-
-2005-03-11 19:21  jamie
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: Allow multiple
-	lines in Javascript alert.
-
-2005-03-11 18:40  jamie
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: Escape single
-	quotes so it doesn't krunk things up.
-
-2005-03-11 11:58  patrick
-
-	* CC_Fields/CC_Time_Field.php: getValue() was padding the hour
-	value with two extra 0's...
-
-2005-03-11 11:34  mike
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: removed extra
-	option that did nothing! :O
-
-2005-03-11 11:34  mike
-
-	* CC_Summary_Filters/CC_Text_Shortening_Filter.php: Added option to
-	popup (alert) full text for the text shortening dingle.
-
-2005-03-11 10:38  mike
-
-	* CC_Summary_Filters/CC_DateTime_Filter.php: Fixed comparison for
-	blank date.
-
-2005-03-11 10:27  patrick
-
-	* CC_Summary.php: Make sure all queries use getSortByColumn()
-	instead of $this->sortByColumn.
-
-2005-03-11 10:22  patrick
-
-	* CC_Summary.php: Add getSortByColumn() to do the quoting in there.
-
-2005-03-05 23:15  patrick
-
-	* bin/buildExtras.php (PHP5): We won't be needing this anymore...
-
-2005-03-05 23:13  patrick
-
-	* CC_Handlers/: CC_Summary_JumpPage_Handler.php,
-	CC_Summary_Jump_To_Page_Handler.php (PHP5): One downside with the
-	__autoload() thingy is that class names and file names need to
-	match. (This probably isn't such a bad thing for us to do, though.)
-
-2005-03-05 23:13  patrick
-
-	* CC_Handlers/CC_Summary_Jump_To_Page_Handler.php: file
-	CC_Summary_Jump_To_Page_Handler.php was initially added on branch
-	PHP5.
-
-2005-03-05 23:11  patrick
-
-	* CC_Application.php, CC_Button.php, CC_Database.php, CC_Index.php,
-	CC_Record.php, CC_Summary.php, CC_Utilities.php, CC_Window.php,
-	classes.conf.php, CC_Components/CC_Folder_Component.php,
-	CC_Components/CC_MultipleKey_Record.php,
-	CC_Components/CC_Summary_Search_Component.php,
-	CC_Fields/CC_AutoSubmit_Select_Field.php,
-	CC_Fields/CC_DateTime_Field.php, CC_Fields/CC_Date_Field.php,
-	CC_Fields/CC_File_Upload_Field.php,
-	CC_Fields/CC_Foreign_Key_Field.php,
-	CC_Fields/CC_Multiple_File_Upload_Field.php,
-	CC_Fields/CC_OneToMany_Field.php,
-	CC_Fields/CC_Percentage_Field.php,
-	CC_Fields/CC_RadioButton_Field.php, CC_Fields/CC_Time_Field.php,
-	CC_Handlers/CC_AddFileUploadField_Handler.php,
-	CC_Handlers/CC_Add_FK_Record_Handler.php,
-	CC_Handlers/CC_Add_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Add_Record_Handler.php,
-	CC_Handlers/CC_Back_Button_Handler.php,
-	CC_Handlers/CC_Cancel_Button_Handler.php,
-	CC_Handlers/CC_Cancel_Cleanup_Handler.php,
-	CC_Handlers/CC_Delete_Confirm_Handler.php,
-	CC_Handlers/CC_Delete_Multiple_Records_Handler.php,
-	CC_Handlers/CC_Delete_Ordered_Confirm_Handler.php,
-	CC_Handlers/CC_Delete_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Delete_Record_Handler.php,
-	CC_Handlers/CC_Download_File_Handler.php,
-	CC_Handlers/CC_Download_XLS_Handler.php,
-	CC_Handlers/CC_Download_XLS_Summary_Handler.php,
-	CC_Handlers/CC_Download_ZIP_Summary_Handler.php,
-	CC_Handlers/CC_Edit_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Edit_Record_Handler.php,
-	CC_Handlers/CC_Insert_FK_Record_Handler.php,
-	CC_Handlers/CC_Insert_Ordered_Record_Handler.php,
-	CC_Handlers/CC_Insert_Record_Handler.php,
-	CC_Handlers/CC_Logout_Handler.php,
-	CC_Handlers/CC_Manage_FK_Table_Handler.php,
-	CC_Handlers/CC_Manage_OneToMany_Handler.php,
-	CC_Handlers/CC_Multiple_Selections_Handler.php,
-	CC_Handlers/CC_Redirect_Handler.php,
-	CC_Handlers/CC_Related_Table_Handler.php,
-	CC_Handlers/CC_Save_Record_Handler.php,
-	CC_Handlers/CC_Summary_Next_Handler.php,
-	CC_Handlers/CC_Summary_Num_Rows_Handler.php,
-	CC_Handlers/CC_Summary_Previous_Handler.php,
-	CC_Handlers/CC_Summary_Record_Handler.php,
-	CC_Handlers/CC_Summary_Refresh_Handler.php,
-	CC_Handlers/CC_Summary_Reorder_Handler.php,
-	CC_Handlers/CC_Unregister_Window_Handlr.php,
-	CC_Handlers/CC_Update_OneToMany_Handler.php,
-	CC_Handlers/CC_Update_Record_Handler.php,
-	CC_Handlers/CC_View_Ordered_Record_Handler.php,
-	CC_Handlers/CC_View_Record_Handler.php,
-	CC_Handlers/CC_Multiple_Selections_Handlers/CC_Delete_Multiple_Selections_Handler.php,
-	CC_Summaries/CC_Ordered_Summary.php,
-	CC_Summaries/CC_Safe_Summary.php (PHP5), bin/buildExtras.php: Minor
-	changes needed to get things working properly in PHP 5. Yeah baby,
-	you heard me -- PHP 5!!
-	
-	PHP 5 has a neat __autoload() function you can implement so that
-	you can have classes be loaded only when they are needed. The PHP5
-	branch of N2O supports this!
-
-2005-03-05 16:47  patrick
-
-	* CC_Graph.php: var $barWidth was declared twice!
-
-2005-03-05 16:46  patrick
-
-	* CC_Application.php: var $lastAction was declared twice!
-
-2005-03-02 14:59  patrick
-
-	* cc_styles.css: Add a margin for the ccSummaryDownload style.
-
-2005-02-28 11:19  mike
-
-	* CC_Record.php: Added a delimiter option to radio button lists, so
-	we can have commas in the radio button label.
-
-2005-02-27 16:12  patrick
-
-	* CC_Handlers/CC_Download_XLS_Summary_Handler.php: Fixed this
-	handler to get the filename from the summary when it doesn't
-	already have an explicit filename to use.
-
-2005-02-27 16:11  patrick
-
-	* CC_Summary.php: Moved the construction of the download all
-	buttons from getExtraSummaryButtons() into register() where it
-	should happen.
-
-2005-02-24 21:38  patrick
-
-	* CC_Fields/CC_RadioButton_Field.php: Use the === when comparing
-	values so that if your radio button happens to have a value of '0',
-	it is not confused with false.
-
-2005-02-24 21:30  patrick
-
-	* CC_Record.php: Call setRecord() on the fields at the time the
-	record is registered rather than at the time the field is created.
-	This is because with the old way, if you called setOptions() on a
-	radio button field after it was created by a record, the radio
-	buttons did not have the reference to the record.
-
-2005-02-22 18:30  patrick
-
-	* CC_Fields/CC_RadioButton.php: Added setOnMouseOverAction() and
-	setOnMouseOutAction().
-
-2005-02-22 15:29  jamie
-
-	* CC_Fields/CC_Multiple_Choice_Field.php: Added a note to for the
-	setAssociatedField method. The main field goes LAST in the
-	CC_Record construction.
-
-2005-02-18 12:05  jamie
-
-	* CC_Fields/CC_ProvinceState_Field.php: XX = N/A.
-
-2005-02-17 17:08  patrick
-
-	* CC_Pie_Chart.php: Clean up after drawing a pie chart.
-
-2005-02-14 14:15  patrick
-
-	* CC_Fields/CC_RadioButton_Field.php: Minor fix in setOptions() to
-	get the current value.
-
-2005-02-14 14:10  patrick
-
-	* CC_Fields/CC_RadioButton_Field.php: Fixed a bug where the options
-	array was not being checked for elements that were arrays in
-	setOptions(). Also removed the duplicate code in the constructor;
-	we now just call setOptions() instead.
-
-2005-02-14 14:07  patrick
-
-	* CC_Fields/CC_Checkbox_Field.php: The label style should be
-	ccLabelError instead of ccError.
-
-2005-02-14 00:58  jamie
-
-	* CC_Fields/CC_ISO_Country_Field.php: Removed Holy See from the
-	Vatican.
-
-2005-02-13 23:08  jamie
-
-	* CC_Fields/CC_ISO_Country_Field.php: It DOES exist, doesn't it?
-
-2005-02-13 17:09  patrick
-
-	* CC_Index.php, _RequireOnceFiles.php: The world's not ready for
-	_n2o_extras.php yet.
-
-2005-02-13 17:06  jamie
-
-	* CC_Fields/CC_ISO_Country_Field.php: Mispelling FIXED!
-
-2005-01-10 13:14  patrick
-
-	* CC_Fields/CC_ISO_Country_Field.php: Sort the country by name
-	rather than country code.
-
-2004-12-21 12:28  patrick
-
-	* ChangeLog: Updated ChangeLog.
-
 2004-12-21 12:27  patrick
 
 	* CC_Fields/CC_Generic_Text_Field.php: This is the most useless
@@ -1887,7 +58,7 @@
 
 2004-12-21 12:14  patrick
 
-	* CC_Fields/CC_Dependant_Checkbox_Field.php: Added an $Id: ChangeLog,v 1.16 2010/11/11 04:28:32 patrick Exp $ tag. I
+	* CC_Fields/CC_Dependant_Checkbox_Field.php: Added an $Id: ChangeLog,v 1.12 2004/12/21 20:28:17 patrick Exp $ tag. I
 	thought I already did all files!
 
 2004-12-21 12:13  patrick
@@ -2329,7 +500,7 @@
 
 2004-09-29 14:38  patrick
 
-	* CC_Database.php (version-1): Close the database connection!
+	* CC_Database.php: Close the database connection!
 
 2004-09-23 10:26  jamie
 
@@ -2528,13 +699,12 @@
 
 2004-07-30 14:43  jamie
 
-	* CC_Summaries/CC_Ordered_Summary.php (version-1): Overrode
+	* CC_Summaries/CC_Ordered_Summary.php: Overrode
 	getViewEditDeleteLinkButton.
 
 2004-07-30 14:05  jamie
 
-	* CC_Record.php (version-1): Changed loop condition for adding
-	ordered records.
+	* CC_Record.php: Changed loop condition for adding ordered records.
 
 2004-07-30 11:12  patrick
 
@@ -2637,12 +807,11 @@
 
 2004-05-28 16:00  patrick
 
-	* CC_Index.php (version-1): Ugh...
+	* CC_Index.php: Ugh...
 
 2004-05-28 15:57  patrick
 
-	* CC_Fields/_RequireOnceFiles.php (version-1): More krunk to
-	comment out!
+	* CC_Fields/_RequireOnceFiles.php: More krunk to comment out!
 
 2004-05-28 15:56  patrick
 
@@ -2650,28 +819,28 @@
 	CC_Fields/CC_AutoSubmit_Select_Field.php,
 	CC_Handlers/CC_Insert_FK_Record_Handler.php,
 	CC_Handlers/CC_RemoveFileFromDB_Handler.php,
-	CC_Handlers/CC_RemoveFileFromPathHandlr.php (version-1): Removed
-	require_once lines.
+	CC_Handlers/CC_RemoveFileFromPathHandlr.php: Removed require_once
+	lines.
 
 2004-05-28 15:49  patrick
 
 	* CC_Handlers/:
 	CC_Multiple_Selections_Handlers/CC_Delete_Multiple_Selections_Handler.php,
-	CC_Remove_File_Handler.php (version-1): This file was missing the
-	closing ?> tag!
+	CC_Remove_File_Handler.php: This file was missing the closing ?>
+	tag!
 
 2004-05-28 15:46  patrick
 
 	* CC_Fields/CC_Date_Added_Field.php,
-	CC_Handlers/CC_Multiple_Selections_Handler.php (version-1): This
-	file was missing the closing ?> tag!
+	CC_Handlers/CC_Multiple_Selections_Handler.php: This file was
+	missing the closing ?> tag!
 
 2004-05-18 13:13  patrick
 
-	* CC_Database.php (version-1), CC_Database.php: Store the password
-	and datasource strings in a more secure fashion so not just anyone
-	can go look at the session file and get the passwords for our
-	precious databases!
+	* CC_Database.php, CC_Database.php: Store the password and
+	datasource strings in a more secure fashion so not just anyone can
+	go look at the session file and get the passwords for our precious
+	databases!
 
 2004-05-13 09:55  patrick
 
@@ -3417,8 +1586,8 @@
 
 2003-12-15 20:43  patrick
 
-	* CC_Fields/CC_Credit_Card_Field.php (version-1): Improve validate
-	to allow for Amercian Express numbers (15 digits).
+	* CC_Fields/CC_Credit_Card_Field.php: Improve validate to allow for
+	Amercian Express numbers (15 digits).
 
 2003-12-15 12:20  jamie
 
@@ -5244,8 +3413,8 @@
 
 2003-08-22 14:31  patrick
 
-	* CC_Summary_Filters/CC_Boolean_Filter.php (version-1): Added
-	Boolean filter to old CC_Framework.
+	* CC_Summary_Filters/CC_Boolean_Filter.php: Added Boolean filter to
+	old CC_Framework.
 
 2003-08-22 14:16  mike
 
@@ -5432,14 +3601,13 @@
 
 2003-08-14 12:33  patrick
 
-	* CC_Fields/: CC_Date_Field.php (version-1), CC_Date_Field.php:
-	Added default values for setXXXValue() methods.
+	* CC_Fields/: CC_Date_Field.php, CC_Date_Field.php: Added default
+	values for setXXXValue() methods.
 
 2003-08-14 12:23  patrick
 
-	* CC_Fields/: CC_SelectList_Field.php (version-1),
-	CC_SelectList_Field.php: Added default value for
-	setUnselectedValue().
+	* CC_Fields/: CC_SelectList_Field.php, CC_SelectList_Field.php:
+	Added default value for setUnselectedValue().
 
 2003-08-14 12:04  patrick
 
@@ -5449,7 +3617,7 @@
 
 2003-08-14 11:54  patrick
 
-	* CC_Record.php, CC_Fields/CC_Date_Field.php (version-1): Added
+	* CC_Record.php, CC_Fields/CC_Date_Field.php: Added
 	setAllowBlankValue() to the CC_Date_Field so you leave a date field
 	blank. (ie. Cancel Date for Retrix Admin)
 
@@ -5571,8 +3739,8 @@
 
 2003-08-01 10:43  patrick
 
-	* CC_Fields/CC_Expiry_Date_Field.php (version-1): Fixed expiry date
-	to allow for the current month.
+	* CC_Fields/CC_Expiry_Date_Field.php: Fixed expiry date to allow
+	for the current month.
 
 2003-07-31 15:19  patrick
 
@@ -6129,14 +4297,14 @@
 
 2003-07-02 11:47  patrick
 
-	* CC_Fields/: CC_Credit_Card_Field.php (version-1),
-	CC_Credit_Card_Field.php: We now do a strSlide13() on the
-	$defaultValue before passing it into the super-constructor.
+	* CC_Fields/: CC_Credit_Card_Field.php, CC_Credit_Card_Field.php:
+	We now do a strSlide13() on the $defaultValue before passing it
+	into the super-constructor.
 
 2003-07-02 11:36  patrick
 
-	* CC_Fields/CC_Credit_Card_Field.php (version-1): We needed to call
-	setValue() in the constructor.
+	* CC_Fields/CC_Credit_Card_Field.php: We needed to call setValue()
+	in the constructor.
 
 2003-07-01 16:48  patrick
 
@@ -6279,8 +4447,7 @@
 
 2003-06-26 23:14  patrick
 
-	* CC_Index.php (version-1): Applied the same cache-control header
-	as N2O.
+	* CC_Index.php: Applied the same cache-control header as N2O.
 
 2003-06-26 18:58  patrick
 
@@ -6347,21 +4514,21 @@
 
 2003-06-26 14:47  patrick
 
-	* CC_Window.php (version-1), CC_Window.php: Took the strSlide13()
-	out of the update for credit card fields.
+	* CC_Window.php, CC_Window.php: Took the strSlide13() out of the
+	update for credit card fields.
 
 2003-06-26 14:46  patrick
 
-	* CC_Fields/: CC_Credit_Card_Field.php, CC_Credit_Card_Field.php
-	(version-1), CC_Credit_Card_Field.php: Moved all the
-	strSlide13()ing into this field. Before, some of it was doing it in
-	the CC_Window, and some in the field. Makes it difficult if you're
-	manually setting the value.
+	* CC_Fields/: CC_Credit_Card_Field.php, CC_Credit_Card_Field.php,
+	CC_Credit_Card_Field.php: Moved all the strSlide13()ing into this
+	field. Before, some of it was doing it in the CC_Window, and some
+	in the field. Makes it difficult if you're manually setting the
+	value.
 
 2003-06-26 14:40  patrick
 
-	* CC_Fields/: CC_Credit_Card_Field.php (version-1),
-	CC_Credit_Card_Field.php: Made the error messages better.
+	* CC_Fields/: CC_Credit_Card_Field.php, CC_Credit_Card_Field.php:
+	Made the error messages better.
 
 2003-06-26 14:33  patrick
 
@@ -6370,9 +4537,9 @@
 
 2003-06-26 14:15  patrick
 
-	* CC_Fields/CC_Credit_Card_Field.php (version-1): Validate was not
-	working! It was getting the value via getValue(), but not undoing
-	the strslide13().
+	* CC_Fields/CC_Credit_Card_Field.php: Validate was not working! It
+	was getting the value via getValue(), but not undoing the
+	strslide13().
 
 2003-06-26 14:13  patrick
 
@@ -6489,8 +4656,8 @@
 
 2003-06-22 16:07  patrick
 
-	* CC_Windows/CC_Manage_FK_Table_Window.php (version-1): Set table
-	to use ccTable as style.
+	* CC_Windows/CC_Manage_FK_Table_Window.php: Set table to use
+	ccTable as style.
 
 2003-06-22 03:00  patrick
 
@@ -6844,8 +5011,8 @@
 
 2003-06-12 14:08  patrick
 
-	* CC_Fields/CC_RadioButton_Field.php (version-1): setOptions() now
-	works properly.
+	* CC_Fields/CC_RadioButton_Field.php: setOptions() now works
+	properly.
 
 2003-06-12 14:07  patrick
 
@@ -6854,9 +5021,9 @@
 
 2003-06-12 10:29  patrick
 
-	* CC_RelationshipManager.php (version-1),
-	CC_RelationshipManager.php: Fixed getField() so that a space is
-	always inserted before the $additionalWhereClause.
+	* CC_RelationshipManager.php, CC_RelationshipManager.php: Fixed
+	getField() so that a space is always inserted before the
+	$additionalWhereClause.
 
 2003-06-11 23:56  patrick
 
@@ -7177,9 +5344,8 @@
 
 2003-06-05 12:41  patrick
 
-	* CC_Handlers/CC_Delete_Confirm_Handler.php (version-1): Fixed
-	process() to work properly when you override
-	getSetActionFunction().
+	* CC_Handlers/CC_Delete_Confirm_Handler.php: Fixed process() to
+	work properly when you override getSetActionFunction().
 
 2003-06-02 13:49  patrick
 
@@ -7281,9 +5447,8 @@
 
 2003-05-22 17:18  patrick
 
-	* CC_Summary.php (version-1): Added CC_Config variable
-	$dwDefaultRecordsPerPage to set the default number of rows per
-	page.
+	* CC_Summary.php: Added CC_Config variable $dwDefaultRecordsPerPage
+	to set the default number of rows per page.
 
 2003-05-22 17:16  patrick
 
@@ -7650,13 +5815,13 @@
 
 2003-05-14 13:02  patrick
 
-	* CC_Fields/: CC_AutoSubmit_Select_Field.php (version-1),
+	* CC_Fields/: CC_AutoSubmit_Select_Field.php,
 	CC_AutoSubmit_Select_Field.php: Added a click() function for the go
 	button.
 
 2003-05-13 19:24  patrick
 
-	* CC_Index.php (version-1): Updated the range for requestId.
+	* CC_Index.php: Updated the range for requestId.
 
 2003-05-13 19:22  patrick
 
@@ -10465,8 +8630,7 @@
 	CC_Windows/CC_Edit_Record_Window.php,
 	CC_Windows/CC_Manage_FK_Table_Window.php,
 	CC_Windows/CC_OneToMany_Window.php,
-	CC_Windows/CC_View_Record_Window.php, CC_Windows/Icon: Initial
-	revision
+	CC_Windows/CC_View_Record_Window.php, CC_Windows/Icon: CC_Framework
 
 2002-06-01 11:58  patrick
 
@@ -10554,5 +8718,6 @@
 	CC_Windows/CC_Edit_Record_Window.php,
 	CC_Windows/CC_Manage_FK_Table_Window.php,
 	CC_Windows/CC_OneToMany_Window.php,
-	CC_Windows/CC_View_Record_Window.php, CC_Windows/Icon: CC_Framework
+	CC_Windows/CC_View_Record_Window.php, CC_Windows/Icon: Initial
+	revision
 

@@ -1,4 +1,4 @@
-<!-- $Id: CC_Add_Record_Window.php,v 1.19 2010/11/11 04:28:32 patrick Exp $ -->
+<!-- $Id: CC_Add_Record_Window.php,v 1.17 2004/08/19 04:25:26 patrick Exp $ -->
 <?php
 if ($application->hasArgument('displayNameForAdd'))
 {
@@ -17,13 +17,12 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
-	//$window->setUnregisterOnLeave();
 	$application->registerWindow($window);
 	
 	
@@ -31,22 +30,23 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (1) Construct the CC_Record component
 	//
 	
-	$record = new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAdd')), $application->getArgument('tableNameForAdd'), true);
+	$record = &new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAdd')), $application->getArgument('tableNameForAdd'), true);
 	
 	
 	// ------------------------------------------------------------------
 	// (2) Create our buttons
 	//
 	
-	$cancelButton = new CC_Cancel_Button();
-	$addButton = new CC_Button('Add');
+	$cancelButton = &new CC_Cancel_Button();
+	$addButton = &new CC_Button('Add');
 	
 	
 	// ------------------------------------------------------------------
 	// (3) Create our handlers
 	//
 	
-	$addButtonHandler = new CC_Insert_Record_Handler($record);
+	$addButtonHandler = &new CC_Insert_Record_Handler($record);
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 	
 	
 	// ------------------------------------------------------------------
@@ -54,6 +54,7 @@ if (!$application->isWindowRegistered($application->getAction()))
 	//
 	
 	$addButton->registerHandler($addButtonHandler);
+	$addButton->registerHandler($unregisterWindowHandler);
 
 
 	// ------------------------------------------------------------------
@@ -91,11 +92,14 @@ else
 
 <div class="ccContent" align="<?php echo $ccContentAlignment; ?>">
 
-<h1 class="ccH1">Adding New <?php echo $displayName; ?></h1>
-
 <?php echo $window->getErrorMessage(); ?>
 
-<table border="0" cellpadding="0" cellspacing="0" class="ccTable">
+<table border="0" cellpadding="1" cellspacing="0"><tr><td bgcolor="<?php echo $ccContentBorderColour; ?>">
+<table border="0" cellpadding="4" cellspacing="0">
+
+ <tr bgcolor="<?php echo $ccTitleBarColour; ?>">
+  <td colspan="2" class="ccSummaryHeadings">Adding New <?php echo $displayName; ?></td>
+ </tr>
 
 <?php 
 
@@ -128,14 +132,14 @@ for ($i = 0; $i < sizeof($keys); $i++)
 }
 ?>
 
- <tr class="buttonRow">
-  <td></td>
-  <td>
+ <tr bgcolor="<?php echo $ccButtonBarRowColour; ?>">
+  <td colspan="2" align="right">
    <?php echo $cancelButton->getHTML(); ?> <?php echo $addButton->getHTML(); ?>
   </td>
  </tr>
  
 </table>
+</td></tr></table>
 
 </div>
 

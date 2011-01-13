@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_MultipleKey_Record.php,v 1.9 2005/12/09 03:56:11 jamie Exp $
+// $Id: CC_MultipleKey_Record.php,v 1.3 2004/11/17 22:18:24 mike Exp $
 //=======================================================================
 // CLASS: CC_MultipleKey_Record
 //=======================================================================
@@ -46,7 +46,7 @@ class CC_MultipleKey_Record extends CC_Record
 
 	function CC_MultipleKey_Record($fieldList, $table, $editable = false, $id = array(-1), $idColumnName = array('ID'))
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		$this->window = &$application->getCurrentWindow();
 		$this->table = $table;
@@ -59,20 +59,22 @@ class CC_MultipleKey_Record extends CC_Record
 			$this->id[$idColumnName[$i]] = $id[$i];
 		}
 		
+		$fieldManager = &$application->fieldManager;
+
 		$fieldNameArray = explode(',', $fieldList);
 		
 		$key = $this->getKeyID($table, $id);
-		$size = sizeof($fieldNameArray);
-		$row = false;
 		
 		if ($id[0] != -1)
 		{
 			// get the record from the database
 			$selectQuery = 'select ';
 			
+			$size = sizeof($fieldNameArray);
+			
 			for ($i = 0; $i < $size; $i++)
 			{
-				$fieldType = $application->fieldManager->getFieldType($fieldNameArray[$i]);
+				$fieldType = $fieldManager->getFieldType($fieldNameArray[$i]);
 				
 				switch (strtolower($fieldType))
 				{
@@ -95,7 +97,10 @@ class CC_MultipleKey_Record extends CC_Record
 				}
 			}
 			
+			unset($size);
+			
 			$selectQuery .= ' from ' . $this->table . ' where ';
+			
 			
 			for ($i = 0; $i < $idColumnSize; $i++)
 			{
@@ -107,22 +112,51 @@ class CC_MultipleKey_Record extends CC_Record
 				}
 			}
 				
+			
 			//echo $selectQuery . "<p>";
 			
 			$results = $application->db->doSelect($selectQuery);
 			
 			if (PEAR::isError($results))
 			{
-				$this->initialize($fieldNameArray);
+				$this->initializeFields($fieldNameArray);
 				trigger_error('Query failed: ' . $results->getMessage() . '. The query was: ' . $selectQuery, E_USER_WARNING);
 			}
-			
-			$row = cc_fetch_assoc($results);
+			else
+			{
+				if ($row = cc_fetch_assoc($results))
+				{
+					$size = sizeof($fieldNameArray);
+					
+					for ($i = 0; $i < $size; $i++)
+					{
+						$fieldName = $fieldNameArray[$i];
+						$fieldData = $row[$fieldName];
+						
+						$fieldObject = &$this->createFieldObject($fieldName, $fieldData);
+						$fieldObject->setRecord($this);
+						
+						// make sure field keys are all upper case in this array
+						$this->fields[strtoupper($fieldName)] = &$fieldObject;
+	
+						unset($fieldName);
+						unset($fieldData);
+						unset($fieldObject);
+					}
+					
+					unset($size);
+				}
+				else
+				{
+					trigger_error('The record with id ' . $this->id[0] . ' doesn\'t exist. The query was: ' . $selectQuery, E_USER_WARNING);
+					$this->initializeFields($fieldNameArray);
+				}
+			}
 		}
-
-		$this->initialize($fieldNameArray, $size, $row);
-
-		unset($row, $size, $fieldNameArray);		
+		else
+		{
+			$this->initializeFields($fieldNameArray);
+		}
    	}	
 	
 	
@@ -175,7 +209,7 @@ class CC_MultipleKey_Record extends CC_Record
 	function buildUpdateQuery()
 	{
 		// CC_Database fields should be excluded from the update
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		$updateQuery = 'update ' . $this->table . ' set ';
 			
@@ -262,7 +296,7 @@ class CC_MultipleKey_Record extends CC_Record
 	function buildInsertQuery()
 	{
 		// CC_Database fields should be excluded from the update
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		$insertQuery = 'insert into ' . $this->table . ' (';
 	
@@ -270,18 +304,16 @@ class CC_MultipleKey_Record extends CC_Record
 		
 		$idkeys = array_keys($this->id);
 		
-		$keys = $this->getDatabaseUpdateableFieldNames();
-		
 		for ($i = 0; $i < $idSize; $i++)
 		{
-			if (!in_array($idkeys[$i], $keys))
-			{
-				$insertQuery .= $idkeys[$i] . ',';
-			}
+			$insertQuery .= $idkeys[$i] . ',';
 		}
 		
 		$insertQuery .= ' DATE_ADDED, ';
+		//$insertQuery = 'insert into ' . $this->table . ' (\'' . $this->idColumnName . '\', DATE_ADDED, ';
 
+		$keys = $this->getDatabaseUpdateableFieldNames();
+		
 		$size = sizeof($keys);
 		
 		$valueList = '';
@@ -324,10 +356,7 @@ class CC_MultipleKey_Record extends CC_Record
 		$keyValues = '';
 		for ($i = 0; $i < $idSize; $i++)
 		{
-			if (!in_array($idkeys[$i], $keys))
-			{
-				$keyValues .= "'" . $this->id[$idkeys[$i]] . "',";
-			}
+			$keyValues .= "'" . $this->id[$idkeys[$i]] . "',";
 		}
 		
 		$insertQuery .= $fieldList . ') values (' . $keyValues . ' now(), ' . $valueList . ')';

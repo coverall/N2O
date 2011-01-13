@@ -1,16 +1,11 @@
 <?php
-// $Id: CC_SelectList_Field.php,v 1.58 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_SelectList_Field.php,v 1.43 2004/11/02 21:32:01 patrick Exp $
 //=======================================================================
 // CLASS: CC_SelectList_Field
 //=======================================================================
 
 /**
  * The CC_SelectList_Field field represents a single select list (or drop-down) form field that allows users to choose from a list of pre-defined selections.
- *
- * In addition to what's supported globally by all CC_Fields (see documentation), this field supports the following arguments for the fourth argument of CC_FieldManager's addField() method:
- *
- * unselectedValue=[string] - The string for the unselected value in the select list. Defaults to "- Select -". If you set it to nothing, it won't be displayed.<br>
- * options=[string] - A comma-delimited list of values to be used. (eg. Red,Orange,Blue) You can also do key/value sets. (eg. 1=Red,2=Orange,3=Blue)<br>
  *
  * @package CC_Fields
  * @access public
@@ -173,29 +168,35 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 
 	function getEditHTML()
 	{
-		$selectHTML = '<select id="' . $this->id . '" name="' . $this->getRecordKey() . $this->name . '"' . ($this->_onChange ? ' onChange="' . $this->_onChange . '"' : '' ) . ($this->disabled ? 'disabled="true"' : '') . ' class="' . $this->getInputStyle() . "\">\n";
+		$selectHTML = '<select id="' . $this->id . '" name="' . $this->getRecordKey() . $this->name . '"' . ($this->_onChange ? ' onChange="' . $this->_onChange . '"' : '' ) . ($this->disabled ? 'disabled="true"' : '') . ' class="' . $this->getInputStyle() . '" tabindex="' . $this->_tabIndex . "\">\n";
 
 		$options = $this->getOptions();
+		$names = array_keys($options);
 		
 		if (strlen($this->unselectedValue))
 		{
 			$selectHTML .= ' <option value="' . $this->_unselectedValueValue . '">' . htmlspecialchars($this->unselectedValue) . "</option>\n";
 		}
 		
-		$size = sizeof($options);
+		$size = sizeof($names);
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if (is_array($options[$i]))
+			if (is_array($options[$names[$i]]))
 			{
-				$theValue = $options[$i][0];
-				$theName  = $options[$i][1];
+				$theArray = &$options[$names[$i]];
+
+				$theValue = $theArray[0];
+				$theName  = $theArray[1];
+				
+				unset($theArray);
 			}
 			else
 			{
-				$theValue = $options[$i];
-				$theName  = $options[$i];
+				$theValue = $options[$names[$i]];
+				$theName  = $options[$names[$i]];
 			}
+			
 
 			$selectHTML .= ' <option value="' . ($this->_escapeValues ? htmlspecialchars($theValue) : $theValue) . '"';
 			
@@ -211,7 +212,7 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 		
 		$selectHTML .= "</select>";
 
-		unset($size, $options);
+		unset($size, $options, $names);
 		
 		return $selectHTML;
 	}
@@ -232,36 +233,31 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 	{
 		$options = $this->getOptions();
 		
-		$index = $this->getSelectedIndex();
-		
-		if (strlen($this->unselectedValue))
-		{
-			// If there is an unselected value, and no index, just return blank.
-			if ($index == 0)
-			{
-				// check if there is a value, and return this.
-				$value = $this->getValue();
-				
-				if (strlen($value))
-				{
-					return $value;
-				}
-			
-				return;
-			}
-			// Else, we need to compensate for the unselected value...
-			else
-			{
-				$index--;
-			}
-		}
-
 		if (is_array($options[0]))
 		{
-			return $options[$index][1];
+			$size = sizeof($options);
+		
+			for ($i = 0; $i < $size; $i++)
+			{
+				$theArray = $options[$i];
+				if ($this->value == $theArray[0])
+				{
+					unset($size, $options);
+					return $theArray[1];
+				}
+			}
+			
+			unset($size);
 		}
 		else
 		{
+			$index = $this->getSelectedIndex();
+			
+			if (strlen($this->unselectedValue))
+			{
+				$index--;
+			}
+
 			return $options[$index];
 		}
 		
@@ -303,29 +299,9 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 	 *
 	 * @access public
 	 * @param mixed $visibleValue The value to set in terms of the selection option labels, not their respective, actual values.
-	 * @deprecated
-	 * @see getDisplayValue(), setDisplayValue()
 	 */
 	
-	function setVisibleValue($displayValue)
-	{
-		$this->setDisplayValue($displayValue);
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setDisplayValue
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This sets the value of the select list based on the display value as opposed to the actual value.
-	 *
-	 * @access public
-	 * @param mixed $displayValue The value to set in terms of the selection option labels, not their respective, actual values.
-	 * @see getDisplayValue()
-	 */
-	
-	function setDisplayValue($displayValue)
+	function setVisibleValue($visibleValue)
 	{
 		$options = $this->getOptions();
 		
@@ -333,10 +309,14 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($options[$i][1] == $displayValue)
+			$optionArray = $options[$i];
+			
+			if ($optionArray[1] == $visibleValue)
 			{
-				$this->setValue($options[$i][0]);
+				$this->setValue($optionArray[0]);
 			}
+			
+			unset($optionArray);
 		}
 		
 		unset($size, $options);
@@ -393,19 +373,22 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 		$options = $this->getOptions();
 		$size = sizeof($options);
 		$index = 0;
-		$isArray = ($size ? is_array($options[0]) : false);
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($isArray)
+			$names = array_keys($options);
+		
+			if (is_array($options[$names[$i]]))
 			{
-				$theValue = $options[$i][0];
-				$theName  = $options[$i][1];
+				$theArray = &$options[$names[$i]];
+
+				$theValue = $theArray[0];
+				$theName  = $theArray[1];
 			}
 			else
 			{
-				$theValue = $options[$i];
-				$theName  = $options[$i];
+				$theValue = $options[$names[$i]];
+				$theName  = $options[$names[$i]];
 			}
 
 			if ($theValue == $this->getValue())
@@ -422,7 +405,7 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 			}
 		}
 		
-		unset($size, $options, $i, $isArray);
+		unset($size, $options, $i);
 		
 		return $index;
 	}
@@ -452,21 +435,22 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 		
 		if ($index < sizeof($options) && $index >= 0)
 		{
-			if (is_array($options[$index]))
+			$keys = array_keys($options);
+			
+			if (is_array($options[$keys[$index]]))
 			{
-				$this->setValue($options[$index][0]);
+				$this->setValue($options[$keys[$index]][0]);
 			}
 			else
 			{
-				$this->setValue($options[$index]);
+				$this->setValue($options[$keys[$index]]);
 			}
 		}
 		else
 		{
 			trigger_error('Index out of bounds (' . $index . ')', E_USER_WARNING);
 		}
-
-		unset($options);
+		unset($keys, $options);
 	}
 
 
@@ -484,58 +468,6 @@ class CC_SelectList_Field extends CC_Multiple_Choice_Field
 	function setEscapeValues($escape)
 	{
 		$this->_escapeValues = $escape;
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$delimiter = (isset($args->delimiter) ? $args->delimiter : ',');
-		$unselected = (isset($args->unselectedValue) ? $args->unselectedValue : '- Select -');
-		
-		if (isset($args->options))
-		{
-			if (strpos($args->options, '='))
-			{
-				$preoptions = explode($delimiter, $args->options);
-				$size = sizeof($preoptions);
-				$options = array();
-				
-				for ($i = 0; $i < $size; $i++)
-				{
-					$suboptions = explode('=', $preoptions[$i]);
-					$options[] = array($suboptions[0], $suboptions[1]);
-					unset($suboptions);
-				}
-				unset($preoptions, $size);
-			}
-			else
-			{
-				$options = explode($delimiter, $args->options);
-			}
-		
-		}
-		else
-		{
-			$options = array();
-		}
-
-		$field = new $className($name, $label, $required, $value, $unselected, $options);
-
-		unset($unselected, $options);
-
-		return $field;
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Safe_Summary.php,v 1.14 2008/07/23 02:28:35 jamie Exp $
+// $Id: CC_Safe_Summary.php,v 1.12 2004/12/16 01:33:55 jamie Exp $
 //=======================================================================
 // CLASS: CC_Safe_Summary
 //=======================================================================
@@ -84,116 +84,81 @@ class CC_Safe_Summary extends CC_Summary
 	  * @param string $pluralDisplayName The plural display name.
 	  */
 
-	function update($force = false)
+	function update()
 	{
+		$application = &$_SESSION['application'];
+
 		$this->clearErrorMessage();
 		
-		// Only do the update if it hasn't been done in the last two seconds...
-		if ($force || (time() - $this->_lastUpdateTime) > $this->_updateTimeout)
+		$fullQuery = $this->query;
+		
+		$fullQuery .= (($this->_whereClause != NULL) ? ' ' . $this->_whereClause : '');
+		$fullQuery .= (($this->_groupClause != NULL) ? ' ' . $this->_groupClause : '');
+
+		$results = $application->db->doSelect($fullQuery);
+		
+		if (PEAR::isError($results))
 		{
-			global $application;
-	
-			$fullQuery = $this->query;
-			
-			$fullQuery .= (($this->_whereClause != NULL) ? ' ' . $this->_whereClause : '');
-			$fullQuery .= (($this->_groupClause != NULL) ? ' ' . $this->_groupClause : '');
-	
-			$results = $application->db->doSelect($fullQuery);
-			
-			if (PEAR::isError($results))
-			{
 				$this->setErrorMessage('Error in query: ' . $fullQuery . ' (' . $results->getMessage() . ')');
 				return;
-			}
-	
-			$this->numRecords = cc_num_rows($results);
-			
-			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	
-			if ($this->sortByColumn != NULL)
-			{
-				$fullQuery .= ' order by ' . $this->sortByColumn . ' ' .  $this->sortByDirection;
-			}
-	
-			$fullQuery .=  ' limit ' .  $this->getNumRowsPerPage() . ' offset ' . ($this->getStartRowNumber() - 1);
-	
-			$results = $application->db->doSelect($fullQuery);
-			
-			// pagination updates
-	
-			if (PEAR::isError($results))
-			{
+		}
+
+		$this->numRecords = cc_num_rows($results);
+		
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+		if ($this->sortByColumn != NULL)
+		{
+			$fullQuery .= ' order by ' . $this->sortByColumn . ' ' .  $this->sortByDirection . ' limit ' .  $this->getNumRowsPerPage() . ' offset ' . ($this->getStartRowNumber() - 1);
+		}
+		
+		$results = $application->db->doSelect($fullQuery);
+		//pagination updates
+
+		if (PEAR::isError($results))
+		{
 				$this->setErrorMessage('Error in query: ' . $fullQuery . ' (' . $results->getMessage() . ')');
 				return;
-			}
-	
-			// if there are fewer records than the starting record number, set page back to 1
-			if ($this->numRecords < $this->getStartRowNumber())
-			{
-				$this->pageNumber = 1;
-			}
-			
-			//update jump to page Auto-Submit Field 
-			$this->updateJumpToPageList();
-					
-			//update start and end rows
-			$this->updateStartRowNumber();
-			$this->updateEndRowNumber();
-			
-			//update download summary query
-			//$this->downloadSummaryQuery = $this->query;
-			
-			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			
-			unset($this->rows);
-			$this->rows = array();
-			
-			$first = true;
-			
-			while ($row = cc_fetch_assoc($results))
-			{
-				if ($first)
-				{
-					$this->columnNames = array_keys($row);
-					$first = false;
-				}
-	
-				$this->rows[] = $row;
+		}
+
+		// if there are fewer records than the starting record number, set page back to 1
+		if ($this->numRecords < $this->getStartRowNumber())
+		{
+			$this->pageNumber = 1;
+		}
+		
+		//update jump to page Auto-Submit Field 
+		$this->updateJumpToPageList();
 				
-				unset($row);
-			}
-			
-			unset($fullQuery);
-			unset($first);
-
-			$this->_lastUpdateTime = time();
-		}
-	}
-	
-	//-------------------------------------------------------------------
-	// METHOD: getDownloadAllQuery
-	//-------------------------------------------------------------------
-	
-	/**
-	 * This method gets the download all query, if it doesn't exist, it will just get the regular query
-	 *
-	 * @access public
-	 * @param bool $sort Return the sorted summary or not.
-	 */
-
-	function getDownloadAllQuery($sort = false)
-	{
-		$query = $this->downloadAllQuery;
+		//update start and end rows
+		$this->updateStartRowNumber();
+		$this->updateEndRowNumber();
 		
-		$query .= (($this->_whereClause != NULL) ? ' ' . $this->_whereClause : '');
-		$query .= (($this->_groupClause != NULL) ? ' ' . $this->_groupClause : '');
-
-		if ($sort && ($this->sortByColumn != NULL) && (!$this->downloadQueryComplete))
+		//update download summary query
+		//$this->downloadSummaryQuery = $this->query;
+		
+		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		
+		unset($this->rows);
+		$this->rows = array();
+		
+		$counter = 0;
+		
+		while ($row = cc_fetch_assoc($results))
 		{
-			$query .= ' order by ' . $this->getSortByColumn() . ' ' . $this->sortByDirection;
+			if ($counter == 0)
+			{
+				$this->columnNames = array_keys($row);
+				$counter++;
+			}
+
+			$this->rows[] = $row;
+			
+			unset($row);
 		}
 		
-		return $query;
+		unset($fullQuery);
+		unset($counter);
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_InternalRewriteUrl_Handler.php,v 1.6 2007/07/19 17:09:11 patrick Exp $
+// $Id: CC_InternalRewriteUrl_Handler.php,v 1.5 2004/12/08 03:12:56 patrick Exp $
 //=======================================================================
 // CLASS: CC_InternalRewriteUrl_Handler
 //=======================================================================
@@ -35,7 +35,7 @@ class CC_InternalRewriteUrl_Handler extends CC_Action_Handler
 
 	function process()
 	{
-		header('Location: ' . BASE_URL . $this->_target . ((isset($_COOKIE[session_name()]) && ($_COOKIE[session_name()] == session_id())) ? '' : ('?' . session_name() . '=' . session_id())));
+		header('Location: ' . BASE_URL . $this->_target . ((isset($_COOKIE[session_name()]) && ($_COOKIE[session_name()] == session_id())) ? '' : ('?' . SID)));
 		exit();
 	}
 }

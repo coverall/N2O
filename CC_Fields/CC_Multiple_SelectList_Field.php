@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Multiple_SelectList_Field.php,v 1.13 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Multiple_SelectList_Field.php,v 1.3 2004/09/14 18:18:23 patrick Exp $
 //=======================================================================
 // CLASS: CC_Multiple_SelectList_Field
 //=======================================================================
@@ -31,13 +31,12 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	 * @param array $theOptions An array of selection options. If this is a 1D array, the label and the value are the same. If it's a 2D array, the first item represents the value, the second represents the label.
 	 */
 
-	function CC_Multiple_SelectList_Field($name, $label, $required = false, $defaultValue = false, $unselectedValue = ' - Select - ', $theOptions = null)
+	function CC_Multiple_SelectList_Field($name, $label, $required = false, $defaultValue = '', $unselectedValue = ' - Select - ', $theOptions = null)
 	{
 		if ($theOptions == null)
 		{
 			$theOptions = array();
 		}
-				
 		$this->CC_SelectList_Field($name, $label, $required, $defaultValue, $unselectedValue, $theOptions);
 	}
 		
@@ -58,53 +57,6 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	{
 		return (sizeof($this->value) > 0);
 	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setValue
-	//-------------------------------------------------------------------
-
-	/**
-     * Gets whether or not the field has a value.
-     *
-     * @access public
-     * @return bool Whether or not the field has a value.
-     * 
-     **/
-
-	function setValue($value)
-	{
-		if (is_array($value))
-		{
-			$this->value = $value;
-		}
-		else if ($value)
-		{
-			parent::setValue(explode(',', $value));
-		}
-		else
-		{
-			parent::setValue(array());
-		}
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: getValue
-	//-------------------------------------------------------------------
-
-	/**
-     * Gets whether or not the field has a value.
-     *
-     * @access public
-     * @return bool Whether or not the field has a value.
-     * 
-     **/
-
-	function getValue()
-	{
-		return implode(',', $this->value);
-	}
 		
 
 	//-------------------------------------------------------------------
@@ -120,36 +72,35 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 
 	function getEditHTML()
 	{
-		$selectHTML = '<select multiple id="' . $this->id . '" name="' . $this->getRecordKey() . $this->name . '[]"' . ($this->_onChange ? ' onChange="' . $this->_onChange . '"' : '' ) . ' class="' . $this->getInputStyle() . "\">\n";
+		$selectHTML = '<select multiple name="' . $this->getRecordKey() . $this->name . '[]"' . ($this->_onChange ? ' onChange="' . $this->_onChange . '"' : '' ) . ' class="' . $this->getInputStyle() . "\">\n";
 
+		$names = array_keys($this->options);
+		
 		if (strlen($this->unselectedValue))
 		{
 			$selectHTML .= ' <option value="' . $this->_unselectedValueValue . '">' . htmlspecialchars($this->unselectedValue) . "</option>\n";
 		}
 		
-		$size = sizeof($this->options);
-	
+		$size = sizeof($names);
+		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($i == 0)
+			if (is_array($this->options[$names[$i]]))
 			{
-				$isArray = is_array($this->options[0]);
-			}
+				$theArray = &$this->options[$names[$i]];
 
-			if ($isArray)
-			{
-				$theValue = $this->options[$i][0];
-				$theName  = $this->options[$i][1];
+				$theValue = $theArray[0];
+				$theName  = $theArray[1];
 			}
 			else
 			{
-				$theValue = $this->options[$i];
-				$theName  = $this->options[$i];
+				$theValue = $this->options[$names[$i]];
+				$theName  = $this->options[$names[$i]];
 			}
 			
 			$selectHTML .= ' <option value="' . htmlspecialchars($theValue) . '"';
 			
-			if (in_array($theValue, $this->value))
+			if (in_array($theValue, $this->getValue()))
 			{	
 				$selectHTML .= ' selected';
 			}
@@ -157,9 +108,9 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 			$selectHTML .= '>' . $theName . "</option>\n";
 		}
 		
-		unset($size, $isArray, $theValue, $theName);
+		unset($size);
 		
-		$selectHTML .= '</select>';
+		$selectHTML .= "</select>";
 
 		return $selectHTML;
 	}
@@ -178,37 +129,21 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	
 	function getEscapedValue()
 	{
-		return addslashes($this->getValue());
-	}	
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: getValueList
-	//-------------------------------------------------------------------
-
-	/**
-     * Returns a comma delimited list of values.
-     *
-     * @access public
-     * @param $delimiter The delimiter to use.
-     * @return mixed The field's value as a comma delimited list.
-     */	
-	
-	function getValueList($delimiter = ',')
-	{
 		$numValues = sizeof($this->value);
 		
-		if ($numValues > 0)
+		for ($i = 0; $i < $numValues; $i++)
 		{
-			$value = implode($delimiter, $this->value);
-		}
-		else
-		{
-			$value = '';
+			$commaDelimitedList .= $this->value[$i];
+			
+			if ($i < ($numValues - 1))
+			{
+				 $commaDelimitedList .= ',';
+			}
 		}
 		
-		return $value;
-	}
+		return addslashes($commaDelimitedList);
+	}	
+	
 
 	//-------------------------------------------------------------------
 	// METHOD: getViewHTML
@@ -223,15 +158,24 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 
 	function getViewHTML()
 	{
-		$isArray = is_array($this->options[0]);
+		if (is_array($this->options[0]))
+		{
+			$optionsAreAnArray = true;
+		}
+		else
+		{
+			$optionsAreAnArray = false;
+		}
+		
 		$size = sizeof($this->options);
 	
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($isArray)
+			if ($optionsAreAnArray)
 			{
-				$currentValue = $this->options[$i][0];
-				$displayValue = $this->options[$i][1];
+				$theArray = $this->options[$i];	
+				$currentValue = $theArray[0];
+				$displayValue = $theArray[1];
 			}
 			else
 			{
@@ -268,8 +212,7 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	{
 		$this->setVisibleValues(array($visibleValue));
 	}
-
-
+	
 	//-------------------------------------------------------------------
 	// METHOD: setVisibleValues
 	//-------------------------------------------------------------------
@@ -284,15 +227,17 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	function setVisibleValues($visibleValues)
 	{
 		$size = sizeof($this->options);
-		$isArray = is_array($this->options[0]);
+		
 		$valueArray = array();
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($isArray)
+			if (is_array($this->options[$i]))
 			{
-				$theValue = $this->options[$i][0];
-				$theName  = $this->options[$i][1];
+				$theArray = &$this->options[$i];
+
+				$theValue = $theArray[0];
+				$theName  = $theArray[1];
 			}
 			else
 			{
@@ -346,19 +291,21 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 		$size = sizeof($this->options);
 		$indexArray = array();
 		
-		$isArray = is_array($this->options[0]);
-
 		for ($i = 0; $i < $size; $i++)
 		{
-			if ($isArray)
+			$names = array_keys($this->options);
+		
+			if (is_array($this->options[$names[$i]]))
 			{
-				$theValue = $this->options[$i][0];
-				$theName  = $this->options[$i][1];
+				$theArray = &$this->options[$names[$i]];
+
+				$theValue = $theArray[0];
+				$theName  = $theArray[1];
 			}
 			else
 			{
-				$theValue = $this->options[$i];
-				$theName  = $this->options[$i];
+				$theValue = $this->options[$names[$i]];
+				$theName  = $this->options[$names[$i]];
 			}
 
 			if (in_array($theValue, $this->getValue()))
@@ -375,7 +322,7 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 			}
 		}
 		
-		unset($size, $isArray);
+		unset($size);
 		
 		return $indexArray;
 	}
@@ -396,8 +343,7 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	{
 		$this->setSelectedIndices(array($index));
 	}
-
-
+	
 	//-------------------------------------------------------------------
 	// METHOD: setSelectedIndices
 	//-------------------------------------------------------------------
@@ -412,24 +358,27 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 	function setSelectedIndices($indexArray)
 	{
 		$newValue = array();
-		$size = sizeof($indexArray);
-		$offset = strlen($this->unselectedValue) ? 1 : 0;
-		$isArray = is_array($this->options[0]);
 		
-		for ($i = 0; $i < $size; $i++)
+		for ($i = 0; $i < sizeof($indexArray); $i++)
 		{
 			$index = $indexArray[$i];
-			$index -= $offset;
+		
+			if (strlen($this->unselectedValue))
+			{
+				$index--;
+			}
 			
 			if ($index < sizeof($this->options) && $index >= 0)
 			{
-				if ($isArray)
+				$keys = array_keys($this->options);
+				
+				if (is_array($this->options[$keys[$index]]))
 				{
-					$currentValue = $this->options[$index][0];
+					$currentValue = $this->options[$keys[$index]][0];
 				}
 				else
 				{
-					$currentValue = $this->options[$index];
+					$currentValue = $this->options[$keys[$index]];
 				}
 				
 				$newValue[] = $currentValue;
@@ -499,69 +448,6 @@ class CC_Multiple_SelectList_Field extends CC_SelectList_Field
 		}
 
 		return $valid;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$key = $this->getRequestArrayName();
-
-		if (array_key_exists($key, $_REQUEST))
-		{
-			// it's an array, by jove!
-			$this->value = $_REQUEST[$key];
-		}
-		else
-		{
-			$this->setValue(false);
-		}
-		
-		unset($key);
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$unselected = (isset($args->unselectedValue) ? $args->unselectedValue : '- Select -');
-
-		if (isset($args->options))
-		{
-			$options = explode(',', $args->options);
-		}
-		else
-		{
-			$options = array();
-		}
-				
-		$field = new $className($name, $label, $required, $value, $unselected, $options);
-
-		unset($unselected, $options);
-
-		return $field;
 	}
 }
 

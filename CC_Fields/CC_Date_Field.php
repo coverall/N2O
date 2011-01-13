@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Date_Field.php,v 1.29 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Date_Field.php,v 1.20 2004/12/08 10:21:55 jamie Exp $
 //=======================================================================
 // CLASS: CC_Date_Field
 //=======================================================================
@@ -15,6 +15,16 @@
 
 class CC_Date_Field extends CC_Field
 {
+	/**
+     * An array representing the month names.
+     *
+     * @var array $monthsArray
+     * @access private
+     */	
+     
+     var $monthsArray = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+	
+	
 	/**
      * The CC_SelectList_Field that represents the month.
      *
@@ -74,25 +84,31 @@ class CC_Date_Field extends CC_Field
 	 * @param int $endYear The end year in the year select list's range.	
 	 */
 
-	function CC_Date_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $startYear = 2005, $endYear = 2015)
+	function CC_Date_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $startYear = 1993, $endYear = 2013)
 	{
 		$this->CC_Field($name, $label, $required);
 		
-		$monthsArray = array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-
-		for ($i = 0; $i < 12; $i++)
+		$size = sizeof($this->monthsArray);
+		
+		for ($j = 0; $j < $size; $j++)
 		{
-			$monthArray[] = array($i + 1, $monthsArray[$i]);
+			$monthItem[0] = $j + 1;
+			$monthItem[1] = $this->monthsArray[$j];
+			$monthArray[] = $monthItem;
+			
+			unset($monthItem);
 		}
 		
-		for ($i = 1; $i <= 31; $i++)
+		unset($size);
+		
+		for ($k = 1; $k <= 31; $k++)
 		{
-			$dayArray[] = $i;
+			$dayArray[] = $k;
 		}
 		
-		for ($i = $startYear; $i <= $endYear; $i++)
+		for ($l = $startYear; $l <= $endYear; $l++)
 		{
-			$yearArray[] = $i;
+			$yearArray[] = $l;
 		}
 		
 		$today = getdate();
@@ -112,9 +128,9 @@ class CC_Date_Field extends CC_Field
 			$defaultYearValue = $today['year'];
 		}
 		
-		$this->monthField = new CC_SelectList_Field($this->name . '_month', '', false, $defaultMonthValue, '', $monthArray);
-		$this->dateField = new CC_SelectList_Field($this->name . '_date', '', false, $defaultDateValue, '', $dayArray);
-		$this->yearField = new CC_SelectList_Field($this->name . '_year', '', false, $defaultYearValue, '', $yearArray);
+		$this->monthField = &new CC_SelectList_Field($this->name . '_month', '', false, $defaultMonthValue, '', $monthArray);
+		$this->dateField = &new CC_SelectList_Field($this->name . '_date', '', false, $defaultDateValue, '', $dayArray);
+		$this->yearField = &new CC_SelectList_Field($this->name . '_year', '', false, $defaultYearValue, '', $yearArray);
 	}
 	
 	
@@ -250,7 +266,7 @@ class CC_Date_Field extends CC_Field
 
 	function getEditHTML()
 	{
-		return $this->getMonthHTML() . ' ' . $this->getDateHTML() . ', ' . $this->getYearHTML();
+		return $this->getMonthHTML() . " " . $this->getDateHTML() . ", " . $this->getYearHTML();
 	}
 
 
@@ -363,7 +379,7 @@ class CC_Date_Field extends CC_Field
 
 	function setMonthValue($monthValue = '')
 	{
-		$this->monthField->setValue(intval($monthValue));
+		$this->monthField->setValue($monthValue);
 	}
 	
 
@@ -380,7 +396,7 @@ class CC_Date_Field extends CC_Field
 
 	function setDateValue($dateValue = '')
 	{
-		$this->dateField->setValue(intval($dateValue));
+		$this->dateField->setValue($dateValue);
 	}
 	
 	
@@ -399,13 +415,11 @@ class CC_Date_Field extends CC_Field
 	{
 		if (preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2}/', $value))
 		{
-			$parsed = explode('-', $value);
+			$parsedDate = getDate(convertMysqlDateToTimestamp($value));
 			
-			$this->setYearValue($parsed[0]);
-			$this->setMonthValue($parsed[1]);
-			$this->setDateValue($parsed[2]);
-			
-			unset($parsed);
+			$this->setMonthValue($parsedDate['mon']);
+			$this->setDateValue($parsedDate['mday']);
+			$this->setYearValue($parsedDate['year']);
 		}
 		else
 		{
@@ -475,9 +489,9 @@ class CC_Date_Field extends CC_Field
 	 * @return string $defaultValue A string of the form YYYY-MM-DD representing a date.
 	 */
 
-	function getValue($format = '%04u-%02u-%02u')
+	function getValue()
 	{
-		return sprintf($format, $this->getYearValue(), $this->getMonthValue(), $this->getDateValue());
+		return sprintf('%04u-%02u-%02u', $this->getYearValue(), $this->getMonthValue(), $this->getDateValue());
 	}
 	
 	
@@ -563,101 +577,6 @@ class CC_Date_Field extends CC_Field
 	function validate()
 	{
 		return ($this->_allowBlank || checkdate($this->getMonthValue(), $this->getDateValue(), $this->getYearValue()));
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setYearRange
-	//-------------------------------------------------------------------
-
-	/** 
-	 * This method returns an expiry date value in the format 'YYMM' for use with credit card processing gateways like Moneris.)
-	 *
-	 * @access public
-	 * @return string The value of the field in YYMM format.
-	 */
-
-	function setYearRange($start, $end)
-	{
-		if ($start < $end)
-		{
-			$options = array();
-			
-			for ($i = $start; $i <= $end; $i++)
-			{
-				$options[] = $i;
-			}
-			
-			$this->yearField->setOptions($options);
-			
-			unset($options, $i);
-		}
-		else
-		{
-			trigger_error('$start must be < $end: ' . getStackTrace(), E_USER_WARNING);
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		$key = $this->getRequestArrayName();
-
-		if (array_key_exists($key . '_year', $_REQUEST))
-		{
-			$this->setYearValue($_REQUEST[$key . '_year']);
-			$this->setMonthValue($_REQUEST[$key . '_month']);
-			$this->setDateValue($_REQUEST[$key . '_date']);
-		}
-		
-		unset($key);
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$startYear = (isset($args->startYear) ? $args->startYear : 2000);		
-		$endYear = (isset($args->endYear) ? $args->endYear : 2015);		
-
-		$field = new $className($name, $label, $required, -1, -1, -1, $startYear, $endYear);
-		
-		if (strlen($value) && $value != '0000-00-00')
-		{
-			$field->setValue($value);
-		}
-		
-		if (isset($args->allowBlank))
-		{
-			$field->setAllowBlankValue($args->allowBlank);
-		}
-		
-		unset($startYear, $endYear);
-
-		return $field;
 	}
 }
 

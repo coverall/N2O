@@ -1,19 +1,11 @@
 <?php
-// $Id: CC_Foreign_Key_Field.php,v 1.31 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Foreign_Key_Field.php,v 1.21 2004/09/14 18:18:23 patrick Exp $
 //=======================================================================
 // CLASS: CC_Foreign_Key_Field
 //=======================================================================
 
 /**
  * The CC_Foreign_Key_Field field represents a selection of values from a separate, but related database table.
- *
- * In addition to what's supported globally by all CC_Fields (see documentation), this field supports the following arguments for the fourth argument of CC_FieldManager's addField() method:
- *
- * showAdd=[0/1] - Should we show an add button?<br>
- * addHandler=[string] - The class name for the handler for the add button.<br>
- * orderBy=[string] - The column to order by in the query.<br>
- * whereClause=[string] - An optional where clause for the query (eg. whereClause=where ID > 10)<br>
- * unselectedValue=[string] - The string for the unselected value in the select list. Defaults to "- Select -". If you set it to nothing, it won't be displayed.<br>
  *
  * @package CC_Fields
  * @access public
@@ -23,6 +15,16 @@
 
 class CC_Foreign_Key_Field extends CC_SelectList_Field
 {
+	/**
+     * The window which the field belongs to. It is used to register the add button for this field.
+     *
+     * @var CC_Window $window
+     * @access private
+     */
+	
+	var $window;
+	
+	
 	/**
 	 * A button to add a new record to the related table.
 	 *
@@ -61,16 +63,6 @@ class CC_Foreign_Key_Field extends CC_SelectList_Field
      
      var $whereClause;
 
-
-	/**
-	 * The add button handler class for adding new elements
-	 *
-     * @var string $addButtonHandlerClass
-     * @access private
-     */
-     
-     var $addButtonHandlerClass;
-
 	
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Foreign_Key_Field
@@ -99,14 +91,26 @@ class CC_Foreign_Key_Field extends CC_SelectList_Field
 			$theOptions = array();
 		}
 	
+		$application = &$_SESSION['application'];
+		
 		$this->CC_SelectList_Field($name, $label, $required, $defaultValue, $unselectedValue, $theOptions);
 		
+		$this->window = &$application->getCurrentWindow();
 		$this->relatedTableName = $relatedTableName;
 		$this->setShowAddButton($showAddButton);
 
-		$this->showAddButton = $showAddButton;
-		$this->addButtonHandlerClass = $addButtonHandlerClass;
-
+		if ($showAddButton)
+		{
+			$this->manageButton = new CC_Button('Add ' . $this->label);
+		
+			$this->manageButton->setValidateOnClick(false);
+			$this->manageButton->setFieldUpdater(true);
+			
+			$this->manageButton->registerHandler(new $addButtonHandlerClass($this->name));
+		
+			$this->window->registerComponent($this->manageButton);
+		}
+		
 		$this->foreignKey = true;
 	}
 	
@@ -141,7 +145,7 @@ class CC_Foreign_Key_Field extends CC_SelectList_Field
 
 	function getEditHTML()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		if ($application->hasArgument($this->name))
 		{	
@@ -158,6 +162,37 @@ class CC_Foreign_Key_Field extends CC_SelectList_Field
 		$editHTML .= '</nobr>';
 		
 		return $editHTML;
+	}
+
+
+	//-------------------------------------------------------------------
+	// METHOD: getDisplayValue
+	//-------------------------------------------------------------------
+	
+	/** 
+	 * This gets the field's display value (as opposed to its actual value).
+	 *
+	 * @access public
+	 * @return mixed The display value for the field. Same as the viewHTML.
+	 */
+
+	function getDisplayValue()
+	{
+		$size = sizeof($this->options);
+	
+		for ($i = 0; $i < $size; $i++)
+		{
+			$valueArray = $this->options[$i];
+			
+			if (strcmp("$valueArray[0]", $this->getValue()) == 0)
+			{
+				return $valueArray[1];
+			}
+		}
+		
+		unset($size);
+		
+		return $this->unselectedValue;
 	}
 	
 	
@@ -177,76 +212,21 @@ class CC_Foreign_Key_Field extends CC_SelectList_Field
 		return new CC_Record($fieldList, $this->relateTableName, $editable = false, $this->getValue());
 	}
 
-
+	
 	//-------------------------------------------------------------------
-	// METHOD: register
+	// METHOD: getViewHTML
 	//-------------------------------------------------------------------
 
-	/**
-	 * This is a callback method that gets called by the window when the
-	 * component is registered. It's up to the component to decide which
-	 * registerXXX() method it should call on the window. Should your
-	 * custom component consist of multiple components, you may need to
-	 * make multiple calls.
+	/** 
+	 * Returns HTML with the display value of the field for viewing. 
 	 *
 	 * @access public
+	 * @return string The HTML for the field.
 	 */
 
-	function register(&$window)
+	function getViewHTML()
 	{
-		parent::register($window);
-		
-		if ($this->showAddButton)
-		{
-			$this->manageButton = new CC_Button('Add ' . $this->label);
-		
-			$this->manageButton->setValidateOnClick(false);
-			$this->manageButton->setFieldUpdater(true);
-			
-			$this->manageButton->registerHandler(new $this->addButtonHandlerClass($this->name));
-		
-			$window->registerComponent($this->manageButton);
-		}
-		
-		unset($this->addButtonHandlerClass);
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function getInstance($className, $name, $label, $value, $args, $required)
-	{
-		global $application;
-		
-		$showAdd = (isset($args->showAdd) ? $args->showAdd : false);
-		$addHandler = (isset($args->addHandler) ? $args->addHandler : 'CC_Manage_FK_Table_Handler');
-		$orderBy = (isset($args->orderBy) ? $args->orderBy : false);
-		$whereClause = (isset($args->whereClause) ? $args->whereClause : false);
-		$sourceTable = (isset($args->sourceTable) ? $args->sourceTable : false);
-		$displayColumn = (isset($args->displayColumn) ? $args->displayColumn : false);
-		$required = (isset($args->required) ? $args->required : 0);
-		$unselectedValue = (isset($args->unselectedValue) ? $args->unselectedValue : '- Select -');
-		
-		if (!$application->relationshipManager->getRelatedTable($name))
-		{
-			$application->relationshipManager->addRelationship($name, $sourceTable, $displayColumn);
-		}
-
-		$field = &$application->relationshipManager->getField($name, $value, $label, $showAdd, $orderBy, $addHandler, $whereClause, $unselectedValue, $displayColumn, $required);
-
-		unset($showAdd, $addHandler, $orderBy, $whereClause, $sourceTable, $displayColumn, $required);
-
-		return $field;
+		return $this->getDisplayValue();
 	}
 }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Download_ZIP_Summary_Handler.php,v 1.20 2006/02/18 02:15:36 patrick Exp $
+// $Id: CC_Download_ZIP_Summary_Handler.php,v 1.19 2003/10/13 21:00:23 jamie Exp $
 //=======================================================================
 // CLASS: CC_Download_ZIP_Summary_Handler
 //=======================================================================
@@ -81,7 +81,7 @@ class CC_Download_ZIP_Summary_Handler extends CC_Action_Handler
 
 	function process()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		if (strstr($this->downloadFileName, '.txt') !== false)
 		{
@@ -94,7 +94,7 @@ class CC_Download_ZIP_Summary_Handler extends CC_Action_Handler
 			$filename = $this->downloadFileName . '.txt';
 		}
 		
-		if (false) //@function_exists('gzcompress'))
+		if (@function_exists('gzcompress'))
 		{
 			$zipFile = new CC_ZIP_File();
 			$zipFile->addFile($this->summaryToDownload->getRawSummary($this->downloadQuery, true), $filename);
@@ -102,26 +102,21 @@ class CC_Download_ZIP_Summary_Handler extends CC_Action_Handler
 			header('Content-type: application/octet-stream; name=' . $zipName);
 			header('Content-Disposition: attachment; filename=' . $zipName);
 			header('Content-Length: ' . $zipFile->compressed_file_size);
-
-			echo $zipFile->getFile();
 		}
 		else
 		{	
-			if (strstr($this->downloadFileName, '.txt') == false)
-			{
-				$this->downloadFileName = $filename;
-			}
-
-			$text = $this->summaryToDownload->getRawSummary($this->downloadQuery, true);
-			
 			header('Content-type: application/octet-stream; name=' . $this->downloadFileName);
 			header('Content-Disposition: attachment; filename=' . $this->downloadFileName);
-			header('Content-Length: ' . strlen($text));
-
-			echo $text;
-			
-			$text = null;
-			unset($text);
+		}
+		
+		if (@function_exists('gzcompress'))
+		{
+			echo $zipFile->getFile();
+		}
+		else
+		{
+			// pass true to get tab delimted text.
+			echo $this->summaryToDownload->getRawSummary($this->downloadQuery, true);
 		}
 		
 		exit();

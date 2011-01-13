@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Text_Button.php,v 1.25 2008/05/30 23:41:30 mike Exp $
+// $Id: CC_Text_Button.php,v 1.22 2004/11/02 21:24:51 patrick Exp $
 //=======================================================================
 // CLASS: CC_Text_Button
 //=======================================================================
@@ -32,7 +32,7 @@ class CC_Text_Button extends CC_Button
 		
 		if (isset($_SESSION['application']))
 		{
-			global $application;
+			$application = $_SESSION['application'];
 			$this->action = $application->getAction();
 		}
 		else
@@ -63,7 +63,7 @@ class CC_Text_Button extends CC_Button
 		
 		if ($this->clickable)
 		{
-			return '<a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey())) . '" class="' . $this->getStyle() . '" ' . (isset($this->_onClick) ? ' onClick="' . $this->_onClick . '"' : '' ) . '>' . $this->label . '</a>';
+			return '<a href="' . $application->getFormAction($this->getPath(), '_LL=' . $this->id . '&pageId=' . URLValueEncode($this->action) . '&pageIdKey=' . URLValueEncode($application->getActionKey()) . (SID ? '&' . SID : '')) . '" class="' . $this->getStyle() . '">' . $this->label . '</a>';
 		}
 		else
 		{

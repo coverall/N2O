@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_RadioButton.php,v 1.36 2009/03/10 04:34:42 patrick Exp $
+// $Id: CC_RadioButton.php,v 1.31 2005/02/23 02:30:54 patrick Exp $
 //=======================================================================
 // CLASS: CC_RadioButton
 //=======================================================================
@@ -133,7 +133,7 @@ class CC_RadioButton
 			$this->label = $option;
 		}
 		
-		$this->isSelected = $isSelected;
+		$this->$isSelected = $isSelected;
 		
 		$this->onClickAction = $onClickString;
 		
@@ -201,23 +201,6 @@ class CC_RadioButton
 	
 	
 	//-------------------------------------------------------------------
-	// METHOD: setLabel
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * This sets the radio button label.
-	 *
-	 * @access public
-	 * @param string $label The label text.
-	 */
-	  
-	function setLabel($label)
-	{
-		$this->label = $label;
-	}
-	
-	
-	//-------------------------------------------------------------------
 	// METHOD: getLabel
 	//-------------------------------------------------------------------
 	
@@ -231,19 +214,11 @@ class CC_RadioButton
 	  
 	function getLabel($extra = null)
 	{
-		if ($this->radioField->hasLinkableLabel())
-		{
-			$label = '<span class="ccClickableLabel"';
-		}
-		else
-		{
-			$label = '<span';
-		}
-		
+		$label = '<span class="ccClickableLabel"';
 		
 		if ($this->radioField->hasLinkableLabel() && !$this->radioField->isDisabled() && !$this->radioField->readonly)
 		{
-			$label .= ' onClick="document.getElementsByName(\'' . $this->getRecordKey() . $this->radioField->name . '\')';
+			$label .= ' onClick="document.forms[\'CC_Form\'].elements[\'' . $this->radioField->getRecordKey() . $this->radioField->name . '\']';
 			if (sizeof($this->radioField->radioButtons) > 1)
 			{
 				$label .= '[' . $this->_index . ']';

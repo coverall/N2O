@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Summary.php,v 1.186 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Summary.php,v 1.152 2005/02/28 00:11:56 patrick Exp $
 //=======================================================================
 // CLASS: CC_Summary
 //=======================================================================
@@ -23,6 +23,17 @@ class CC_Summary extends CC_Component
      */	
      
 	var $window;
+	
+	
+	/**
+     * The application's field manager object.
+     *
+     * @var CC_FieldManager $fieldManager
+     * @access private
+     * @todo Do we need this if we have the application object everywhere?
+     */	
+    
+    var $fieldManager;				// the field manager which provides us info
 	
 	
 	/**
@@ -468,6 +479,36 @@ class CC_Summary extends CC_Component
 
 
 	/**
+     * The colour of the summary's header row as a hexadecimal RGB string.
+     *
+     * @var string $columnHeaderColour
+     * @access private
+     */	
+
+	var $columnHeaderColour;
+
+
+	/**
+     * The colour of the summary's even rows as a hexadecimal RGB string.
+     *
+     * @var string $evenRowColour
+     * @access private
+     */	
+
+	var $evenRowColour;
+
+
+	/**
+     * The colour of the summary's odd rows as a hexadecimal RGB string.
+     *
+     * @var string $oddRowColour
+     * @access private
+     */
+
+	var $oddRowColour;
+
+
+	/**
      * The colour of the summary's button row as a hexadecimal RGB string.
      *
      * @var string $buttonBarColour
@@ -714,9 +755,9 @@ class CC_Summary extends CC_Component
 
 	function CC_Summary($name, $query, $mainTable = NULL, $sortByColumn = 'ID', $sortAscending = true, $allowView = false, $allowEdit = false, $allowDelete = false, $viewHandlerClass = 'CC_Summary_Record_Handler', $editHandlerClass = 'CC_Summary_Record_Handler', $deleteHandlerClass = 'CC_Summary_Record_Handler', $addHandlerClass = 'CC_Summary_Record_Handler', $displayName = 'Record')
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 
-		global $ccContentBackgroundColour, $ccButtonBarRowColour, $ccRecordHighlightRowColour, $ccDefaultRecordsPerPage;
+		global $ccContentBackgroundColour, $ccTitleBarColour, $ccRecordOddRowColour, $ccRecordEvenRowColour, $ccButtonBarRowColour, $ccRecordHighlightRowColour, $ccDefaultRecordsPerPage;
 		
 		$this->window = &$application->getCurrentWindow();
 		
@@ -738,6 +779,8 @@ class CC_Summary extends CC_Component
 			$this->setSortByDirection('DESC');
 		}
 		
+		$this->fieldManager = &$application->fieldManager;
+		
 		$this->allowView = $allowView;
 		$this->allowEdit = $allowEdit;
 		$this->allowDelete = $allowDelete;
@@ -752,26 +795,28 @@ class CC_Summary extends CC_Component
 		$this->deleteWindow = CC_FRAMEWORK_PATH . '/CC_Windows/CC_Delete_Confirm_Window'; 
 		$this->editWindow = CC_FRAMEWORK_PATH . '/CC_Windows/CC_Edit_Record_Window'; 
 		
-		$this->addNewButton = new CC_Image_Button('Add New', '/N2O/CC_Images/add.png', 16, 16, 0);
+		$this->addNewButton = &new CC_Image_Button('Add New', '/N2O/CC_Images/add.gif', 20, 20, 0);
 		$this->addNewButton->setValidateOnClick(false);
 
-		$this->refreshButton = new CC_Image_Button('Refresh', '/N2O/CC_Images/refresh.png', 16, 16, 0);
+		$this->refreshButton = &new CC_Image_Button('Refresh', '/N2O/CC_Images/refresh.gif', 20, 20, 0);
 		$this->refreshButton->setValidateOnClick(false);
 		$this->refreshButton->registerHandler(new CC_Summary_Refresh_Handler($this->name));
 		
 		// pagination code
 		
-		$this->numberRowsPerPageList = new CC_AutoSubmit_Select_Field($this->name . '_NUM_ROWS', 'Records Per Page', false, (cc_is_int($ccDefaultRecordsPerPage) ? $ccDefaultRecordsPerPage : 5), '', array('5' => '5', '10' => '10', '25' => '25', '50' => '50', '100' => '100', 'All' => 'All'), 'Go', true);
+		$this->numberRowsPerPageList = &new CC_AutoSubmit_Select_Field($this->name . '_NUM_ROWS', 'Records Per Page', false, (cc_is_int($ccDefaultRecordsPerPage) ? $ccDefaultRecordsPerPage : 5), '', array('5' => '5', '10' => '10', '25' => '25', '50' => '50', '100' => '100', 'All' => 'All'));
+		$this->numberRowsPerPageList->registerHandler(new CC_Summary_Num_Rows_Handler($this->name));
 		
 		$this->setDefaultNumRowsPerPage($this->getNumRowsPerPage(), false);
 		
-		$this->jumpToPageList = new CC_AutoSubmit_Select_Field($this->name . '_JUMP_TO_PAGE', 'Page', false, 1, '', array(), 'Go', true);
+		$this->jumpToPageList = &new CC_AutoSubmit_Select_Field($this->name . '_JUMP_TO_PAGE', 'Page', false, 1, '', array());
+		$this->jumpToPageList->registerHandler(new CC_Summary_Jump_To_Page_Handler($this->name));
 
-		$this->nextButton = new CC_Image_Button('Next >>', '/N2O/CC_Images/next.png', 16, 16, 0);
-		$this->nextButton->setDisabledImagePath('/N2O/CC_Images/next.inactive.png');
-
-		$this->previousButton = new CC_Image_Button('<< Previous', '/N2O/CC_Images/previous.png', 16, 16, 0);
-		$this->previousButton->setDisabledImagePath('/N2O/CC_Images/previous.inactive.png');
+		$this->nextButton = &new CC_Image_Button('Next >>', '/N2O/CC_Images/next.gif', 20, 20, 0);
+		$this->previousButton = &new CC_Image_Button('<< Previous', '/N2O/CC_Images/previous.gif', 20, 20, 0);
+		
+		$this->nextButton->registerHandler(new CC_Summary_Next_Handler($this->name));
+		$this->previousButton->registerHandler(new CC_Summary_Previous_Handler($this->name));
 		
 		$this->nextButton->setValidateOnClick(false);
 		$this->previousButton->setValidateOnClick(false);
@@ -784,7 +829,7 @@ class CC_Summary extends CC_Component
 		}
 		
 		$sortByColumnCookieName = session_name() . '_' . $this->name . '_SORTBY';
-		if (array_key_exists($sortByColumnCookieName, $_COOKIE) && strpos($this->query, $_COOKIE[$sortByColumnCookieName]))
+		if (array_key_exists($sortByColumnCookieName, $_COOKIE))
 		{	
 			$this->setSortByColumn($_COOKIE[$sortByColumnCookieName]);
 		}
@@ -801,6 +846,9 @@ class CC_Summary extends CC_Component
 		$this->setPageNumber(1);
 
 		$this->backgroundColour   = $ccContentBackgroundColour;	// the background colour
+		$this->columnHeaderColour = $ccTitleBarColour;		// the colour of the header row
+		$this->evenRowColour      = $ccRecordEvenRowColour;	// the colour of even rows
+		$this->oddRowColour       = $ccRecordOddRowColour;	// the colour of odd rows
 		$this->buttonBarColour    = $ccButtonBarRowColour;	// the colour of the button row
 		$this->rowHighlightColour = $ccRecordHighlightRowColour; // the colour of the highlight shading
 		
@@ -822,7 +870,7 @@ class CC_Summary extends CC_Component
 	
 	function registerFilter($column, &$filter)
 	{
-		if ($filter instanceof CC_Summary_Filter)
+		if (verifyClassType($filter, 'CC_Summary_Filter'))
 		{
 			$this->columnFilters[$column] = $filter;
 		}
@@ -844,9 +892,9 @@ class CC_Summary extends CC_Component
 	 	
 	function addColumn($columnTitle, &$contentProvider, $before = false)
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
-		if (!($contentProvider instanceof CC_Summary_Content_Provider))
+		if (!verifyClassType($contentProvider, 'CC_Summary_Content_Provider'))
 		{
 			trigger_error('CC_Summary->addColumn($columnTitle): The content provider was not a CC_Summary_Content_Provider.', E_USER_ERROR);
 		}
@@ -904,7 +952,7 @@ class CC_Summary extends CC_Component
 				if ($this->additionalColumnsBefore[$keys[$i]] == $before)
 				{
 					$contentProvider = &$this->additionalColumns[$keys[$i]];
-					$rowHTML .= '<td style="text-align:' . $contentProvider->alignment . '">' . $contentProvider->getHTML($recordId, $this->mainTable, $row) . "</td>\n";
+					$rowHTML .= '<td align="' . $contentProvider->alignment . '">' . $contentProvider->getHTML($recordId, $this->mainTable, $row) . "</td>\n";
 					
 					unset($contentProvider);
 				}
@@ -940,8 +988,8 @@ class CC_Summary extends CC_Component
 			$this->window->registerComponent($this->multipleSelectionCheckboxes[$recordId]);
 		}
 		
-		$html = '   <th style="text-align:center">';
-		$html .= $this->multipleSelectionCheckboxes[$recordId]->getHTML() . "</th>\n";
+		$html = '   <td align="center" class="ccSummaryHeadings">';
+		$html .= $this->multipleSelectionCheckboxes[$recordId]->getHTML() . "</td>\n";
 
 		return $html;
 	}
@@ -1005,12 +1053,12 @@ EOF;
 			$this->window->registerComponent($this->multipleSelectionSelectAllButton);
 		}
 		
-		$html = '   <th style="text-align:center">';
+		$html = '   <td align="center" class="ccSummaryHeadings">';
 		//$html .= $this->multipleSelectionSelectAllButton->getHTML() . "</td>\n";
 		
 		$summaryName = $this->name;
 
-		$html .= '<input type="checkbox" name="sa_' . $this->name . '" onClick="SelectAll(\'' . $this->name . '\');" title="Select or de-select all messages"></th>' . "\n";
+		$html .= '<input type="checkbox" name="sa_' . $this->name . '" onClick="SelectAll(\'' . $this->name . '\');" title="Select or de-select all messages"></td>' . "\n";
 
 		return $html;
 	}
@@ -1045,7 +1093,7 @@ EOF;
 				if ($this->additionalColumnsBefore[$keys[$j]] == $before)
 				{
 					$contentProvider = &$this->additionalColumns[$keys[$j]];
-					$html .= '   <th style="text-align:' . $contentProvider->alignment . '">' . $contentProvider->getHeading($keys[$j]) . "</th>\n";
+					$html .= '   <td align="' . $contentProvider->alignment . '" class="ccSummaryHeadings">' . $contentProvider->getHeading($keys[$j]) . "</td>\n";
 					
 					unset($contentProvider);
 				}
@@ -1072,7 +1120,9 @@ EOF;
 
 	function getRowHTML($rowNumber, $shade)
 	{
-		$rowHTML = '  <tr class="ccSummaryData ' . ($shade ? 'even' : 'odd') . '" id="r' . $this->name . $rowNumber . '">' . "\n";
+		$application = &$_SESSION['application'];
+		
+		$rowHTML = '  <tr' . $shade . ' id="r' . $this->name . $rowNumber . '" valign="top" onMouseOver="obj=document.getElementById(\'r' . $this->name . $rowNumber . '\'); obj.style.backgroundColor=\'' . $this->rowHighlightColour . '\'; return true" onMouseOut="obj=document.getElementById(\'r' . $this->name . $rowNumber . '\'); obj.style.backgroundColor=\'\'; return true" class="ccSummaryData">' . "\n";
 		
 		$row = $this->rows[$rowNumber];
 		
@@ -1086,7 +1136,7 @@ EOF;
 		}
 		else
 		{
-			trigger_error($this->getName() . ' summary: You didn\'t specify the ID field in your summary query! (Row: ' . $rowNumber . ') Are you using a GROUP BY clause? If so, you should use a CC_Safe_Summary instead.', E_USER_WARNING);
+			trigger_error('You didn\'t specify the ID field in your summary query! (Row: ' . $rowNumber . ') Are you using a GROUP BY clause? If so, you should use a CC_Safe_Summary instead.', E_USER_WARNING);
 		}
 		
 		if (sizeof($this->multipleSelectionsButtons) > 0)
@@ -1104,7 +1154,7 @@ EOF;
 		// Iterate through the SQL results
 		//
 		
-		// display the column ID only if the showIdColumn is true
+		//display the column ID only if the showIdColumn is true
 		for ($l = 0; $l < sizeof($row); $l++)
 		{
 			if (!(!strcasecmp($this->columnNames[$l], $this->_idColumn) && ($this->showIdColumn == false)))
@@ -1118,11 +1168,11 @@ EOF;
 						$viewButton = &$this->getViewEditDeleteLinkButton($this->viewHandlerClass, $recordId, 'View', $recordId . '_cv');
 						$viewButton->setLabel($filter->processValue($row[$this->columnNames[$l]], $recordId, $row));
 
-						$rowHTML .= '   <td class="' . strtolower(preg_replace('/[ _]/', '-', $this->columnNames[$l])) . '" style="text-align:' . $filter->alignment . '">' . $viewButton->getHTML() . "</td>\n";
+						$rowHTML .= '   <td align="' . $filter->alignment . '">' . $viewButton->getHTML() . "</td>\n";
 					}
 					else
 					{
-						$rowHTML .= '   <td class="' . strtolower(preg_replace('/[ _]/', '-', $this->columnNames[$l])) . '" style="text-align:' . $filter->alignment . '">' . $filter->processValue($row[$this->columnNames[$l]], $recordId, $row) . "</td>\n";
+						$rowHTML .= '   <td align="' . $filter->alignment . '">' . $filter->processValue($row[$this->columnNames[$l]], $recordId, $row) . "</td>\n";
 					}
 				}
 				else
@@ -1132,11 +1182,11 @@ EOF;
 						$viewButton = &$this->getViewEditDeleteLinkButton($this->viewHandlerClass, $recordId, 'View', $recordId . '_cv');
 						$viewButton->setLabel($row[$this->columnNames[$l]]);
 						
-						$rowHTML .= '   <td class="' . strtolower(preg_replace('/[ _]/', '-', $this->columnNames[$l])) . '">' . $viewButton->getHTML() . "</td>\n";
+						$rowHTML .= '   <td>' . $viewButton->getHTML() . "</td>\n";
 					}
 					else
 					{
-						$rowHTML .= '   <td class="' . strtolower(preg_replace('/[ _]/', '-', $this->columnNames[$l])) . '">' . $row[$this->columnNames[$l]] . "</td>\n";
+						$rowHTML .= '   <td>' . $row[$this->columnNames[$l]] . "</td>\n";
 					}
 				}
 			}
@@ -1151,7 +1201,7 @@ EOF;
 		if ($this->allowView)
 		{
 			$viewButton = &$this->getViewEditDeleteLinkButton($this->viewHandlerClass, $recordId, 'View', $recordId . '_v', true);
-			$rowHTML .= '   <td style="text-align:center">' . $viewButton->getHTML() . '</td>' . "\n";
+			$rowHTML .= '   <td align="center">' . $viewButton->getHTML() . '</td>' . "\n";
 			
 			unset($viewButton);
 		}
@@ -1160,7 +1210,7 @@ EOF;
 		if ($this->allowEdit)
 		{
 			$editButton = &$this->getViewEditDeleteLinkButton($this->editHandlerClass, $recordId, 'Edit', $recordId . '_e', true);
-			$rowHTML .= '   <td style="text-align:center">' . $editButton->getHTML() . '</td>' . "\n";
+			$rowHTML .= '   <td align="center">' . $editButton->getHTML() . '</td>' . "\n";
 			
 			unset($editButton);
 		}
@@ -1168,7 +1218,7 @@ EOF;
 		if ($this->allowDelete)
 		{
 			$deleteButton = &$this->getViewEditDeleteLinkButton($this->deleteHandlerClass, $recordId, 'Delete', $recordId . '_d', true);
-			$rowHTML .= '   <td style="text-align:center">' . $deleteButton->getHTML() . '</td>' . "\n";
+			$rowHTML .= '   <td align="center">' . $deleteButton->getHTML() . '</td>' . "\n";
 			
 			unset($deleteButton);
 		}
@@ -1194,34 +1244,19 @@ EOF;
 
 	function getStatusRow()
 	{
-		echo ' <div align="center"><table border="0" cellspacing="3" cellpadding="0" class="ccSummaryStatus">' . "\n";
+		echo ' <div align="center"><table border="0" cellspacing="0" cellpadding="0" class="ccSummaryStatus">' . "\n";
 		echo '  <tr valign="middle" align="center">' . "\n";
 		echo '   <td>' . $this->getPreviousButtonHTML() . "</td>\n";
 		
-		echo '   <td id="' . $this->getName() . '_summaryStatus">' . "\n";
+		echo '   <td>' . "\n";
 		
 		if ($this->getEndRowNumber() == $this->getStartRowNumber())
 		{
-			if ($this->numRecords == 0)
-			{
-				echo '&nbsp;&nbsp;Displaying ' . $this->displayName . ' <b><span id="' . $this->getName() . '_summaryStarRow">0</span> of <span id="' . $this->getName() . '_summaryRecords">' . $this->numRecords . '</span></b>&nbsp;&nbsp;';
-			}
-			else
-			{
-				echo '&nbsp;&nbsp;Displaying ' . $this->displayName . ' <b><span id="' . $this->getName() . '_summaryStarRow">' . $this->getStartRowNumber() . '</span> of <span id="' . $this->getName() . '_summaryRecords">' . $this->numRecords . '</span></b>&nbsp;&nbsp;';
-			}
-		
+			echo '&nbsp;&nbsp;Displaying ' . $this->displayName . ' <b>' . $this->getStartRowNumber() . ' of ' . $this->numRecords . '</b>&nbsp;&nbsp;';
 		}
 		else
 		{
-			if ($this->numRecords == 0)
-			{
-				echo '&nbsp;&nbsp;Displaying ' . $this->pluralDisplayName . ' <b><span id="' . $this->getName() . '_summaryStarRow">0</span> - <span id="' . $this->getName() . '_summaryEndRow">' . $this->getEndRowNumber() . '</span></b> of <span id="' . $this->getName() . '_summaryRecords">' . $this->numRecords . '</span>&nbsp;&nbsp;';
-			}
-			else
-			{
-				echo '&nbsp;&nbsp;Displaying ' . $this->pluralDisplayName . ' <b><span id="' . $this->getName() . '_summaryStarRow">' . $this->getStartRowNumber() . '</span> - <span id="' . $this->getName() . '_summaryEndRow">' . $this->getEndRowNumber() . '</span></b> of <span id="' . $this->getName() . '_summaryRecords">' . $this->numRecords . '</span>&nbsp;&nbsp;';
-			}
+			echo '&nbsp;&nbsp;Displaying ' . $this->pluralDisplayName . ' <b>' . $this->getStartRowNumber() . ' - ' . $this->getEndRowNumber() . '</b> of ' . $this->numRecords . '&nbsp;&nbsp;';
 		}
 		
 		echo '   </td>' . "\n";
@@ -1256,11 +1291,11 @@ EOF;
 	{
 		if ($this->numRecords > $this->defaultNumRowsPerPage)
 		{
-			echo ' <table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" class="ccSummaryControl">' . "\n";
+			echo ' <table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" width="100%" class="ccSummaryControl">' . "\n";
 	
-			echo '  <tr>' . "\n";
+			echo '  <tr bgcolor="' . $this->backgroundColour . '">' . "\n";
 							
-			echo '<td>Page: ' . $this->jumpToPageList->getHTML() . '</td>';
+			echo '<td>' .  $this->jumpToPageList->getLabel() . ': ' . $this->jumpToPageList->getHTML() . '</td>';
 			echo '<td align="right">' . $this->pluralDisplayName . ' Per Page: ' . $this->numberRowsPerPageList->getHTML() . ' </td>';
 
 			echo "  </tr></table>\n";
@@ -1331,7 +1366,7 @@ EOF;
 
 	function getHTML()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 						
 		if ($this->numRecords > 0 && !$this->hasErrorMessage())
 		{
@@ -1356,10 +1391,10 @@ EOF;
 				echo $this->getIncludeMultipleSelectionsSelectAllJavascript();
 			}
 
-			echo '<table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" class="' . $this->style . '" id="' . $this->getName() . '">' . "\n";
+			echo '<table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" class="' . $this->style . '">' . "\n";
 			
 			// the column headers
-			echo '  <tr class="ccSummaryHeadings">' . "\n";
+			echo '  <tr bgcolor="' . $this->columnHeaderColour . '" class="ccSummaryHeadings">' . "\n";
 			
 			
 			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1394,9 +1429,9 @@ EOF;
 					}
 					else
 					{
-						$sortHandler = new CC_Summary_Sort_Handler($this, $this->columnNames[$i]);
+						$sortHandler = &new CC_Summary_Sort_Handler($this, $this->columnNames[$i]);
 						
-						$button = new CC_Sort_Button($displayName, $sortHandler);
+						$button = &new CC_Sort_Button($displayName, $sortHandler);
 						
 						$sortHandler->setSortButton($button);
 						
@@ -1428,7 +1463,7 @@ EOF;
 							$button->setCurrentlySorting(false);
 						}
 
-						echo '   <th style="text-align:' . $filter->alignment . '" class="' . strtolower(preg_replace('/[ _]/', '-', $this->columnNames[$i])) . '">' . $button->getHTML();
+						echo '   <td align="' . $filter->alignment . '">' . $button->getHTML();
 					}
 					else
 					{
@@ -1450,10 +1485,10 @@ EOF;
 							$button->setCurrentlySorting(false);
 						}
 						
-						echo'   <th>' . $button->getHTML();
+						echo'   <td>' . $button->getHTML();
 					}
 					
-					echo "</th>\n";
+					echo "</td>\n";
 					
 					unset($button);
 					unset($sortHandler);
@@ -1472,44 +1507,40 @@ EOF;
 			//
 			if ($this->allowView)
 			{
-				echo '    <th style="text-align:center"><img src="/N2O/CC_Images/cc_summary.view.png" width="16" height="16" title="View"></th>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">View</td>' . "\n"; 
 			}
 			if ($this->allowEdit)
 			{
-				echo '    <th style="text-align:center"><img src="/N2O/CC_Images/cc_summary.edit.png" width="16" height="16" title="Edit"></th>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">Edit</td>' . "\n"; 
 			}
 			if ($this->allowDelete)
 			{
-				echo '    <th style="text-align:center"><img src="/N2O/CC_Images/cc_summary.delete.png" width="16" height="16" title="Delete"></th>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">Delete</td>' . "\n"; 
 			}
-						
+			
 			echo "  </tr>\n";
 			
-			$shadeRow = false;
+			$shadeRow = FALSE;
 			
 			for ($k = 0; $k <= ($this->getEndRowNumber() - $this->getStartRowNumber()); $k++)
 			{
-				echo $this->getRowHTML($k, $shadeRow);
+				if ($shadeRow)
+				{
+					$shade = " bgcolor=\"" . $this->oddRowColour . "\"";
+				}
+				else
+				{
+					$shade = " bgcolor=\"" . $this->evenRowColour . "\"";
+				}
+								
+				echo $this->getRowHTML($k, $shade);
 				
 				$shadeRow = !$shadeRow;
 			}
 			
 			echo "  </table>\n";
-?>
-<!--[if IE]>
-<script language="JavaScript">
-var summary = document.getElementById('<?php echo $this->getName(); ?>');
-var tags = summary.getElementsByTagName('a');
-for (i = 0; i < tags.length; i++)
-{
-	tags[i].attachEvent('onmouseover', function() { window.event.srcElement.parentNode.parentNode.className = "hover"; });
-	tags[i].attachEvent('onmouseout', function() { window.event.srcElement.parentNode.parentNode.className = (i % 2 == 0 ? "even" : "odd"); });
-}
-</script>
-<![endif]-->
-
-
-<?php
+			
+			
 			if ($this->numRecords > 25 && $this->getNumRowsPerPage() > 25)
 			{
 				// the previous/next/refresh/add buttons.
@@ -1564,14 +1595,11 @@ for (i = 0; i < tags.length; i++)
 
 	function getRawSummary($downloadQuery, $getTabDelimitedText = true)
 	{
-		error_log('getRawSummary: ' . $downloadQuery);
-		
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		if ($getTabDelimitedText)
 		{
 			$tabDelimitedText = '';
-			$rowTabDelimitedText = '';
 		}
 		else
 		{
@@ -1580,7 +1608,7 @@ for (i = 0; i < tags.length; i++)
 		
 		if (($this->sortByColumn != NULL) && (!$this->downloadQueryComplete))
 		{
-			$downloadQuery .= ' order by ' . $this->getSortByColumn() . ' ' . $this->sortByDirection;
+			$downloadQuery .= ' order by ' . $this->sortByColumn . ' ' . $this->sortByDirection;
 		}
 		
 		$results = $application->db->doSelect($downloadQuery);
@@ -1637,16 +1665,8 @@ for (i = 0; i < tags.length; i++)
 						{
 							$rawData[0][$i] = $displayName;
 						}
-						
-						unset($displayName);
 					}
 				}
-
-				if ($getTabDelimitedText)
-				{
-					$tabDelimitedText .= "\n";
-				}
-
 				$counter++;
 			}
 
@@ -1665,22 +1685,21 @@ for (i = 0; i < tags.length; i++)
 				{
 					if ($getTabDelimitedText)
 					{
-						$rowTabDelimitedText .= convertMysqlDateToSortable($row[$l]) . "\t";
+						$rowTabDelimitedText .= convertMysqlTimestampToHuman($row[$l] . "\t");
 					}
 					else
 					{
-						$rawData[$rowNumber][$l] = convertMysqlDateToSortable($row[$downloadColumnNames[$l]]);
+						$rawData[$rowNumber][$downloadColumnNames[$l]] = convertMysqlTimestampToHuman($row[$downloadColumnNames[$l]]);
 					}
 				}
 				else if (!strcasecmp($downloadColumnNames[$l], 'DATE_ADDED'))
 				{
 					if ($getTabDelimitedText)
 					{
-						$rowTabDelimitedText .= convertMysqlDateToSortable($row[$downloadColumnNames[$l]]) . "\t";
+						$rowTabDelimitedText .= convertMysqlDateToSortable($row[$downloadColumnNames[$l]] . "\t");
 					}
 					else
 					{
-					
 						$rawData[$rowNumber][$l] = convertMysqlDateToSortable($row[$downloadColumnNames[$l]]);
 					}
 				}
@@ -1689,18 +1708,18 @@ for (i = 0; i < tags.length; i++)
 					$filter = &$this->columnFilters[$downloadColumnNames[$l]];
 					if ($getTabDelimitedText)
 					{
-						$rowTabDelimitedText .= str_replace(chr(10), '|', str_replace(chr(13), '|', $filter->textFriendlyProcessValue($row[$downloadColumnNames[$l]], $recordId, $row))) . "\t";
+						$rowTabDelimitedText .= $filter->textFriendlyProcessValue($row[$downloadColumnNames[$l]], $recordId, $row) . "\t";
 					}
 					else
 					{
-						$rawData[$rowNumber][$l] = $filter->textFriendlyProcessValue($row[$downloadColumnNames[$l]], $recordId, $row);
+						$rawData[$rowNumber][$l] =  $filter->textFriendlyProcessValue($row[$downloadColumnNames[$l]], $recordId, $row);
 					}
 				}
 				else
 				{	
 					if ($getTabDelimitedText)
 					{
-						$rowTabDelimitedText .= str_replace(chr(10), '|', str_replace(chr(13), '|', $row[$downloadColumnNames[$l]])) . "\t";
+						$rowTabDelimitedText .= $row[$downloadColumnNames[$l]] . "\t";
 					}
 					else
 					{
@@ -1709,7 +1728,6 @@ for (i = 0; i < tags.length; i++)
 				}
 			}
 
-			$row = null;
 			unset($row);
 			
 			$rowNumber++;
@@ -1722,8 +1740,6 @@ for (i = 0; i < tags.length; i++)
 			
 			unset($row);
 		}
-		
-		$results->free();
 		
 		unset($downloadColumnNames);
 		
@@ -1824,23 +1840,23 @@ for (i = 0; i < tags.length; i++)
 		// Only do the update if it hasn't been done in the last two seconds...
 		if ($force || (time() - $this->_lastUpdateTime) > $this->_updateTimeout)
 		{
-			global $application;
+			$application = &$_SESSION['application'];
 			
-			$query = 'select count(*) from ' . substr($this->query, strpos($this->query, 'from') + 5);
+			$countQuery = 'select count(*) from ' . substr($this->query, strpos($this->query, 'from') + 5);
 			
-			$count = $application->db->doGetOne($query);
+			$countResult = $application->db->doSelect($countQuery);
 			
-			if (PEAR::isError($count))
+			if (PEAR::isError($countResult))
 			{
-				$this->setErrorMessage('Error while doing count query: ' . $query . ' (' . $count->getMessage() . ')');
+				$this->setErrorMessage('Error while doing count query: ' . $countQuery . ' (' . $countResult->getMessage() . ')');
 				return;
 			}
 			
-			$this->numRecords = $count;
+			$countRow = cc_fetch_row($countResult);
 			
-			unset($count, $query);
+			$this->numRecords = $countRow[0];
 			
-			// pagination updates
+			//pagination updates
 	
 			// if there are fewer records than the starting record number, set page back to 1
 			if ($this->numRecords < $this->getStartRowNumber())
@@ -1867,7 +1883,7 @@ for (i = 0; i < tags.length; i++)
 			
 			if ($this->sortByColumn != NULL)
 			{
-				$fullQuery .= ' order by ' . $this->getSortByColumn() . ' ' .  $this->sortByDirection . ' limit ' .  $this->getNumRowsPerPage() . ' offset ' . ($this->getStartRowNumber() - 1);
+				$fullQuery .= ' order by ' . $this->sortByColumn . ' ' .  $this->sortByDirection . ' limit ' .  $this->getNumRowsPerPage() . ' offset ' . ($this->getStartRowNumber() - 1);
 			}
 			
 			$results = $application->db->doSelect($fullQuery);
@@ -1878,14 +1894,14 @@ for (i = 0; i < tags.length; i++)
 				return;
 			}
 			
-			$first = true;
+			$counter = 0;
 			
 			while ($row = cc_fetch_assoc($results))
 			{
-				if ($first)
+				if ($counter == 0)
 				{
 					$this->columnNames = array_keys($row);
-					$first = false;
+					$counter++;
 				}
 	
 				$this->rows[] = $row;
@@ -1893,10 +1909,10 @@ for (i = 0; i < tags.length; i++)
 				unset($row);
 			}
 			
-			$results->free();
+			//echo $fullQuery;
 			
 			unset($fullQuery);
-			unset($first);
+			unset($counter);
 	
 			$this->_lastUpdateTime = time();
 		}
@@ -1923,9 +1939,14 @@ for (i = 0; i < tags.length; i++)
 
 	function getNextButtonHTML()
 	{
-		$this->nextButton->setClickable($this->getEndRowNumber() != $this->numRecords);
-		
-		return $this->nextButton->getHTML();	
+		if ($this->getEndRowNumber() != $this->numRecords)
+		{
+			return $this->nextButton->getHTML();	
+		}
+		else
+		{
+			return '<img src="/N2O/CC_Images/next.inactive.gif" width="20" height="20" border="0">';
+		}
 	}
 	
 	
@@ -1942,9 +1963,15 @@ for (i = 0; i < tags.length; i++)
 
 	function getPreviousButtonHTML()
 	{
-		$this->previousButton->setClickable($this->getPageNumber() != 1);
-		
-		return $this->previousButton->getHTML();	
+		if ($this->getPageNumber() != 1)
+		{
+			return $this->previousButton->getHTML();	
+		}
+		else
+		{
+			return '<img src="/N2O/CC_Images/previous.inactive.gif" width="20" height="20" border="0">';
+		}
+
 	}
 	
 	
@@ -2143,9 +2170,9 @@ for (i = 0; i < tags.length; i++)
 	  * @param int The current summary page number to set.
 	  */	
 
-	function setPageNumber($pageNumber)
+	function setPageNumber($pageToSetTo)
 	{
-		$this->pageNumber = $pageNumber;
+		$this->pageNumber = $pageToSetTo;
 	}
 
 	
@@ -2162,15 +2189,15 @@ for (i = 0; i < tags.length; i++)
 
 	function getNumRowsPerPage()
 	{
-		$value = $this->numberRowsPerPageList->getValue();
+		$selectListValue = $this->numberRowsPerPageList->getValue();
 		
-		if ($value == 'All')
+		if ($selectListValue == 'All')
 		{
 			return $this->numRecords;
 		}
 		else
 		{
-			return $value;
+			return $selectListValue;
 		}
 	}
 	
@@ -2207,30 +2234,13 @@ for (i = 0; i < tags.length; i++)
 
 	function setSortByColumn($sortByColumn)
 	{
-		$this->sortByColumn = $sortByColumn;
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: getSortByColumn
-	//-------------------------------------------------------------------
-	
-	/** 
-	  * The method sets the column to sort by in the summary.
-	  *
-	  * @access public
-	  * @param string $sortByColumn The column to sort by.
-	  */	
-
-	function getSortByColumn()
-	{
-		if (strstr($this->sortByColumn, ' '))
+		if (strstr($sortByColumn, ' '))
 		{
-			return '\'' . $this->sortByColumn . '\'';
+			$this->sortByColumn = '\'' . $sortByColumn . '\'';
 		}
 		else
 		{
-			return $this->sortByColumn;
+			$this->sortByColumn = $sortByColumn;
 		}
 	}
 	
@@ -2250,22 +2260,6 @@ for (i = 0; i < tags.length; i++)
 	{
 		//echo "setting to $sortByDirection<br>";
 		$this->sortByDirection = $sortByDirection;
-	}
-	
-
-	//-------------------------------------------------------------------
-	// METHOD: getSortByDirection
-	//-------------------------------------------------------------------
-	
-	/** 
-	  * The method gets the direction to sort the $sortByColumn by.
-	  *
-	  * @access public
-	  */	
-
-	function getSortByDirection()
-	{
-		return $this->sortByDirection;
 	}
 	
 	
@@ -2344,7 +2338,7 @@ for (i = 0; i < tags.length; i++)
 		
 	function addMultipleSelectionsButton($buttonText, &$multipleSelectHandler)
 	{
-		$multipleSelectionsButton = new CC_Button($buttonText);
+		$multipleSelectionsButton = &new CC_Button($buttonText);
 
 		$multipleSelectHandler->summaryName = $this->getName();
 		$multipleSelectHandler->tableName = $this->mainTable;
@@ -2476,22 +2470,6 @@ for (i = 0; i < tags.length; i++)
 	
 	
 	//-------------------------------------------------------------------
-	// METHOD: getDownloadAllFileName
-	//-------------------------------------------------------------------
-
-	/**
-	 * This method gets download all file's file name.
-	 *
-	 * @access public
-	 */
-	
-	function getDownloadAllFileName()
-	{
-		return $this->downloadAllFileName;
-	}
-	
-	
-	//-------------------------------------------------------------------
 	// METHOD: setDownloadSummaryFileName
 	//-------------------------------------------------------------------
 	
@@ -2517,13 +2495,13 @@ for (i = 0; i < tags.length; i++)
 	 *
 	 * @access public
 	 * @param string $downloadAllQuery The download all query.
-	 * @param bool $isQueryComplete Whether or not the passed query should remain as is (ie. an order by is added in getRawSummary()).
+	 * @param bool $queryComplete Whether or not the passed query should remain as is (ie. an order by is added in getRawSummary()).
 	 */
 
-	function setDownloadAllQuery($downloadAllQuery, $isQueryComplete = false)
+	function setDownloadAllQuery($downloadAllQuery, $queryComplete = false)
 	{
 		$this->downloadAllQuery = $downloadAllQuery;
-		$this->downloadQueryComplete = $isQueryComplete;
+		$this->downloadQueryComplete = $queryComplete;
 	}
 
 
@@ -2535,19 +2513,19 @@ for (i = 0; i < tags.length; i++)
 	 * This method gets the download all query, if it doesn't exist, it will just get the regular query
 	 *
 	 * @access public
-	 * @param bool $sort Return the sorted summary or not.
+	 * @param string $downloadAllQuery The download all query.
 	 */
 
-	function getDownloadAllQuery($sort = false)
+	function getDownloadAllQuery()
 	{
-		$query = $this->downloadAllQuery;
-		
-		if ($sort && ($this->sortByColumn != NULL) && (!$this->downloadQueryComplete))
+		if (strlen($this->downloadAllQuery) > 0)
 		{
-			$query .= ' order by ' . $this->getSortByColumn() . ' ' . $this->sortByDirection;
+			return $this->downloadAllQuery;
 		}
-		
-		return $query;
+		else
+		{
+			return $this->query;
+		}
 	}
 
 
@@ -2920,11 +2898,11 @@ for (i = 0; i < tags.length; i++)
 		{
 			if ($image)
 			{
-				$button = new CC_Image_Button($label, '/N2O/CC_Images/cc_summary.' . strtolower($label) . '.png', 16, 16);
+				$button = &new CC_Image_Button($label, '/N2O/CC_Images/cc_summary.' . strtolower($label) . '.gif', 16, 18);
 			}
 			else
 			{
-				$button = new CC_Text_Button($label);
+				$button = &new CC_Text_Button($label);
 			}
 			
 			$targetWindowMethod = 'get' . $label . 'Window';
@@ -2990,10 +2968,6 @@ for (i = 0; i < tags.length; i++)
 
 	function setIdColumn($idColumn, $showIdColumn = false)
 	{
-		if ($this->sortByColumn == $this->_idColumn)
-		{
-			$this->sortByColumn = $idColumn;
-		}
 		$this->_idColumn = $idColumn;
 		$this->setShowIdColumn($showIdColumn);
 	}
@@ -3118,7 +3092,7 @@ for (i = 0; i < tags.length; i++)
 
 		if ($this->includeDownloadButton)
 		{
-			$this->downloadButton = new CC_Text_Button('Download All');
+			$this->downloadButton = &new CC_Text_Button('Download All');
 			$this->downloadButton->registerHandler(new $this->downloadAllHandler($this, $this->downloadSummaryQuery, $this->downloadSummaryFileName));
 			
 			$this->downloadButton->setValidateOnClick(false);
@@ -3129,7 +3103,7 @@ for (i = 0; i < tags.length; i++)
 		
 		if ($this->includeDownloadAllButton)
 		{
-			$this->downloadAllButton = new CC_AnchorImage_Button('Download Tab-delimited File', '/N2O/CC_Images/cc_summary.excel-tab.png', 96, 40);
+			$this->downloadAllButton = &new CC_Text_Button('Download Tab-Delimited File');
 			$this->downloadAllButton->registerHandler(new $this->downloadTabHandler($this, $this->getDownloadAllQuery(), $this->downloadAllFileName));
 			
 			$this->downloadAllButton->setValidateOnClick(false);
@@ -3140,7 +3114,7 @@ for (i = 0; i < tags.length; i++)
 
 		if ($this->includeDownloadXLSButton)
 		{
-			$this->downloadXLSButton = new CC_AnchorImage_Button('Download Excel Spreadsheet', '/N2O/CC_Images/cc_summary.excel.png', 96, 40);
+			$this->downloadXLSButton = &new CC_AnchorImage_Button('Download Excel Spreadsheet', '/N2O/CC_Images/cc_summary.excel.png', 96, 40);
 			$this->downloadXLSButton->setPngFix(true);
 			$this->downloadXLSButton->registerHandler(new $this->downloadXLSHandler($this));
 			$this->downloadXLSButton->setValidateOnClick(false);
@@ -3148,12 +3122,6 @@ for (i = 0; i < tags.length; i++)
 
 			$window->registerComponent($this->downloadXLSButton);
 		}
-
-		$this->numberRowsPerPageList->registerHandler(new CC_Summary_Num_Rows_Handler($this->name));
-		$this->jumpToPageList->registerHandler(new CC_Summary_Jump_To_Page_Handler($this->name));
-		
-		$this->nextButton->registerHandler(new CC_Summary_PreviousNext_Handler($this->name));
-		$this->previousButton->registerHandler(new CC_Summary_PreviousNext_Handler($this->name, -1));
 
 		// Defer the update until the component is registered...
 		$this->update();

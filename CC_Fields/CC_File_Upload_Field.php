@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_File_Upload_Field.php,v 1.39 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_File_Upload_Field.php,v 1.36 2004/08/11 22:15:29 patrick Exp $
 //=======================================================================
 // CLASS: CC_File_Upload_Field
 //=======================================================================
@@ -184,9 +184,13 @@ class CC_File_Upload_Field extends CC_Field
 
 	function CC_File_Upload_Field(&$parentField, $name, $label, $required, $rootSavePath, $maxFileSize = 1000000000, $filePath = "")
 	{	
+		global $application;
+		
 		$this->CC_Field($name, $label, $required);
 		
 		$this->validateIfNotRequired = true;
+		
+		$this->window = &$application->getCurrentWindow();
 		
 		$this->rootSavePath = $rootSavePath;
 		$this->value = $filePath;
@@ -194,7 +198,8 @@ class CC_File_Upload_Field extends CC_Field
 		$this->maxFileSize = $maxFileSize;
 		$this->parentField = &$parentField;
 		
-		$this->deleteFileCheckbox = new CC_Checkbox_Field('DELETE_' . $label, 'Delete');
+		$this->deleteFileCheckbox = &new CC_Checkbox_Field('DELETE_' . $label, 'Delete');
+		$this->window->registerComponent($this->deleteFileCheckbox);
 	}
 		
 	
@@ -210,9 +215,14 @@ class CC_File_Upload_Field extends CC_Field
 	 * @param string $extension The file extension. (eg. 'mp3').
 	 */
 
-	function addFileType($mimeType, $extension = '')
+	function addFileType($mimeTYPE, $extension = '')
 	{
-		$this->fileTypes[] = array($mimeType, $extension);
+		$fileTypeItem = array();
+		
+		$fileTypeItem[0] = $mimeTYPE;
+		$fileTypeItem[1] = $extension;
+		
+		$this->fileTypes[] = $fileTypeItem;
 	}
 	
 	
@@ -352,8 +362,7 @@ class CC_File_Upload_Field extends CC_Field
 		$this->setFileSize('');
 		$this->setTemporaryPath('');
 		$this->value = '';
-		$this->clearErrorMessage();		
-		$this->deleteMe = false;
+		$this->clearErrorMessage();			
 	}
 	
 	
@@ -593,22 +602,24 @@ class CC_File_Upload_Field extends CC_Field
 		
 		if ($this->hasError())
 		{
-			$editHTML = '<nobr><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSize . '"><input type="file" name="' . $this->getRequestArrayName() . '" value="' . $this->value . '" class="' . $this->style . '">'. "\n";
+			$editHTML = '<nobr><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSize . '"><input type="file" name="' . $this->getRequestArrayName() . '" value="' . $this->value . '">'. "\n";
 			$editHTML .= '<br><span class="error">' . $this->getErrorMessage() . '</span>';
 		}
 		else if ($this->getValue() != '')
 		{	
+			$deleteFileCheckbox = &$this->window->getField('DELETE_' . $this->label);
+			
 			$editHTML .= '<table cellspacing="1" cellpadding="3" border="0" class="ccFileTable"><tr><td valign="top">' . $this->getIcon() . '</td>';
 			$editHTML .= '<td valign="top">' . $this->getDetailsHTML() . '</td>';
 			if ($this->allowDelete)
 			{
-				$editHTML .= '<td valign="top">' . $this->deleteFileCheckbox->getHTML() . ' ' . $this->deleteFileCheckbox->getLabel() . '</td>';
+				$editHTML .= '<td valign="top">' . $deleteFileCheckbox->getHTML() . $deleteFileCheckbox->getLabel() . '</td>';
 			}
 			$editHTML .= '</tr></table>';
 		}
 		else
 		{
-			$editHTML = '<nobr><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSize . '"><input type="file" name="' . $this->getRequestArrayName() . '" value="' . $this->value . '" class="' . $this->style . '">' . "\n";
+			$editHTML = '<nobr><input type="hidden" name="MAX_FILE_SIZE" value="' . $this->maxFileSize . '"><input type="file" name="' . $this->getRequestArrayName() . '" value="' . $this->value . '">' . "\n";
 		}
 
 		return $editHTML;
@@ -757,7 +768,7 @@ class CC_File_Upload_Field extends CC_Field
 				{
 					if ($copyPosition = strpos($fileNameCopy, '_copy'))
 					{
-						if (($dotPos = strrpos($fileNameCopy, '.')) > 0)
+						if ($dotPos = strrpos($fileNameCopy, '.') > 0)
 						{
 							$length = $dotPos - ($copyPosition + 5);
 							
@@ -829,8 +840,7 @@ class CC_File_Upload_Field extends CC_Field
 		if (file_exists($this->getValue()) && $this->deleteMe)
 		{
 			unlink($this->getValue());
-		}
-		$this->setValue('');
+		}		
 	}
 	
 	
@@ -846,6 +856,11 @@ class CC_File_Upload_Field extends CC_Field
 	
 	function cancelCleanup()
 	{
+		$application = &$_SESSION['application'];
+		
+		// delete the file if a cancel is performed and the records has not yet been
+		// added to the database
+		
 		//if (!$this->inDatabase())
 		{
 			$this->deleteCleanup();
@@ -953,28 +968,6 @@ class CC_File_Upload_Field extends CC_Field
 	function setRootSavePath($rootSavePath)
 	{
 		$this->rootSavePath = $rootSavePath;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: register
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a callback method that gets called by the window when the
-	 * component is registered. It's up to the component to decide which
-	 * registerXXX() method it should call on the window. Should your
-	 * custom component consist of multiple components, you may need to
-	 * make multiple calls.
-	 *
-	 * @access public
-	 */
-
-	function register(&$window)
-	{
-		parent::register($window);
-
-		$window->registerComponent($this->deleteFileCheckbox);
 	}
 	
 }

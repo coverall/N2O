@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_TextArea_Field.php,v 1.23 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_TextArea_Field.php,v 1.9 2004/08/25 21:16:45 patrick Exp $
 //=======================================================================
 // CLASS: CC_TextArea_Field
 //=======================================================================
@@ -43,26 +43,6 @@ class CC_TextArea_Field extends CC_Field
      */
      
 	var $autolink;
-
-
-	/**
-     * The maximum number of words you can have in here.
-     *
-     * @var int $maxWords
-     * @access private
-     */
-     
-	var $maxWords = 0;
-
-
-	/**
-     * The maximum number of characters you can have in here.
-     *
-     * @var int $maxLength
-     * @access private
-     */
-     
-	var $maxLength = 0;
 	
 	
 	//-------------------------------------------------------------------
@@ -103,7 +83,7 @@ class CC_TextArea_Field extends CC_Field
 
 	function getEditHTML()
 	{
-		return '<textarea name="' . $this->getRecordKey() . $this->name . '" cols="' . $this->numColumns . '" rows="' . $this->numRows . '" wrap="soft" class="' . $this->getInputStyle() . '" maxwords="' . $this->maxWords . '">' . $this->value . '</textarea>';
+		return '<textarea name="' . $this->getRecordKey() . $this->name . '" cols="' . $this->numColumns . '" rows="' . $this->numRows . '" wrap="soft" tabindex="' . $this->_tabIndex .'">' . $this->value . '</textarea>';
 	}
 
 
@@ -149,39 +129,11 @@ class CC_TextArea_Field extends CC_Field
 		{
 			return false;
 		}
-		
-		if ($this->maxWords > 0)
+		else
 		{
-			$words = explode(' ', $this->getValue());
-		
-			if (sizeof($words) > $this->maxWords)
-			{
-				unset($words);
-				$this->setErrorMessage($this->label . ' contains too many words.', CC_FIELD_ERROR_INVALID);
-				return false;
-			}
-			
-			unset($words);
+			return true;
 		}
-		
-		if ($this->maxLength > 0)
-		{
-			$mblength = cc_strlen($this->getValue());
-			//$length = strlen($this->getValue());
-		
-			if ($mblength > $this->maxLength)
-			{
-				unset($length);
-				$this->setErrorMessage($this->label . ' contains too many characters.', CC_FIELD_ERROR_INVALID);
-				return false;
-			}
-			
-			unset($length);
-		}
-		
-		return true;
 	}
-
 	
 	//-------------------------------------------------------------------
 	// METHOD: setAutolink
@@ -196,65 +148,6 @@ class CC_TextArea_Field extends CC_Field
 	{
 		$this->autolink = $autolink;
 	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setMaxWords
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * This method sets the maximum number of words you can have.
-	 *
-	 */
-	
-	function setMaxWords($maxWords)
-	{
-		$this->maxWords = $maxWords;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setMaxLength
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * This method sets the maximum number of characters you can have.
-	 *
-	 */
-	
-	function setMaxLength($maxLength)
-	{
-		$this->maxLength = $maxLength;
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$field = new $className($name, $label, $required, $value, (isset($args->x) ? $args->x : 50), (isset($args->y) ? $args->y : 5));
-		
-		$field->setMaxWords((isset($args->maxWords) ? $args->maxWords : 0));
-		$field->setMaxLength((isset($args->maxLength) ? $args->maxLength : 0));
-		
-		if (isset($args->autolink))
-		{
-			$field->setAutolink($args->autolink);
-		}
-		
-		return $field;
-	}
-
 }
 
 ?>

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_PostalZipCode_Field.php,v 1.6 2005/07/07 21:58:53 jamie Exp $
+// $Id: CC_PostalZipCode_Field.php,v 1.5 2003/07/14 08:48:02 jamie Exp $
 //=======================================================================
 // CLASS: CC_PostalZipCode_Field
 //=======================================================================
@@ -16,16 +16,6 @@
 
 class CC_PostalZipCode_Field extends CC_Text_Field
 {	
-	/**
-     * The country field to associate for validation.
-     *
-     * @var CC_Country_Field or CC_ISO_Country_Field $countryField
-     * @access private
-     */	
-     
-	var $countryField;
-	
-	
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_PostalZipCode_Field
 	//-------------------------------------------------------------------
@@ -51,47 +41,28 @@ class CC_PostalZipCode_Field extends CC_Text_Field
 	//-------------------------------------------------------------------
 	
 	/** 
-	 * This method checks if the postal or zip code is in a valid format 
-	 * depending on the value of the associated country field. 
+	 * This method checks if the postal or zip code is in a valid format. 
 	 *
 	 * @access public
 	 * @return bool Whether or not the field has a valid postal or zip code.
 	 */
 	 
 	function validate()
-	{	
-		$USValue = is_a($this->countryField, 'CC_ISO_Country_Field') ? 'US' : 'United States'; 
-		$CAValue = is_a($this->countryField, 'CC_ISO_Country_Field') ? 'CA' : 'Canada'; 
-		
-		if (!isset($this->countryField))
+	{
+		// Postal Code
+		if (ereg('^[A-Za-z]{1}[0-9]{1}[A-Za-z]{1}[ ]*[0-9]{1}[A-Za-z]{1}[0-9]{1}$', $this->getValue()))
 		{
-			// Postal Code
-			if (ereg('^[A-Za-z]{1}[0-9]{1}[A-Za-z]{1}[ ]*[0-9]{1}[A-Za-z]{1}[0-9]{1}$', $this->getValue()))
-			{
-				return true;
-			}
-			// Zip Code
-			else if (ereg('^[0-9]{5}[-]*[0-9]*$', $this->getValue()))
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return true;
 		}
-		else if ($this->countryField->getValue() == $USValue)
-		{	
-			return ereg('^[0-9]{5}[-]*[0-9]*$', $this->getValue());
-		}
-		else if ($this->countryField->getValue() == $CAValue)
+		// Zip Code
+		else if (ereg('^[0-9]{5}[-]*[0-9]*$', $this->getValue()))
 		{
-			return ereg('^[A-Za-z]{1}[0-9]{1}[A-Za-z]{1}[ ]*[0-9]{1}[A-Za-z]{1}[0-9]{1}$', $this->getValue());
+			return true;
 		}
 		else
 		{
-			return true;
-		}			
+			return false;
+		}
 	}
 
 
@@ -109,23 +80,6 @@ class CC_PostalZipCode_Field extends CC_Text_Field
 	function setValue($value)
 	{
 		parent::setValue(strtoupper($value));
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setCountryField
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * Set the country field to associate with this field, for validation.
-	 *
-	 * @access public
-	 * @param CC_ISO_Country_Field or CC_Country_Field The country field to set.
-	 */
-	 
-	function setCountryField(&$countryField)
-	{
-		$this->countryField = &$countryField;
 	}
 }
 

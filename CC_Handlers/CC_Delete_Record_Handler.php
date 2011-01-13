@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Delete_Record_Handler.php,v 1.10 2010/01/18 19:38:01 patrick Exp $
+// $Id: CC_Delete_Record_Handler.php,v 1.8 2004/08/01 00:00:41 mike Exp $
 //=======================================================================
 
 
@@ -21,13 +21,23 @@
 class CC_Delete_Record_Handler extends CC_Action_Handler
 {
 	/**
-	 * The record to delete.
+	 * The id of the record to delete.
 	 *
 	 * @access private
-	 * @var CC_Record $recordToDelete
+	 * @var int $recordIdToDelete
 	 */
 
-	var $recordToDelete;
+	var $recordIdToDelete;
+
+	/**
+	 * The name of the table we are deleting from.
+	 *
+	 * @access private
+	 * @var string $tableNameToDelete
+	 */
+
+	var $tableNameToDelete;
+	
 	
 	/**
 	 * This is used to get the window object.
@@ -59,20 +69,15 @@ class CC_Delete_Record_Handler extends CC_Action_Handler
 	 * @param int $recordIdToDelete The id of the record to delete.
 	 */
 
-	function CC_Delete_Record_Handler(&$record, $deleteAction = '')
+	function CC_Delete_Record_Handler($tableNameToDelete, $recordIdToDelete)
 	{	
 		$application = &$_SESSION['application'];
 		
-		$this->recordToDelete = &$record;
+		$this->tableNameToDelete = $tableNameToDelete;
+		$this->recordIdToDelete = $recordIdToDelete;
 		
-		if ($deleteAction == '')
-		{
-			$this->deleteAction = $application->getLastAction();
-		}
-		else
-		{
-			$this->deleteAction = $deleteAction;
-		}
+		$this->deleteAction = $application->getLastAction();
+		$this->currentAction = $application->getAction();
 				
 		$this->CC_Action_Handler();
 	}
@@ -96,17 +101,21 @@ class CC_Delete_Record_Handler extends CC_Action_Handler
 			$application = &$_SESSION['application'];
 			
 			// cycle through the fields in the record and call the cleanup method
-			$this->sourceWindow = &$application->getCurrentWindow();
-						
-			$keys = array_keys($this->recordToDelete->fields);
+			$this->sourceWindow = &$application->getWindow($this->currentAction);
+			
+			$deletedRecord = &$this->sourceWindow->getRecord();
+			
+			$keys = array_keys($deletedRecord->fields);
 			
 			for ($i = 0 ; $i < sizeof($keys); $i++)
 			{
-				$field = &$this->recordToDelete->getField($keys[$i]);
+				$field = &$deletedRecord->getField($keys[$i]);
 				$field->deleteCleanup();			
 			}
 			
-			$this->recordToDelete->delete();
+			$deleteQuery = "delete from " . $this->tableNameToDelete . " where " . $deletedRecord->idColumnName . "='" . $this->recordIdToDelete . "'";
+	
+			$application->db->doDelete($deleteQuery);
 			
 			$application->setAction($this->deleteAction);
 		}

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_ZipCode_Field.php,v 1.6 2005/07/07 21:59:19 jamie Exp $
+// $Id: CC_ZipCode_Field.php,v 1.5 2003/07/14 08:48:02 jamie Exp $
 //=======================================================================
 // CLASS: CC_ZipCode_Field
 //=======================================================================
@@ -17,16 +17,6 @@
 
 class CC_ZipCode_Field extends CC_Text_Field
 {	
-	/**
-     * The country field to associate for validation.
-     *
-     * @var CC_Country_Field or CC_ISO_Country_Field $countryField
-     * @access private
-     */	
-     
-	var $countryField;
-	
-	
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_ZipCode_Field
 	//-------------------------------------------------------------------
@@ -60,14 +50,7 @@ class CC_ZipCode_Field extends CC_Text_Field
 	 
 	function validate()
 	{
-		$USValue = is_a($this->countryField, 'CC_ISO_Country_Field') ? 'US' : 'United States'; 
-		
-		if (!isset($this->countryField) || ($this->countryField->getValue() == $USValue))
-		{
-			return ereg('^[0-9]{5}[-]*[0-9]*$', $this->getValue());
-		}
-		
-		return true;
+		return ereg('^[0-9]{5}[-]*[0-9]*$', $this->getValue());
 	}
 
 
@@ -85,23 +68,6 @@ class CC_ZipCode_Field extends CC_Text_Field
 	function setValue($value)
 	{
 		parent::setValue(strtoupper($value));
-	}
-	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setCountryField
-	//-------------------------------------------------------------------
-	
-	/** 
-	 * Set the country field to associate with this field, for validation.
-	 *
-	 * @access public
-	 * @param CC_ISO_Country_Field or CC_Country_Field The country field to set.
-	 */
-	 
-	function setCountryField(&$countryField)
-	{
-		$this->countryField = &$countryField;
 	}
 }
 

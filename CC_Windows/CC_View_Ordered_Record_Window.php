@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_View_Ordered_Record_Window.php,v 1.13 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_View_Ordered_Record_Window.php,v 1.12 2004/08/19 04:25:26 patrick Exp $
 if ($application->hasArgument('displayNameForViewOrdered'))
 {
 	$displayName = $application->getArgument('displayNameForViewOrdered');
@@ -17,11 +17,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 	$application->registerWindow($window);
 
@@ -30,7 +30,7 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (1) Create our buttons
 	//
 	
-	$doneButton = new CC_Button("Done", false);
+	$doneButton = &new CC_Button("Done", false);
 	$doneButton->setFieldUpdater(false);
 	$doneButton->setValidateOnClick(false);
 	
@@ -39,8 +39,8 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (2) Create our handlers
 	//
 	
-	$doneButtonHandler = new CC_Cancel_Button_Handler();
-	$unregisterWindowHandler = new CC_Unregister_Window_Handler();
+	$doneButtonHandler = &new CC_Cancel_Button_Handler();
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 	
 	// ------------------------------------------------------------------
 	// (3) Register our handlers with our buttons
@@ -54,7 +54,7 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// (4) Register the CC_Record component with the application
 	//
 
-	$record = new CC_Record(getFieldListFromTable($application->getArgument("tableNameForView"), array(ID)), $application->getArgument("tableNameForView"), false, $application->getArgument("viewRecordId"));
+	$record = &new CC_Record(getFieldListFromTable($application->getArgument("tableNameForView"), array(ID)), $application->getArgument("tableNameForView"), false, $application->getArgument("viewRecordId"));
 	
 	//$window->registerComponent($record);
 	
@@ -81,7 +81,7 @@ else
 	// the objects have already been created (ie. anytime after the first access)
 	if (!($window->isRecordRegistered($key)))
 	{
-		$record = new CC_Record(getFieldListFromTable($application->getArgument("tableNameForView")), $application->getArgument("tableNameForView"), false, $application->getArgument("viewRecordId"));
+		$record = &new CC_Record(getFieldListFromTable($application->getArgument("tableNameForView")), $application->getArgument("tableNameForView"), false, $application->getArgument("viewRecordId"));
 	}
 	else
 	{

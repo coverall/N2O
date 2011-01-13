@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Credit_Card_Field.php,v 1.55 2009/09/11 01:23:03 patrick Exp $
+// $Id: CC_Credit_Card_Field.php,v 1.46 2004/12/10 21:13:34 patrick Exp $
 //=======================================================================
 // CLASS: CC_Credit_Card_Field
 //=======================================================================
@@ -58,12 +58,11 @@ class CC_Credit_Card_Field extends CC_Text_Field
 	 * @param bool $required Whether or not this field must contain data from the user before proceeding. Not required by default.
 	 * @param int $defaultValue The value the field should contain before user's submit input. Initially blank by default.
 	 * @param int $size The visible size of the field.
-	 * @param int $maxlength The maximum amount of data we can enter in the field, in characters.
 	 */
 
-	function CC_Credit_Card_Field($name, $label, $required = false, $defaultValue = '', $size = 24, $maxlength = 19)
+	function CC_Credit_Card_Field($name, $label, $required = false, $defaultValue = '', $size = 24)
 	{
-		$this->CC_Text_Field($name, $label, $required, strSlide13($defaultValue), $size, $maxlength);
+		$this->CC_Text_Field($name, $label, $required, strSlide13($defaultValue), $size, 19);
 		$this->setEncode(true);
 	}
 	
@@ -115,13 +114,18 @@ class CC_Credit_Card_Field extends CC_Text_Field
 	 * @return string The HTML for the field. 
 	 */
 	 
-	function getEditHTML($mask = false)
+	function getEditHTML()
 	{
 		global $application;
 		
-		//error_log($application->isSecure() && !$mask);
-		
-		return '<input type="text" size="' . $this->size. '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . ($application->isSecure() && !$mask ? htmlspecialchars($this->getValue()) : $this->getMaskedNumber()) . '" class="' . $this->inputStyle . '"' . ($this->disabled ? ' disabled="true"' : '') . '>';
+		if ($application->isSecure())
+		{
+			return '<input type="text" size="' . $this->size. '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . htmlspecialchars($this->getValue()) . '" class="' . $this->inputStyle . '"' . ($this->disabled ? ' disabled="true"' : '') . '>';
+		}
+		else
+		{
+			return '<input type="text" size="' . $this->size . '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . $this->getMaskedNumber() . '" class="' . $this->inputStyle  . '"' . ($this->disabled ? ' disabled="true"' : '') . '>';
+		}
 	}
 
 	
@@ -274,21 +278,10 @@ class CC_Credit_Card_Field extends CC_Text_Field
 	 
 	function setValue($value)
 	{
-		$matches = array();
-		
-		// If the passed in value is masked and the first and last
-		// digits match what we have stored, don't update...
-		if ($this->hasValue() && preg_match('/^([0-9]{4})\*\*\*\*\*\*\*\*([0-9]+)$/', $value, $matches))
-		{
-			if ($matches[1] == substr($this->getValue(), 0, 4) && $matches[2] == substr($this->getValue(), strlen($this->getValue()) - 4, 4))
-			{
-				return;
-			}
-
-		}
-
 		// strip out anything that isn't a digit
-		parent::setValue(strSlide13(ereg_replace('[^0-9]', '', $value)));
+		$value = ereg_replace('[^0-9]', '', $value);
+
+		parent::setValue(strSlide13($value));
 	}
 	
 	
@@ -429,8 +422,8 @@ class CC_Credit_Card_Field extends CC_Text_Field
 		
 		if (strlen($aNumber))
 		{
-			$maskedNumber .= substr($aNumber, 0, 1);
-			$maskedNumber .= "***********";
+			$maskedNumber .= substr($aNumber, 0, 4);
+			$maskedNumber .= "********";
 			$maskedNumber .= substr($aNumber, strlen($aNumber) - 4, 4);
 		}
 		
@@ -459,41 +452,6 @@ class CC_Credit_Card_Field extends CC_Text_Field
 		{
 			return $value;
 		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		if (!isset($args->maxlength))
-		{
-			$args->maxlength = 19;
-		}
-
-		if (!isset($args->size))
-		{
-			$args->size = 24;
-		}
-
-		if (strlen($value))
-		{
-			$value = strSlide13($value);
-		}
-
-		$field = &parent::getInstance($className, $name, $label, $value, $args, $required);
-
-		return $field;
 	}
 
 }

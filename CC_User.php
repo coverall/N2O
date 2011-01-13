@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_User.php,v 1.9 2005/05/19 23:54:42 patrick Exp $
+// $Id: CC_User.php,v 1.8 2004/06/15 23:24:44 mike Exp $
 //=======================================================================
 // CLASS: CC_User
 //=======================================================================
@@ -146,7 +146,7 @@ class CC_User
 
 
 	//-------------------------------------------------------------------
-	// METHOD: getUsername
+	// METHOD: getUserName
 	//-------------------------------------------------------------------
 
 	/** 
@@ -157,7 +157,7 @@ class CC_User
 	 * @see setUserName()
 	 */
 
-	function getUsername()
+	function getUserName()
 	{
 		return $this->username;
 	}
@@ -286,7 +286,7 @@ class CC_User
 	 * @see getUserName()
 	 */
 
-	function setUsername($username)
+	function setUserName($username)
 	{
 		$this->username = $username;
 	}

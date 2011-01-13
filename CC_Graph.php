@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Graph.php,v 1.29 2005/12/09 19:04:35 jamie Exp $
+// $Id: CC_Graph.php,v 1.25 2005/03/06 00:47:33 patrick Exp $
 //=======================================================================
 // CLASS: CC_Graph
 //=======================================================================
@@ -342,7 +342,7 @@ class CC_Graph
 		$this->endRange = $endRange;
 		
 		// Create the initial image
-		$this->image = imagecreate($this->width, $this->height);
+		$this->image = imagecreatetruecolor($this->width, $this->height);
 		//imageantialias($this->image, true);
 		
 		$this->white = imagecolorallocate($this->image, 0xFF, 0xFF, 0xFF);
@@ -579,7 +579,7 @@ class CC_Graph
 	 
 	 function convertYPixelToGraph($y)
 	 {
-		return $this->height - ($y + $this->bottomMargin);
+		return $this->height - ($y + $this->bottomMargin) - 2;
 	 }
 	 
 	 

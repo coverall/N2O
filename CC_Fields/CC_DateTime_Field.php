@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_DateTime_Field.php,v 1.32 2011/01/13 02:35:36 jamie Exp $
+// $Id: CC_DateTime_Field.php,v 1.23 2004/12/08 10:21:55 jamie Exp $
 //=======================================================================
 // CLASS: CC_DateTime_Field
 //=======================================================================
@@ -55,22 +55,38 @@ class CC_DateTime_Field extends CC_Date_Field
 	 * @param int $minuteIncrements The increments for the minute select list. Default is 15 (so the select list values are 0,15,30,45).
 	 */
 
-	function CC_DateTime_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $defaultHourValue = 12, $defaultMinuteValue = 0, $startYear = 2002, $endYear = 2020, $minuteIncrements = 15)
+	function CC_DateTime_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = -1, $defaultYearValue = -1, $defaultHourValue = -1, $defaultMinuteValue = -1, $startYear = 2002, $endYear = 2010, $minuteIncrements = 15)
 	{
 		$this->CC_Date_Field($name, $label, $required, $defaultMonthValue, $defaultDateValue, $defaultYearValue, $startYear, $endYear);
 		
-		for ($i = 0; $i <= 23; $i++)
+		for ($m = 0; $m <= 23; $m++)
 		{
-			$hourArray[] = sprintf('%02u', $i);
+			$hourItem[0] = $m;
+			$hourItem[1] = zeropad($m);
+			$hourArray[] = $hourItem;
 		}
 		
-		for ($i = 0; $i < 60; $i += $minuteIncrements)
+		for ($n = 0; $n < 60; $n = $n + $minuteIncrements)
 		{
-			$minuteArray[] = sprintf('%02u', $i);
+			$minuteItem[0] = $n;
+			$minuteItem[1] = zeropad($n);
+			$minuteArray[] = $minuteItem;
+			
+			unset($minuteItem);
 		}
 		
-		$this->hourField = new CC_SelectList_Field($this->name . '_hour', '', false, $defaultHourValue, '', $hourArray);
-		$this->minuteField = new CC_SelectList_Field($this->name . '_minute', '', false, $defaultMinuteValue, '', $minuteArray);
+		if ($defaultHourValue == -1)
+		{
+			$defaultHourValue = 12;
+		}
+		
+		if ($defaultMinuteValue == -1)
+		{
+			$defaultMinuteValue = 0;
+		}
+		
+		$this->hourField = &new CC_SelectList_Field($this->name . '_hour', '', false, $defaultHourValue, '', $hourArray);
+		$this->minuteField = &new CC_SelectList_Field($this->name . '_minute', '', false, $defaultMinuteValue, '', $minuteArray);
 	}
 	
 	
@@ -287,7 +303,7 @@ class CC_DateTime_Field extends CC_Date_Field
 		parent::setReadOnly($fieldReadOnly);
 	}
 	
-
+	
 	//-------------------------------------------------------------------
 	// METHOD: getValue
 	//-------------------------------------------------------------------
@@ -296,13 +312,12 @@ class CC_DateTime_Field extends CC_Date_Field
 	 * The method returns the field's value as a string of the form YYYY-MM-DD HH:MM. 
 	 *
 	 * @access public
-	 * @param String format string for sprintf(). Will be passed year, month, day, hour, second, in that order.
 	 * @return string $defaultValue A string of the form YYYY-MM-DD HH:MM representing a date and time.
 	 */
 
-	function getValue($format = '%u-%0u-%0u %0u:%0u')
+	function getValue()
 	{
-		return sprintf($format, $this->getYearValue(), $this->getMonthValue(), $this->getDateValue(), $this->getHourValue(), $this->getMinuteValue());
+		return sprintf('%u-%0u-%0u %0u:%0u', $this->getYearValue(), $this->getMonthValue(), $this->getDateValue(), $this->getHourValue(), $this->getMinuteValue());
 	}
 
 
@@ -347,7 +362,7 @@ class CC_DateTime_Field extends CC_Date_Field
 
 	function setValue($rawValue = '', $clearIfBlank = false)
 	{
-		if (strlen($rawValue) > 0)
+		if (strlen($rawValue) >= 19)
 		{
 			$parsedDate = getDate(convertMysqlDateTimeToTimestamp(substr($rawValue, 0, 19)));
 
@@ -368,35 +383,6 @@ class CC_DateTime_Field extends CC_Date_Field
 			$this->setMinuteValue('');
 		}
 	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		parent::handleUpdateFromRequest();
-		
-		$key = $this->getRequestArrayName();
-
-		if (array_key_exists($key . '_year', $_REQUEST))
-		{
-			$this->setHourValue($_REQUEST[$key . '_hour']);
-			$this->setMinuteValue($_REQUEST[$key . '_minute']);
-		}
-		
-		unset($key);
-	}
-
 }
 
 ?>

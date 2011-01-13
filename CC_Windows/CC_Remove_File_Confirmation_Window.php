@@ -1,16 +1,16 @@
 <?php
-// $Id: CC_Remove_File_Confirmation_Window.php,v 1.9 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Remove_File_Confirmation_Window.php,v 1.8 2003/11/02 21:28:28 patrick Exp $
 // ------------------------------------------------------------------
 // Create our window
 //
 
 if (isset($window_class))
 {
-	$window = new $window_class();
+	$window = &new $window_class();
 }
 else
 {
-	$window = new CC_Window();
+	$window = &new CC_Window();
 }
 $application->registerWindow($window);
 
@@ -19,15 +19,15 @@ $application->registerWindow($window);
 //
 
 /*
-$testButton = new CC_Button("Testing Button");
-$testLink = new CC_Button("Testing Link", true);
+$testButton = &new CC_Button("Testing Button");
+$testLink = &new CC_Button("Testing Link", true);
 */
 
-$cancelButton = new CC_Cancel_Button();
+$cancelButton = &new CC_Cancel_Button();
 $cancelButton->setFieldUpdater(false);
 $cancelButton->setValidateOnClick(false);
 
-$deleteButton = new CC_Button("Delete", false);
+$deleteButton = &new CC_Button("Delete", false);
 $deleteButton->setFieldUpdater(false);
 $deleteButton->setValidateOnClick(false);
 
@@ -39,9 +39,9 @@ $uploadField = &$application->getArgument("uploadFieldToRemove");
 
 // (!) what is $windows? -PG	
 
-$deleteHandler = new CC_Remove_File_Handler($uploadField);
-$backHandler = new CC_Cancel_Button_Handler();
-$unregisterWindowHandler = new CC_Unregister_Window_Handler();
+$deleteHandler = &new CC_Remove_File_Handler($uploadField);
+$backHandler = &new CC_Cancel_Button_Handler();
+$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 
 
 // ------------------------------------------------------------------

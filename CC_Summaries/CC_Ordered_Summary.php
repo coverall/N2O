@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Ordered_Summary.php,v 1.26 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Ordered_Summary.php,v 1.23 2004/10/05 22:54:36 jamie Exp $
 //=======================================================================
 // CLASS: CC_Ordered_Summary
 //=======================================================================
@@ -117,9 +117,9 @@ class CC_Ordered_Summary extends CC_Summary
 
 	function getRowHTML($rowNumber, $shade)
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
-		$rowHTML = '  <tr class="ccSummaryData ' . ($shade ? 'even' : 'odd') . '" id="r' . $this->name . $rowNumber . '">' . "\n";
+		$rowHTML = sprintf("  <tr%s valign=\"top\" onMouseOver=\"this.style.backgroundColor='%s'\" onMouseOut=\"this.style.backgroundColor=''\">\n", $shade, $this->rowHighlightColour);
 		
 		$row = $this->rows[$rowNumber];
 		
@@ -160,14 +160,14 @@ class CC_Ordered_Summary extends CC_Summary
 		
 		if (!($this->window->isFieldRegistered($this->name . '_' . $recordId)))
 		{
-			$selectListField = new CC_AutoSubmit_Select_Field($this->name . '_' . $recordId, 'Order', false, $sortId, '', $sortIdOptions);
+			$selectListField = &new CC_AutoSubmit_Select_Field($this->name . '_' . $recordId, 'Order', false, $sortId, '', $sortIdOptions);
 		
 			$selectListField->registerHandler(new CC_Summary_Reorder_Handler($this));
 			
 			for ($i = 0; $i < sizeof($this->sortHandlerClasses); $i++)
 			{
 				$sortHandlerClass = $this->sortHandlerClasses[$i];
-				$sortHandler = new $sortHandlerClass($this->mainTable, $recordId, $this->displayName, $this->window, 'Go');
+				$sortHandler = &new $sortHandlerClass($this->mainTable, $recordId, $this->displayName, $this->window, 'Go');
 				
 				if (is_a($sortHandler, 'CC_Action_Handler'))
 				{
@@ -250,7 +250,7 @@ class CC_Ordered_Summary extends CC_Summary
 		if ($this->allowDelete)
 		{
 
-			$deleteButton = &$this->getDeleteLinkButton($this->deleteHandlerClass, $recordId, 'Delete', $recordId . '_delete', true);
+			$deleteButton = &$this->getViewEditDeleteLinkButton($this->deleteHandlerClass, $recordId, 'Delete', $recordId . '_delete', true);
 			$rowHTML .= sprintf("   <td align=\"center\">%s</td>\n", $deleteButton->getHTML());
 			
 			unset($deleteButton);
@@ -263,59 +263,7 @@ class CC_Ordered_Summary extends CC_Summary
 		return $rowHTML;
 	}
 
-	
-	//-------------------------------------------------------------------
-	// METHOD: getViewEditDeleteLinkButton
-	//-------------------------------------------------------------------
 
-	/**
-	 * This method returns buttons for view, edit and delete actions in the summary.
-	 *
-	 * @access protected
-	 * @param CC_Action_Handler $handlerClass The handler to use for the button.
-	 * @param int $recordId The record id of the record the button should act on.
-	 * @param string $label The label to use for the button.
-	 * @param string $key The unique key for the button.
-	 * @param bool $image Whether or not to use an image for the button.
-	 * @see getRowHTML()
-	 */
-	
-	function &getDeleteLinkButton($handlerClass, $recordId, $label, $key, $image = false)
-	{	
-		if (array_key_exists($key, $this->buttons))
-		{
-			$button = &$this->buttons[$key];
-
-			// In case the column's data was updated, we should also update
-			// the button label.
-			$button->setLabel($label);
-		}
-		else
-		{
-			if ($image)
-			{
-				$button = new CC_Image_Button($label, '/N2O/CC_Images/cc_summary.' . strtolower($label) . '.png', 16, 16);
-			}
-			else
-			{
-				$button = new CC_Text_Button($label);
-			}
-			
-			$targetWindowMethod = 'get' . $label . 'Window';
-			
-			$button->registerHandler(new CC_Delete_Ordered_Confirm_Handler($this->mainTable, $recordId, $this->sortArray, $this->displayName));
-			
-			$button->setValidateOnClick(false);
-			
-			$this->buttons[$key] = &$button;
-			
-			$this->window->registerButton($button);
-		}
-		
-		return $button;
-	}
-	
-	
 	//-------------------------------------------------------------------
 	// METHOD: getStatusRow()
 	//-------------------------------------------------------------------
@@ -371,7 +319,7 @@ class CC_Ordered_Summary extends CC_Summary
 
 	function getHTML()
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 					
 		if ($this->numRecords > 0 && !$this->hasErrorMessage())
 		{
@@ -392,10 +340,10 @@ class CC_Ordered_Summary extends CC_Summary
 			$this->getSummaryControlRow();
 			
 
-			echo '<table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" class="' . $this->style . '" id="' . $this->getName() . '">' . "\n";
+			echo ' <table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" width="100%">' . "\n";
 			
 			// the column headers
-			echo '  <tr class="ccSummaryHeadings">' . "\n";
+			echo '  <tr bgcolor="' . $this->columnHeaderColour . "\">\n";
 			
 
 			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -408,7 +356,7 @@ class CC_Ordered_Summary extends CC_Summary
 			// display the order column
 			//
 
-			echo "    <td align=\"center\">Order</td>\n";
+			echo "    <td align=\"center\" class=\"ccSummaryHeadings\">Order</td>\n";
 
 			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			// Iterate through the SQL results
@@ -419,9 +367,9 @@ class CC_Ordered_Summary extends CC_Summary
 				//display the column ID only if the showIdColumn is true
 				if (!(($this->columnNames[$i] == 'ID') && ($this->showIdColumn == false)) && !($this->columnNames[$i] == 'SORT_ID'))
 				{			
-					$displayName = $application->fieldManager->getDisplayName($this->columnNames[$i]);
+					$displayName = $this->fieldManager->getDisplayName($this->columnNames[$i]);
 					
-					printf('   <td>%s', $displayName);
+					printf('   <td class="ccSummaryHeadings">%s', $displayName);
 					echo "</td>\n";
 				}
 			}
@@ -439,15 +387,15 @@ class CC_Ordered_Summary extends CC_Summary
 			
 			if ($this->allowView)
 			{
-				echo '    <td align="center">View</td>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">View</td>' . "\n"; 
 			}
 			if ($this->allowEdit)
 			{
-				echo '    <td align="center">Edit</td>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">Edit</td>' . "\n"; 
 			}
 			if ($this->allowDelete)
 			{
-				echo '    <td align="center">Delete</td>' . "\n"; 
+				echo '    <td align="center" class="ccSummaryHeadings">Delete</td>' . "\n"; 
 			}
 			
 			echo "  </tr>\n";
@@ -456,7 +404,16 @@ class CC_Ordered_Summary extends CC_Summary
 			
 			for ($k = 0; $k < $this->numRecords; $k++)
 			{
-				echo $this->getRowHTML($k, $shadeRow);
+				if ($shadeRow)
+				{
+					$shade = " bgcolor=\"" . $this->oddRowColour . "\"";
+				}
+				else
+				{
+					$shade = " bgcolor=\"" . $this->evenRowColour . "\"";
+				}
+								
+				echo $this->getRowHTML($k, $shade);
 				
 				$shadeRow = !$shadeRow;
 			}

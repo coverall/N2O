@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Button.php,v 1.46 2008/06/01 17:26:13 mike Exp $
+// $Id: CC_Button.php,v 1.40 2004/12/07 20:05:43 mike Exp $
 //=======================================================================
 // CLASS: CC_Button
 //=======================================================================
@@ -86,7 +86,7 @@ class CC_Button extends CC_Component
      *
      * @var bool $clickable
      * @see setClickable()
-     * @see isClickable()
+     * @see getClickable()
      * @access private
      */
      
@@ -124,6 +124,16 @@ class CC_Button extends CC_Component
 	
 	var $_redirectPath = '';
 	
+
+	/**
+     * The "tabindex" for this button. This will allow us to control which button is submitted first when someone hits enter in a field. By default, buttons will start at 100, but making a button default by using CC_Window::setDefaultButton() will make it lower than the rest.
+	 *
+     * @var int $_tabIndex
+     * @access private
+     */
+
+	var $_tabIndex;
+
 
 	/**
      * The javascript for the onClick handler.
@@ -180,11 +190,11 @@ class CC_Button extends CC_Component
 		
 		for ($i = 0; $i < $argumentCount; $i++)
 		{
-			@$field = &func_get_arg($i);
+			$field = &func_get_arg($i);
 			
 			if (is_object($field))
 			{
-				$this->fieldsToValidateArray[$field->getRequestArrayName()] = true;
+				$this->fieldsToValidateArray[$field->getName()] = true;
 			}
 			else
 			{
@@ -220,7 +230,7 @@ class CC_Button extends CC_Component
 			
 			for ($j = 0; $j < $size; $j++)
 			{
-				$this->fieldsToValidateArray[$record->fields[$keys[$j]]->getRequestArrayName()] = true;
+				$this->fieldsToValidateArray[$record->fields[$keys[$j]]->getName()] = true;
 			}
 			
 			unset($record, $keys, $size, $j);
@@ -240,9 +250,27 @@ class CC_Button extends CC_Component
 	 *
 	 */
 
-	function setFieldsToUpdate($field)
+	function setFieldsToUpdate(&$field1)
 	{
-		trigger_error('setFieldsToUpdate() is no longer functional. Use setFieldsToValidate() instead.', E_USER_WARNING);
+		trigger_error('setFieldsToUpdate() is deprecated. Use setFieldsToValidate() instead.', E_USER_WARNING);
+		
+		$argumentCount = func_num_args();
+		
+		for ($i = 0; $i < $argumentCount; $i++)
+		{
+			$field = &func_get_arg($i);
+			
+			if (is_object($field))
+			{
+				$this->fieldsToValidateArray[$field->getName()] = true;
+			}
+			else
+			{
+				trigger_error('setFieldsToValidate() was passed a null field.' , E_USER_WARNING);
+			}
+			
+			unset($field);
+		}
 	}
 	
 	
@@ -296,12 +324,6 @@ class CC_Button extends CC_Component
 
 	function click($multipleClick = false)
 	{
-		if (!$this->clickable)
-		{
-			trigger_error('Button "' . $this->label . '" is not clickable, but click() was called. Ignoring...', E_USER_WARNING);
-			return;
-		}
-
 		$size = sizeof($this->handlers);
 
 		for ($j = 0; $j < $size; $j++)
@@ -330,7 +352,7 @@ class CC_Button extends CC_Component
 
 	function getHTML()
 	{
-		$button = '<input id="' . $this->id . '" type="submit" name="_BCC_' . $this->id . '" value="' . $this->label . '" class="' . $this->style . '"';
+		$button = '<input type="submit" name="_BCC_' . $this->id . '" value="' . $this->label . '" class="' . $this->style . '" tabindex="' . $this->_tabIndex .'"';
 
 		if ($this->clickable)
 		{
@@ -356,25 +378,6 @@ class CC_Button extends CC_Component
 
 	function getId()
 	{
-		return $this->id;
-	}
-
-	//-------------------------------------------------------------------
-	// METHOD: setId()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the button's unique id.
-	 *
-	 * @access public
-	 * @param strint $id The unique id of the button
-	 * @return string The button's unique id.
-	 */
-
-	function setId($id)
-	{
-		$this->id = $id;
-		
 		return $this->id;
 	}
 
@@ -478,7 +481,7 @@ class CC_Button extends CC_Component
 	
 	
 	//-------------------------------------------------------------------
-	// METHOD: isClickable()
+	// METHOD: getClickable()
 	//-------------------------------------------------------------------
 	
 	/** This method gets whether or not the button is clickable.
@@ -488,7 +491,7 @@ class CC_Button extends CC_Component
 	  * @see setClickable()
 	  */
 	  
-	function isClickable()
+	function getClickable()
 	{
 		return $this->clickable;
 	}

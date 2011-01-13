@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Window.php,v 1.125 2009/09/10 02:10:20 patrick Exp $
+// $Id: CC_Window.php,v 1.111 2004/12/15 19:34:48 jamie Exp $
 //=======================================================================
 // CLASS: CC_Window
 //=======================================================================
@@ -181,13 +181,13 @@ class CC_Window
 
 	
 	/**
-     * This flag tells CC_Application to unregister the window when it is left for another window.
+     * The "tabindex" counter for components. This will allow us to control which button is submitted first when someone hits enter in a field. By default, buttons will start at 100, but making a button default by using CC_Window::setDefaultButton() will make it lower than the rest.
 	 *
-     * @var boolean $_unregisterOnLeave
+     * @var int $_tabIndex
      * @access private
      */
 
-	var $_unregisterOnLeave = false;
+	var $_tabIndexCounter = 0;
 
 
 	//-------------------------------------------------------------------
@@ -206,7 +206,7 @@ class CC_Window
 
 	function CC_Window($id = null)
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 	
 		if ($id == null)
 		{
@@ -236,6 +236,7 @@ class CC_Window
 	{
 		//echo "Registering Button with id " . $aButton->id . "...<br>";
 		$aButton->windowId = $this->id;
+		$aButton->_tabIndex = 420 + ++$this->_tabIndexCounter;
 				
 		$this->buttons[] = &$aButton;
 		
@@ -259,43 +260,53 @@ class CC_Window
 
 	function updateFieldsFromPage($validateFields, $fieldArray = null)
 	{
-		$fieldArraySize = ($fieldArray == null ? 0 : sizeof($fieldArray));
+		global $application;
+		
+		if ($fieldArray == null)
+		{
+			$fieldArray = array();
+		}
+		
+		$fieldArraySize = sizeof($fieldArray);
 		
 		$size = sizeof($this->fields);
 		$keys = array_keys($this->fields);
-		
-		$deferred = array();
 		
 		// search through all stray fields first
 		for ($i = 0; $i < $size; $i++)
 		{
 			if (!$this->fields[$keys[$i]]->isReadOnly())
 			{
-				$this->fields[$keys[$i]]->clearAllErrors();
-				
-				if (($this->fields[$keys[$i]] instanceof CC_Multiple_Choice_Field) && sizeof($this->fields[$keys[$i]]->_associatedFields))
-				{
-					$deferred[] = $keys[$i];
-				}
-				else if (($this->fields[$keys[$i]] instanceof CC_Checkbox_Field) && sizeof($this->fields[$keys[$i]]->_associatedFields))
-				{
-					$deferred[] = $keys[$i];
-				}
-				else
-				{
-					$this->updateFieldFromPage($this->fields[$keys[$i]], $validateFields && (($fieldArraySize == 0) || array_key_exists($this->fields[$keys[$i]]->getRequestArrayName(), $fieldArray)));
-				}
+				$this->updateFieldFromPage($this->fields[$keys[$i]], $validateFields && (($fieldArraySize == 0) || array_key_exists($this->fields[$keys[$i]]->getName(), $fieldArray)));
 			}
 		}
 		
-		$size = sizeof($deferred);
+		unset($size, $keys);
+			
+		// search through all record fields
+		$keys = array_keys($this->records);
 		
-		for ($i = $size -1; $i >= 0; $i--)
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
 		{
-			$this->updateFieldFromPage($this->fields[$deferred[$i]], $validateFields && (($fieldArraySize == 0) || array_key_exists($this->fields[$deferred[$i]]->getRequestArrayName(), $fieldArray)));
+			$fieldKeys = array_keys($this->records[$keys[$i]]->fields);
+
+			$rSize = sizeof($fieldKeys);
+
+			for ($j = 0; $j < $rSize; $j++)
+			{
+				if (!$this->records[$keys[$i]]->fields[$fieldKeys[$j]]->isReadOnly())
+				{
+					$this->updateFieldFromPage($this->records[$keys[$i]]->fields[$fieldKeys[$j]], $validateFields && (($fieldArraySize == 0) || array_key_exists($this->records[$keys[$i]]->fields[$fieldKeys[$j]]->getName(), $fieldArray)));
+				}
+			}
+			
+			unset($rSize);
+			unset($fieldKeys);
 		}
-		
-		unset($size, $keys, $fieldArraySize, $deferred);
+
+		unset($fieldArraySize, $size);
 	}
 	
 	
@@ -314,7 +325,10 @@ class CC_Window
 
 	function updateFieldsFromDatabase($fieldArray = null)
 	{
-		$fieldArraySize = ($fieldArray == null ? 0 : sizeof($fieldArray));
+		if ($fieldArray == null)
+		{
+			$fieldArray = array();
+		}
 		
 		$keys = array_keys($this->records);
 		
@@ -322,19 +336,25 @@ class CC_Window
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			$fieldKeys = array_keys($this->records[$keys[$i]]->fields);
+			$record = &$this->records[$keys[$i]];
+			
+			$fieldKeys = array_keys($record->fields);
 
 			$rSize = sizeof($fieldKeys);
 
 			for ($j = 0; $j < $rSize; $j++)
 			{
-				if (isset($this->records[$keys[$i]]->fields[$fieldKeys[$j]]))
+				$field = &$record->fields[$fieldKeys[$j]];
+				
+				if ($field != NULL)
 				{
-					if ((($fieldArraySize == 0) || array_key_exists($this->records[$keys[$i]]->fields[$fieldKeys[$j]]->name, $fieldArray)) && $this->records[$keys[$i]]->fields[$fieldKeys[$j]]->getUpdateFromDatabase() === true)
+					if (((sizeof($fieldArray) == 0) || array_key_exists($field->name, $fieldArray)) && $field->getUpdateFromDatabase() === true)
 					{
-						$this->updateFieldFromDatabase($this->records[$keys[$i]]->fields[$fieldKeys[$j]], $this->records[$keys[$i]]);
+						$this->updateFieldFromDatabase($field, $record);
 					}
 				}
+				
+				unset($field);
 			}
 			
 			unset($rSize);
@@ -342,7 +362,7 @@ class CC_Window
 			unset($record);
 		}
 		
-		unset($size, $fieldArraySize);
+		unset($size);
 	}
 
 	
@@ -361,22 +381,22 @@ class CC_Window
 
 	function updateFieldFromDatabase(&$field, &$record)
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 
-		$query = 'select ' . $field->name . ' from ' . $record->table . ' where ID = \'' . $record->id . '\'';
+		//echo "$field->name : updateFieldFromDatabase!!<BR>";
 
-		$results = $application->db->doSelect($query);
+		$selectQuery = 'select ' . $field->name . ' from ' . $record->table . ' where ID = \'' . $record->id . '\'';
 
-		if (!PEAR::isError($results))
+		$results = $application->db->doSelect($selectQuery);
+
+		if ($row = cc_fetch_array($results))
 		{
-			if ($row = cc_fetch_array($results))
-			{
-				$field->setValue($row[$field->name]);
-			}
-			
-			$results->free();
+			$fieldName = $field->name;
+			$fieldData = $row[$fieldName];
 		}
-		unset($results, $query);
+
+		//$record->fields[$fieldName] = $record->createFieldObject($fieldName, $fieldData);
+		$field->setValue($fieldData);
 	}
 	
 	
@@ -395,27 +415,235 @@ class CC_Window
 
 	function updateFieldFromPage(&$field, $validateFields)
 	{
-		global $application;
+		$application = &$_SESSION['application'];
 		
-		$field->handleUpdateFromRequest();
+		//$fieldType = $application->fieldManager->getFieldType($field->name);
+		
+		$fieldType = get_class($field);
+		
+		$key = $field->getRecordKey() . $field->getName();
+		
+		//trigger_error("$key : $fieldType", E_USER_WARNING);
+		
+		switch (strtolower($fieldType))
+		{
+			case 'cc_date_field':
+			{
+				if (array_key_exists($key . '_year', $_REQUEST))
+				{
+					$field->setYearValue($_REQUEST[$key . '_year']);
+					$field->setMonthValue($_REQUEST[$key . '_month']);
+					$field->setDateValue($_REQUEST[$key . '_date']);
+				}
+				
+				break;
+			}
+
+			case 'cc_expiry_date_field':
+			{
+				if (array_key_exists($key . '_year', $_REQUEST))
+				{
+					$field->setYearValue($_REQUEST[$key . '_year']);
+					$field->setMonthValue($_REQUEST[$key . '_month']);
+				}
+				
+				break;
+			}
+			
+			case 'cc_datetime_field':
+			{
+				if (array_key_exists($key . '_year', $_REQUEST))
+				{
+					$field->setYearValue($_REQUEST[$key . '_year']);
+					$field->setMonthValue($_REQUEST[$key . '_month']);
+					$field->setDateValue($_REQUEST[$key . '_date']);
+					$field->setHourValue($_REQUEST[$key . '_hour']);
+					$field->setMinuteValue($_REQUEST[$key . '_minute']);
+				}
+				
+				break;
+			}
+			
+			case 'cc_timestamp_field':
+			{
+				if (array_key_exists($key . '_year', $_REQUEST))
+				{
+					$field->setYearValue($_REQUEST[$key . '_year']);
+					$field->setMonthValue($_REQUEST[$key . '_month']);
+					$field->setDateValue($_REQUEST[$key . '_date']);
+					$field->setHourValue($_REQUEST[$key . '_hour']);
+					$field->setMinuteValue($_REQUEST[$key . '_minute']);
+				}
+				
+				break;
+			}
+			
+			case 'cc_time_field':
+			{
+				if (array_key_exists($key . '_hour', $_REQUEST))
+				{
+					$field->setHourValue($_REQUEST[$key . '_hour']);
+					$field->setMinuteValue($_REQUEST[$key . '_minute']);
+					$field->setSecondValue($_REQUEST[$key . '_second']);
+				}
+				
+				break;
+			}
+			case 'cc_checkbox_field':
+			case 'cc_dependant_checkbox_field':
+			{
+				if (array_key_exists($key, $_REQUEST))
+				{
+					$field->setValue(1);
+				}
+				else
+				{
+					$field->setValue(0);
+				}
+				
+				break;
+			}
+			
+			case 'cc_onetomany_field':
+			{
+				break;
+			}
+			
+			case 'cc_multiple_selectlist_field':
+			{
+				if (array_key_exists($key, $_REQUEST))
+				{
+					$ksize = sizeof($_POST[$field->getRequestArrayName()]);
+					
+					$selectionValues = array();
+					
+					for ($k = 0; $k < $ksize; $k++)
+					{
+						$selectionValues[] = stripslashes($_POST[$field->getRequestArrayName()][$k]);
+					}
+					
+					$field->setValue($selectionValues);
+				}
+				
+				break;
+			}
+			
+			case 'cc_multiple_file_upload_field':
+			{
+				$field->resetInvalid();
+	
+				$ksize = sizeof(@$_FILES[$field->getRequestArrayName()]['tmp_name']);
+	
+				for ($k = 0; $k < $ksize; $k++)
+				{
+					if (file_exists($_FILES[$field->getRequestArrayName()]['tmp_name'][$k]))
+					{
+						$uploadField = &$field->uploadFieldArray[$k];
+						
+						$index = $k;
+						
+						// find the next empty upload field to fill
+						while ($uploadField->getValue() != '')
+						{
+							if ($index < $ksize)
+							{
+								unset($uploadField);
+								$uploadField = &$field->uploadFieldArray[$index++];
+							}
+							else
+							{
+								break;
+							}
+						}
+						
+						//update the field with the uploaded file info
+						$uploadField->setFileInfo($k);
+
+						if ($uploadField->validate())
+						{
+							$uploadField->moveTempFileToUploadsFolder();
+							$field->clearAllErrors();
+						}
+						else
+						{
+							$field->setErrorMessage($uploadField->getErrorMessage());
+						}
+						
+						unset($uploadField);
+					}
+				}
+				
+				unset($ksize);
+				
+				/*
+				// handled by CC_Remove_File_Handler now
+				$field->removeDeletedUploadFields();
+				$field->setValue($field->getValue());
+				*/
+				
+				break;
+			}
+			
+			case 'cc_percentage_field':
+			{
+				$button = &$field->percentageButton;
+			
+				if (array_key_exists('_PP_' . $button->id . '_x', $_REQUEST))
+				{
+					$xValue = $_REQUEST['_PP_' . $button->id . '_x'];
+					$yValue = $_REQUEST['_PP_' . $button->id . '_y'];
+					$field->setValue($xValue);
+				}
+				
+				unset($button);
+				
+				break;
+			}
+			
+			case 'cc_credit_card_field':
+			{
+				if (array_key_exists($key, $_REQUEST))
+				{
+					$field->setValue(stripslashes($_REQUEST[$key]));
+				}
+				
+				break;
+			}
+			
+			// any other field type that doesn't require special handling
+			default:
+			{
+				//echo "key = $key : fieldType = $fieldType : fieldValue = $_REQUEST[$key]<BR>";
+				if (array_key_exists($key, $_REQUEST))
+				{
+					$field->setValue(stripslashes($_REQUEST[$key]));
+				}
+				
+				break;
+			}
+		}
 		
 		//trigger_error("$key : $fieldType : " . $field->getValue(), E_USER_WARNING);
 		$hasValue = $field->hasValue();
 		
+/*
+		echo "required is $field->required<br>";
+		echo "hasValue is $hasValue<br>";
+		echo "validateFields is $validateFields<br>";
+		echo "validateIfNotRequired is $field->validateIfNotRequired<br>";
+		echo "validate is " . $field->validate() . "<br>";
+*/		
+		
 		if ($field->required && !$hasValue && $validateFields)
 		{
-			// the field is required but the user didn't enter any data
+			//the field is required but the user didn't enter any data
 			$field->setErrorMessage($field->label . ' is required.', CC_FIELD_ERROR_MISSING);
 			$application->errorManager->addFieldError('000000', $field->getErrorMessage(CC_FIELD_ERROR_MISSING), $this->_verboseErrors);
 		}
 		else if (($field->required || ($field->validateIfNotRequired && $hasValue)) && $validateFields && !$field->validate())
 		{
-			// the field is invalid, check if there is already an invalid message set
-			if ($field->getErrorMessage(CC_FIELD_ERROR_INVALID) == '')
-			{
-				$field->setErrorMessage($field->label . ' is invalid.', CC_FIELD_ERROR_INVALID);
-			}
-			
+			//the field is invalid
+			$field->setErrorMessage($field->label . ' is invalid.', CC_FIELD_ERROR_INVALID);
 			$application->errorManager->addFieldError('000001', $field->getErrorMessage(CC_FIELD_ERROR_INVALID), $this->_verboseErrors);
 		}
 		else
@@ -444,7 +672,7 @@ class CC_Window
 		{
 			trigger_error('CC_Window->registerComponent(): received an undefined component. (' . $this->id . ')');
 		}
-		else if ($aComponent instanceof CC_Component)
+		else if (is_a($aComponent, 'CC_Component'))
 		{
 			$aComponent->register($this);
 		}
@@ -467,24 +695,10 @@ class CC_Window
 	 * @see registerComponent
 	 */
 
-	function registerField(&$field)
+	function registerField(&$aField)
 	{
-		if (!$field)
-		{
-			trigger_error('Attempt to register a null field bypassed...', E_USER_WARNING);
-			trigger_error(getStackTrace(), E_USER_WARNING);
-
-			return;
-		}
-		else if (!strlen($field->getName()))
-		{
-			trigger_error('Attempt to register an unnamed field bypassed...', E_USER_WARNING);
-			trigger_error(getStackTrace(), E_USER_WARNING);
-
-			return;
-		}
-
-		$this->fields[$field->getRequestArrayName()] = &$field;
+		$aField->_tabIndex = ++$this->_tabIndexCounter;
+		$this->fields[$aField->getName()] = &$aField;
 	}
 
 
@@ -500,9 +714,20 @@ class CC_Window
 	 * @see registerComponent
 	 */
 
-	function registerRecord(&$record)
+	function registerRecord(&$aRecord)
 	{
-		$this->records[] = &$record;
+		$keys = array_keys($aRecord->fields);
+		
+		$size = sizeof($keys);
+		
+		for ($i = 0; $i < $size; $i++)
+		{
+			$aRecord->fields[$keys[$i]]->_tabIndex = ++$this->_tabIndexCounter;
+		}
+		
+		unset($keys, $size);
+
+		$this->records[] = &$aRecord;
 	}
 
 
@@ -576,7 +801,7 @@ class CC_Window
 
 	function &getComponent($name)
 	{
-		if (isset($this->components[$name]))
+		if (array_key_exists($name, $this->components))
 		{
 			$this->components[$name]->get($this);
 			return $this->components[$name];
@@ -603,7 +828,7 @@ class CC_Window
 
 	function &getSummary($name, $update = false)
 	{
-		if (isset($this->summaries[$name]))
+		if (array_key_exists($name, $this->summaries))
 		{
 			if ($update)
 			{
@@ -723,7 +948,7 @@ class CC_Window
 
 	function isRecordRegistered($key)
 	{
-		return isset($this->records[$key]);
+		return array_key_exists($key, $this->records);
 	}
 	
 	
@@ -742,7 +967,7 @@ class CC_Window
 
 	function isComponentRegistered($key)
 	{
-		return isset($this->components[$key]);
+		return array_key_exists($key, $this->components);
 	}
 	
 	
@@ -761,7 +986,7 @@ class CC_Window
 
 	function isFieldRegistered($fieldName)
 	{
-		return isset($this->fields[$fieldName]);
+		return array_key_exists($fieldName, $this->fields);
 	}
 	
 	
@@ -780,7 +1005,14 @@ class CC_Window
 
 	function isSummaryRegistered($name)
 	{
-		return isset($this->summaries[$name]);
+		if (array_key_exists($name, $this->summaries))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	
@@ -841,15 +1073,19 @@ class CC_Window
 	
 		for ($i = 0; $i < $size; $i++)
 		{
+			$button = &$this->buttons[$i];
+			
 			// (!) for some reason, ($button->label == $aLabel) was
 			//     returning true for comparisons that weren't the same!!
 			//     we should investigate why this is one day...
 
-			if (strcmp($this->buttons[$i]->label, $aLabel) == 0)
+			if (strcmp($button->label, $aLabel) == 0)
 			{
 				unset($size);
-				return $this->buttons[$i];
+				return $button;	
 			}
+			
+			unset($button);
 		}
 		
 		unset($size);
@@ -969,7 +1205,7 @@ class CC_Window
 
 	function &getField($fieldName)
 	{
-		if (isset($this->fields[$fieldName]))
+		if (array_key_exists($fieldName, $this->fields))
 		{
 			$this->fields[$fieldName]->get($this);
 			return $this->fields[$fieldName];
@@ -1036,7 +1272,7 @@ class CC_Window
 
 	function hasObject($key)
 	{
-		return isset($this->objects[$key]);
+		return array_key_exists($key, $this->objects);
 	}
 	
 	
@@ -1055,7 +1291,7 @@ class CC_Window
 
 	function hasSummary($name)
 	{
-		return isset($this->summaries[$name]);
+		return array_key_exists($name, $this->summaries);
 	}
 	
 
@@ -1158,7 +1394,7 @@ class CC_Window
 	 
 	function hasError()
 	{	
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		return ($application->errorManager->hasFieldErrors() || $application->errorManager->hasUserErrors());
 	}
@@ -1282,14 +1518,14 @@ class CC_Window
 	{	
 		if ($this->hasError())
 		{
-			global $application;
+			$application = &$_SESSION['application'];
 	
 			$this->_errorMessage = '';
 			
-			// user errors get displayed regardless of _verboseErrors
+			//user errors get displayed regardless of _verboseErrors
 			if ($application->errorManager->hasUserErrors())
 			{
-				// cycle through the user errors	
+				//cycle through the user errors	
 				$userErrors = $application->errorManager->getUserErrors();
 				
 				$size = sizeof($userErrors);
@@ -1297,7 +1533,7 @@ class CC_Window
 				for ($i = 0; $i < $size; $i++)
 				{
 					$userError = $userErrors[$i];
-					$this->_errorMessage .= '<span class="ccError">' . $userError->getMessage() . '</span>';
+					$this->_errorMessage .= '<span class="ccError">' . $userError->getMessage() . '</span><p>';
 				}
 				
 				unset($size);
@@ -1309,7 +1545,7 @@ class CC_Window
 				{
 					$this->_errorMessage .= '<span class="ccError">Please check the following fields and try again:</span><ul>';
 												
-					// cycle through the field errors
+					//cycle through the field errors
 						
 					$fieldErrors = $application->errorManager->getFieldErrors();
 					
@@ -1327,7 +1563,7 @@ class CC_Window
 				}
 				else 
 				{
-					$this->_errorMessage .= '<span class="ccError">There were problems with fields marked with this colour. Please check these and try again.</span>';
+					$this->_errorMessage .= '<span class="ccError">There were problems with fields marked with this colour. Please check these and try again.</span><p>';
 				}
 			}
 			
@@ -1350,6 +1586,7 @@ class CC_Window
 	function setDefaultButton(&$defaultButton)
 	{
 		$this->defaultButton = &$defaultButton;
+		$this->defaultButton->_tabIndex = 420;
 	}	
 
 
@@ -1408,7 +1645,7 @@ class CC_Window
 
 	function hasArgument($name)
 	{	
-		return isset($this->arguments[$name]);
+		return array_key_exists($name . '', $this->arguments);
 	}
 
 
@@ -1433,7 +1670,7 @@ class CC_Window
 			trigger_error('CC_Window::getArgument() was passed an unset or NULL object.');
 		}
 		
-		if (isset($this->arguments[$name]))
+		if (array_key_exists($name, $this->arguments))
 		{
 			return $this->arguments[$name];
 		}
@@ -1496,59 +1733,6 @@ class CC_Window
 	function getFooter()
 	{	
 		return;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setUnregisterOnLeave()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * By calling this method, you are instructing the application to
-	  * unregister this window when the user goes to another window.
-	  * This helps reduce clutter in the session and frees up memory
-	  * unnecessarily used by windows you don't need anymore.
-	  *
-	  * @access public
-	  */
-
-	function setUnregisterOnLeave($unregister = true)
-	{	
-		$this->_unregisterOnLeave = $unregister;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: cleanup()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * This method is called when a window is unregistered. It is used
-	  * to nullify and unset() instance variables to help with memory
-	  * reduction.
-	  *
-	  * @access public
-	  */
-
-	function cleanup()
-	{	
-		$this->buttons = null;
-		$this->fields = null;
-		$this->records = null;
-		$this->summaries = null;
-		$this->components = null;
-		$this->defaultButton = null;
-		$this->objects = null;
-		$this->arguments = null;
-		
-		unset($this->buttons);
-		unset($this->fields);
-		unset($this->records);
-		unset($this->summaries);
-		unset($this->components);
-		unset($this->defaultButton);
-		unset($this->objects);
-		unset($this->arguments);
 	}
 }
 

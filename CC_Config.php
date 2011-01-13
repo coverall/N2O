@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Config.php,v 1.27 2005/06/26 23:47:03 patrick Exp $
+// $Id: CC_Config.php,v 1.26 2004/12/21 20:18:25 patrick Exp $
 //===================================================================
 // PLEASE DO NOT EDIT BELOW THIS LINE!
 //===================================================================
@@ -26,6 +26,8 @@
 	//$cookiePath		= '/';
 
 	$session_expiry 	= 0; 	// seconds until the session expires
+	$application_name 	= '_APPLICATION_NAME_';
+	$version_number 	= '_VERSION_';
 	$relative_path 		= '_RELATIVE_PATH';
 	// define if real path is not the same as the "cosmetic" path
 	//$cosmetic_path		= '_COSMETIC_PATH';
@@ -36,7 +38,7 @@
 	$headerFile 		= '_HEADER_';
 	$footerFile 		= '_FOOTER_';
 	$isDebugOn	 		= false; // true or false
-	$require_admin		= true; // set to false if you don't need CC_Summary and other admin-type classes
+	$show_action_in_url = false; // to be implemented soon
 	
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

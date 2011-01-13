@@ -120,10 +120,12 @@ class CC_Multiple_Choice_Field extends CC_Field
 		else
 		{
 			$this->setErrorMessage('Some additional fields are required', CC_FIELD_ERROR_CUSTOM);
-			
+					
 			for ($i = 0; $i < sizeof($errorFields); $i++)
 			{
-				$errorFields[$i]->setErrorMessage('Please include a value.', CC_FIELD_ERROR_MISSING);
+				$errorField = &$errorFields[$i];
+				$errorField->setErrorMessage('Please include a value.', CC_FIELD_ERROR_MISSING);
+				unset($errorField);
 			}
 		}
 

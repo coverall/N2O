@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Update_Record_Handler.php,v 1.15 2008/06/12 04:18:13 jamie Exp $
+// $Id: CC_Update_Record_Handler.php,v 1.12 2003/10/11 23:09:41 patrick Exp $
 //=======================================================================
 
 /**
@@ -49,7 +49,7 @@ class CC_Update_Record_Handler extends CC_Action_Handler
 
 	function CC_Update_Record_Handler(&$recordToUpdate, $updateAction = '')
 	{	
-		global $application;
+		$application = &$_SESSION['application'];
 		
 		//echo "In Update construcor method!<br>";
 		
@@ -86,9 +86,18 @@ class CC_Update_Record_Handler extends CC_Action_Handler
 	{
 		if ($multipleClick === false)
 		{
-			global $application;
+			//echo "In Update process method!<br>";
+			$application = &$_SESSION['application'];
 			
-			if ($this->recordToUpdate->update())
+			$result = $application->db->doUpdate($this->recordToUpdate->buildUpdateQuery());
+			
+			if (PEAR::isError($result))
+			{
+				$window->setErrorMessage('Could not update record. (' . $result->getMessage() . ')');
+				
+				return false;
+			}
+			else
 			{
 				if ($this->updateAction !== false)
 				{	

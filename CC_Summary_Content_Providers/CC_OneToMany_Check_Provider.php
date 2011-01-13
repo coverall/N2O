@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_OneToMany_Check_Provider.php,v 1.7 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_OneToMany_Check_Provider.php,v 1.6 2004/04/15 18:06:31 patrick Exp $
 //=======================================================================
 // CLASS: CC_OneToMany_Checkbox_Provider
 //=======================================================================
@@ -87,7 +87,7 @@ class CC_OneToMany_Checkbox_Provider extends CC_Summary_Content_Provider
 		}
 		else
 		{
-			$checkBox = new CC_Checkbox_Field($recordId, '');
+			$checkBox = &new CC_Checkbox_Field($recordId, '');
 			
 			if (in_array($recordId, $this->oneToManySelectedIds))
 			{

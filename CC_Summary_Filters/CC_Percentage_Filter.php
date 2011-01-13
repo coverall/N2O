@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Percentage_Filter.php,v 1.15 2006/05/29 19:42:54 patrick Exp $
+// $Id: CC_Percentage_Filter.php,v 1.7 2003/09/18 23:38:43 jamie Exp $
 //=======================================================================
 // CLASS: CC_Percentage_Filter
 //=======================================================================
@@ -15,20 +15,6 @@
 
 class CC_Percentage_Filter extends CC_Summary_Filter
 {
-	//-------------------------------------------------------------------
-	var $width;
-
-	
-	//-------------------------------------------------------------------
-	// CONSTRUCTOR
-	//-------------------------------------------------------------------
-
-	function CC_Percentage_Filter($width = 100)
-	{
-		$this->width = $width;
-	}
-
-
 	//-------------------------------------------------------------------
 	// METHOD: processValue()
 	//-------------------------------------------------------------------
@@ -46,43 +32,40 @@ class CC_Percentage_Filter extends CC_Summary_Filter
 	{
 		if (is_array($width))
 		{
-			$width = $this->width;
+			$width = 100;
 		}
-		
-		$percent = round($percent, 2);
 
-		$actualWidth = round(($percent / 100) * ($width - 2));
-		
-		$img = '<div class="ccPercent" style="width:' . ($width - 2) . 'px" title="' . $percent . '%">';
+		$actualWidth = ($percent / 100) * $width;
 		
 		if ($percent == 100)
 		{
-			$type = '-100';
+			//return "<b>Complete</b>";
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-100.gif\" width=\"" . ($actualWidth + 2) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
 		}
-		else if ($percent >= 66 && $percent < 100)
+		else if ($percent >= 98 && $percent < 100)
 		{
-			$type = '-yellow';
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-yellow.gif\" width=\"" . ($actualWidth + 2) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
+		}
+		else if ($percent >= 66 && $percent < 98)
+		{
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-yellow.gif\" width=\"" . $actualWidth . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty-left.gif\" width=\"2\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty.gif\" width=\"" . ($width - $actualWidth - 2) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
 		}
 		else if ($percent >= 33 && $percent < 66)
 		{
-			$type = '-orange';
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-orange.gif\" width=\"" . $actualWidth . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty-left.gif\" width=\"2\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty.gif\" width=\"" . ($width - $actualWidth - 2) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
 		}
 		else if ($percent > 0 && $percent < 33)
 		{
-			$type = '-red';
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-red.gif\" width=\"" . $actualWidth . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty-left.gif\" width=\"2\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty.gif\" width=\"" . ($width - $actualWidth - 2) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
 		}
-		
-		if ($percent > 0)
+		else if ($percent == 0)
 		{
-			$img .= '<img src="/N2O/CC_Images/bar' . $type . '.gif" width="' . ($actualWidth + ($percent < 100 ? 0 : 0)) . '" height="12" border="0">';
+			return "<nobr><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty-left.gif\" width=\"2\" height=\"10\"><img src=\"/N2O/CC_Images/bar-empty.gif\" width=\"" . ($width - 1) . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span></nobr>";
 		}
-		if ($percent > 0 && $percent < 96)
+		else
 		{
-			$img .= '<img src="/N2O/CC_Images/bar-end.png" width="4" height="12" border="0">';
+			return "<img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\"><img src=\"/N2O/CC_Images/bar.gif\" width=\"" . $actualWidth . "\" height=\"10\"><img src=\"/N2O/CC_Images/bar-end.gif\" width=\"1\" height=\"10\">&nbsp;<span class=\"small\">(" . $percent . "%)</span>";
 		}
-		$img .= '</div>';
-		
-		return $img;
 	}
 	
 	

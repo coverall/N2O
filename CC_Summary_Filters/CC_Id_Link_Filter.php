@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Id_Link_Filter.php,v 1.3 2006/12/11 00:06:30 jamie Exp $
+// $Id: CC_Id_Link_Filter.php,v 1.1 2003/09/14 21:03:57 patrick Exp $
 //=======================================================================
 // CLASS: CC_Id_Link_Filter
 //=======================================================================
@@ -18,7 +18,6 @@ class CC_Id_Link_Filter extends CC_Summary_Filter
 	//-------------------------------------------------------------------
 	var $_urlPrefix;
 	var $_urlSuffix;
-	var $_target;
 
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR
@@ -31,11 +30,10 @@ class CC_Id_Link_Filter extends CC_Summary_Filter
 	 * @access private
 	 */
 
-	function CC_Id_Link_Filter($urlPrefix = '', $urlSuffix = '', $target = '')
+	function CC_Id_Link_Filter($urlPrefix = '', $urlSuffix = '')
 	{
 		$this->_urlPrefix = $urlPrefix;
 		$this->_urlSuffix = $urlSuffix;
-		$this->_target = $target;
 	}
 
 
@@ -53,16 +51,7 @@ class CC_Id_Link_Filter extends CC_Summary_Filter
 
 	function processValue($value, $id)
 	{
-		if ($this->_target != '')
-		{
-			$targetString = ' target="' . $this->_target . '"';
-		}
-		else
-		{
-			$targetString = '';
-		}
-		
-		return '<a href="' . $this->_urlPrefix . $id . $this->_urlSuffix . (!isset($_COOKIE[session_name()]) ? '?' . session_name() . '=' . session_id() : '') . '"' . $targetString . '>' . $value . '</a>';
+		return '<a href="' . $this->_urlPrefix . $id . $this->_urlSuffix . '">' . $value . '</a>';
 	}
 }
 

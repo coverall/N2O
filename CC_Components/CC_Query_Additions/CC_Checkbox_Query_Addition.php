@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Checkbox_Query_Addition.php,v 1.11 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Checkbox_Query_Addition.php,v 1.4 2004/12/08 03:15:16 mike Exp $
 //=======================================================================
 // CLASS: CC_Checkbox_Query_Addition
 //=======================================================================
@@ -32,29 +32,6 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
      */
     
     var $_checkboxFilters;
-
-
-    /**
-     * If set to true, we an use this component dynamically (with a CC_Dynamic_Summary)
-     *
-     * @var bool $_isDynamic
-     * @access private
-     */
-    
-    var $_isDynamic = false;
-    var $_dynamicSummaryName = '';
-    var $_dynamicFilterName = '';
-
-
-    /**
-     * Save a cookie for the future!
-     *
-     * @var string $_cookieName
-     * @access private
-     */
-    
-    var $_cookieName = false;
-
     
     	
 	//-------------------------------------------------------------------
@@ -72,8 +49,6 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 	{
 		$this->name = $name;
 		$this->_useAnd = $useAnd;
-
-		$this->_cookieName = session_name() . '_' . $this->name;
 	}
 	
 	
@@ -89,10 +64,10 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 	 * @param string $queryAdditionText A CC_Query_Addition object. 
 	 */
 
-	function addCheckboxFilter($label, $queryAdditionText, $checked = false)
+	function addCheckboxFilter($label, $queryAdditionText)
 	{
 		$numCheckboxes = sizeof($this->_checkboxFilters);
-		$checkboxField =  new CC_Checkbox_Field($this->name  .'_cb_' . $numCheckboxes, $label, false, $checked);
+		$checkboxField =  &new CC_Checkbox_Field($this->name  .'_cb_' . $numCheckboxes, $label);
 		
 		$newCheckboxEntry = array();
 		$newCheckboxEntry[0] = &$checkboxField;
@@ -100,20 +75,6 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 		
 		$this->_checkboxFilters[] = &$newCheckboxEntry;
 		
-		if ($this->_isDynamic)
-		{
-			$checkboxField->setOnClickAction("filterPage('" . $this->_dynamicSummaryName . "', '" . $this->_dynamicFilterName . "', $('" . $this->_dynamicFilterName . "'), '" . $this->getName() . "', " . $numCheckboxes . ");");
-		
-			$checkboxField->setId($this->getName() . '_' . $numCheckboxes);
-		}
-
-		$index = sizeof($this->_checkboxFilters);
-
-		if (array_key_exists($this->_cookieName . '_' . ($index - 1), $_COOKIE))
-		{	
-			$checkboxField->setValue($_COOKIE[$this->_cookieName . '_' . ($index - 1)]);
-		}
-
 		unset($newCheckboxEntry);
 	}
 	
@@ -158,7 +119,6 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 		
 		$first = true;
 		$size = sizeof($this->_checkboxFilters);
-		$queryAddition = '';
 		
 		for ($i = 0; $i < $size; $i++)
 		{
@@ -168,14 +128,8 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 			{
 				$queryAddition .= ($first) ? $this->_checkboxFilters[$i][1] : $booleanOperator . $this->_checkboxFilters[$i][1]; 
 				$first = false;
-
 			}
 			
-			if (!headers_sent())
-			{
-				setcookie($this->_cookieName . '_' . $i, $checkBoxField->getValue() , time() + 60*60*24*30);
-			}
-
 			unset($checkBoxField);
 		}
 
@@ -184,46 +138,6 @@ class CC_Checkbox_Query_Addition extends CC_Query_Addition
 		return $queryAddition;
 	}
 	
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setValueAtIndex
-	//-------------------------------------------------------------------
-
-	/**
-	 * Set's the value of the search field...
-	 *
-	 * @access public
-	 */
-
-	function setValueAtIndex($value, $index)
-	{
-		$checkbox = &$this->_checkboxFilters[$index][0];
-		$checkbox->setValue(($value == 'true' ? 1 : 0));
-		
-		if (!headers_sent())
-		{
-			setcookie($this->_cookieName . '_' . $index, $checkbox->getValue() , time() + 60*60*24*30);
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setDynamic()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the label of the component. Defaults to 'Search-O-Matic'.
-	 *
-	 * @access public
-	 */
-
-	function setDynamic($dynamic, $summaryName, $filterName)
-	{
-		$this->_isDynamic = $dynamic;
-		$this->_dynamicSummaryName = $summaryName;
-		$this->_dynamicFilterName = $filterName;
-	}
 	
 	//-------------------------------------------------------------------
 	// METHOD: register

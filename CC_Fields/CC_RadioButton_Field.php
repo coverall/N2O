@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_RadioButton_Field.php,v 1.43 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_RadioButton_Field.php,v 1.38 2005/02/25 05:38:05 patrick Exp $
 //=======================================================================
 // CLASS: CC_RadioButton_Field
 //=======================================================================
@@ -354,7 +354,7 @@ class CC_RadioButton_Field extends CC_Multiple_Choice_Field
 	 * @return string The HTML for the field.
 	 */
 
-	function getEditHTML($delimiter = '<br>')
+	function getEditHTML()
 	{
 		$size = sizeof($this->radioButtons);
 		
@@ -362,7 +362,7 @@ class CC_RadioButton_Field extends CC_Multiple_Choice_Field
 		
 		for ($i = 0; $i < $size; $i++)
 		{
-			$radioHTML .= $this->getButtonHTMLAtIndex($i) . $delimiter;
+			$radioHTML .= $this->getButtonHTMLAtIndex($i) . '<br>';
 		}
 		
 		unset($size);
@@ -523,50 +523,6 @@ class CC_RadioButton_Field extends CC_Multiple_Choice_Field
 		{
 			$this->radioButtons[$i]->setRecord($this->record);
 		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		$delimiter = (isset($args->delimiter) ? $args->delimiter : ',');
-		$index = (isset($args->index) ? $args->index : 0);
-
-		if (isset($args->options))
-		{
-			$options = explode($delimiter, $args->options);
-		}
-		else
-		{
-			$options = array();
-		}
-		
-		if (!strlen($value) && isset($args->value))
-		{
-			$value = $args->value;
-		}
-
-		$field = new $className($name, $label, $required, $value, $options);
-
-		if (!strlen($value))
-		{
-			$field->setSelectedAtIndex($index);
-		}
-
-		unset($delimiter, $options, $index);
-
-		return $field;
 	}
 }
 

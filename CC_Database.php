@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Database.php,v 1.71 2008/01/09 00:03:30 patrick Exp $
+// $Id: CC_Database.php,v 1.60 2004/11/29 21:21:07 patrick Exp $
 //=======================================================================
 // CLASS: CC_Database
 //=======================================================================
@@ -24,6 +24,48 @@ class CC_Database
 {
 
 	/**
+     * The hostname where the database resides.
+     *
+     * @var string $_databaseHost
+     * @access private
+     */
+
+	var $_databaseHost; 		// database hostname
+
+
+	/**
+     * The name of the database.
+     *
+     * @var string $_databaseHost
+     * @access private
+     */
+
+	var $_databaseName; 		// the name of the mySQL database
+
+
+	/**
+     * The user used to access the database.
+     *
+     * @var string $_databaseUsername
+     * @access private
+     * @see $_databasePassword
+     */
+
+	var $_databaseUsername;
+
+
+	/**
+     * The password used to access the database.
+     *
+     * @var string $_databasePassword
+     * @access private
+     * @see $_databaseUsername
+     */
+
+	var $_databasePassword;
+
+
+	/**
      * The password used to encode data in the database.
      *
      * @var string $_encodePassword
@@ -43,6 +85,16 @@ class CC_Database
 	var $_databaseType;
 
 
+	/**
+     * Whether or not we close our database connections.
+     *
+     * @var bool $_persistent
+     * @access private
+     */
+
+	var $_persistent;
+
+	
 	/**
      * The PEAR DB object
      *
@@ -81,8 +133,13 @@ class CC_Database
 
 	function CC_Database($databaseHost, $databaseName, $databaseUsername, $databasePassword, $encodePassword, $databaseType = DB_MYSQL)
 	{
+		$this->_databaseHost = $databaseHost;
+		$this->_databaseName = $databaseName;
+		$this->_databaseUsername = $databaseUsername;
+		$this->setPassword($databasePassword);
 		$this->setEncodePassword($encodePassword);
 		$this->_databaseType = ($databaseType ? $databaseType : DB_MYSQL);
+		//$this->_persistent = ($persistent ? true : false);
 
 		switch ($this->_databaseType)
 		{
@@ -110,14 +167,11 @@ class CC_Database
 	 * @access private
 	 */
 	
-	function openDatabase($query)
+	function openDatabase()
 	{
 		global $ccDatabaseAlertEmail;
 		
-		if (!$this->_db)
-		{
-			$this->_db = DB::connect(strSlide13($this->_datasource));
-		}
+		$this->_db = DB::connect(strSlide13($this->_datasource));
 		
 		if (DB::isError($this->_db))
 		{
@@ -167,22 +221,21 @@ class CC_Database
 			}
 			
 			$address = $addressPrefix. $_SERVER['SERVER_NAME'] . $port . $_SERVER['REQUEST_URI'];
-			$dsn = strSlide13($this->_datasource);
-			$dsn = preg_replace('/([a-z]+):\/\/([a-z_]+):[^@]+@(.+)/', '\1://\2:xxxxxx@\3', $dsn);
-			$stack = getStackTrace();
 			$email = <<<EOF
+An error occurred while trying to connect to the $dbType database.
+
 Error:   $errorMessage
 Address: $address
-DSN:     $dsn
+DB Host: $this->_databaseHost
+DB User: $this->_databaseUsername
+DB Name: $this->_databaseName
 User IP: {$_SERVER['REMOTE_ADDR']}
-Query:   $query
-Stack:   $stack
+
+Someone better look into this!
 EOF;
 			
-			trigger_error('Could not connect to ' . preg_replace('/([a-z]+):\/\/([a-z_]+):[a-z0-9_]+@([a-z\.-]+)\/([a-z0-9]+)/', '\1://\2:xxxxxx@\3/\4', strSlide13($this->_datasource)), E_USER_WARNING);
-			
 			//dbAlertEmail is set in CC_Config
-			cc_mail($ccDatabaseAlertEmail, (isset($ccDatabaseAlertPrefix) ? $ccDatabaseAlertPrefix . ' ' : '') . 'Database Error!', $email, array('From' => 'cc_database_bot@coverallcrew.com'));
+			cc_mail($ccDatabaseAlertEmail, 'Database Error!', $email, array('From' => 'cc_database_bot@coverallcrew.com'));
 		}
 		
 		return $this->_db;
@@ -203,6 +256,11 @@ EOF;
 	
 	function closeDatabase()
 	{
+		if (DEBUG)
+		{
+			trigger_error('Closing database...', E_USER_WARNING);
+		}
+
 		$this->_db->disconnect();
 		unset($this->_db);
 		
@@ -260,7 +318,12 @@ EOF;
 	{
 		global $application;
 		
-		if (PEAR::isError($this->openDatabase($query)))
+		if (DEBUG)
+		{
+			trigger_error('Query: ' . $query, E_USER_WARNING);
+		}
+		
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -275,9 +338,10 @@ EOF;
 				trigger_error('CC_Database::' . $function . '() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 				$this->rollback();
 
+				$this->closeDatabase();
 				return $result;
 			}
-
+			
 			if ($update)
 			{
 				$return = $this->_db->affectedRows();
@@ -290,6 +354,7 @@ EOF;
 			}
 	
 			$this->commit();
+			$this->closeDatabase();
 			
 			return $return;
 		}
@@ -314,7 +379,7 @@ EOF;
 		
 		$return = array();
 		
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -333,6 +398,7 @@ EOF;
 					trigger_error('CC_Database::' . $function . '() ' . $result->getMessage() . ' Query: ' . $queryArray[$i], E_USER_WARNING);
 					$this->rollback();
 	
+					$this->closeDatabase();
 					return $result;
 				}
 				else
@@ -351,6 +417,7 @@ EOF;
 			}
 	
 			$this->commit();
+			$this->closeDatabase();
 			
 			return $return;
 		}
@@ -433,7 +500,12 @@ EOF;
 	{
 		global $application;
 		
-		if (PEAR::isError($this->openDatabase($query)))
+		if (DEBUG)
+		{
+			trigger_error('Insert Query: ' . $query, E_USER_WARNING);
+		}
+		
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -466,7 +538,7 @@ EOF;
 			}
 			else //add at the end of the sort list
 			{
-				// get the number of records
+				//get the number of records
 				$numRecords = $this->doCount($tableName);
 				
 				$query = 'update ' . $tableName . ' set SORT_ID="' . $numRecords . '" where SORT_ID="0"';
@@ -533,19 +605,25 @@ EOF;
 	{
 		global $application;
 		
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
 		else
 		{
+			if (DEBUG)
+			{
+				trigger_error('Query: ' . $query, E_USER_WARNING);
+			}
+
 			$result = $this->_db->query($query);
 		
 			if (DB::isError($result))
 			{
 				trigger_error('CC_Database::doDelete() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 			}
-
+			
+			$this->closeDatabase();
 			return $result;
 		}
 	}
@@ -570,7 +648,12 @@ EOF;
 		
 		$query = 'delete from ' . $tableName . " where ID='" . $recordId . "'";
 
-		if (PEAR::isError($this->openDatabase($query)))
+		if (DEBUG)
+		{
+			trigger_error('Query: ' . $query, E_USER_WARNING);
+		}
+		
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -582,6 +665,8 @@ EOF;
 			{
 				trigger_error('CC_Database::doOrderedDelete() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 
+				$this->closeDatabase();
+				
 				return $result;
 			}
 			else
@@ -600,6 +685,8 @@ EOF;
 					}
 				}
 				while ($this->_db->affectedRows() > 0);
+				
+				$this->closeDatabase();
 			}
 		}
 	}
@@ -648,9 +735,10 @@ EOF;
 	
 	function doSelect($query)
 	{
+		$application = &getApplication();
 		$start = time();
 
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -658,11 +746,17 @@ EOF;
 		{
 			$result = $this->_db->query($query);
 			
+			if (DEBUG)
+			{
+				trigger_error('Query: ' . $query . ' (' . (time() - $start) . ' seconds)', E_USER_WARNING);
+			}
+	
 			if (DB::isError($result))
 			{
 				trigger_error('CC_Database::doSelect() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 			}
 			
+			$this->closeDatabase();		
 			return $result;
 		}
 	}
@@ -683,7 +777,7 @@ EOF;
 	
 	function doGetOne($query)
 	{
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -693,10 +787,17 @@ EOF;
 			
 			$result = $this->_db->getOne($query);
 
+			if (DEBUG)
+			{
+				trigger_error('Query: ' . $query . ' (' . (time() - $start) . ' seconds)', E_USER_WARNING);
+			}
+
 			if (DB::isError($result))
 			{
 				trigger_error('CC_Database::doGetOne() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 			}
+
+			$this->closeDatabase();		
 
 			return $result;
 		}
@@ -718,7 +819,7 @@ EOF;
 	
 	function doGetRow($query)
 	{
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -730,10 +831,17 @@ EOF;
 			$result = $this->_db->getRow($query);
 			$this->_db->setFetchMode(DB_FETCHMODE_ORDERED);
 
+			if (DEBUG)
+			{
+				trigger_error('Query: ' . $query . ' (' . (time() - $start) . ' seconds)', E_USER_WARNING);
+			}
+
 			if (DB::isError($result))
 			{
 				trigger_error('CC_Database::doGetRow() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
 			}
+
+			$this->closeDatabase();		
 
 			return $result;
 		}
@@ -758,7 +866,7 @@ EOF;
 	
 	function doPreparedSelect($query, $data, $transaction = false)
 	{
-		if (PEAR::isError($this->openDatabase($query)))
+		if (PEAR::isError($this->openDatabase()))
 		{
 			return $this->_db;
 		}
@@ -780,16 +888,11 @@ EOF;
 					$this->rollback();
 				}
 
-				trigger_error('CC_Database::doPreparedSelect() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
+				trigger_error('CC_Database::doSelect() ' . $result->getMessage() . ' Query: ' . $query, E_USER_WARNING);
+				return false;
 			}
-			else
-			{
-				if (is_a($result, 'DB_common'))
-				{
-					$result->freePrepared($statement);
-				}
-			}
-
+			
+			$this->closeDatabase();
 			return $result;
 		}
 	}
@@ -938,6 +1041,7 @@ EOF;
 	}
 	
 	
+	
 	//-------------------------------------------------------------------
 	// METHOD: cc_show_tables
 	//-------------------------------------------------------------------
@@ -1019,20 +1123,6 @@ EOF;
 		}
 
 		return $returnArray;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: __sleep
-	//-------------------------------------------------------------------
-	
-	function __sleep()
-	{
-		if ($this->_db && !PEAR::isError($this->_db))
-		{
-			$this->closeDatabase();
-		}
-		return array_keys(get_object_vars($this));
 	}
 }
 

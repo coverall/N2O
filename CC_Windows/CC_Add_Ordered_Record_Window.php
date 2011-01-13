@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Add_Ordered_Record_Window.php,v 1.12 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Add_Ordered_Record_Window.php,v 1.11 2004/08/19 04:25:26 patrick Exp $
 if ($application->hasArgument('displayNameForAddOrdered'))
 {
 	$displayName = $application->getArgument('displayNameForAddOrdered');
@@ -17,11 +17,11 @@ if (!$application->isWindowRegistered($application->getAction()))
 	
 	if (isset($window_class))
 	{
-		$window = new $window_class();
+		$window = &new $window_class();
 	}
 	else
 	{
-		$window = new CC_Window();
+		$window = &new CC_Window();
 	}
 	$application->registerWindow($window);
 	
@@ -29,23 +29,23 @@ if (!$application->isWindowRegistered($application->getAction()))
 	// ------------------------------------------------------------------
 	// (1) Construct the CC_Record component
 	//	
-	$record = new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAdd')), $application->getArgument('tableNameForAdd'), true);
+	$record = &new CC_Record(getEditableFieldListFromTable($application->getArgument('tableNameForAdd')), $application->getArgument('tableNameForAdd'), true);
 	
 	
 	// ------------------------------------------------------------------
 	// (2) Create our buttons
 	//
 	
-	$cancelButton = new CC_Cancel_Button();
-	$addButton = new CC_Button('Add');
+	$cancelButton = &new CC_Cancel_Button();
+	$addButton = &new CC_Button('Add');
 	
 	
 	// ------------------------------------------------------------------
 	// (3) Create our handlers
 	//
 	
-	$addButtonHandler = new CC_Insert_Ordered_Record_Handler($record, $application->getArgument('tableNameForAdd'),  $application->getArgument('addPosition'));
-	$unregisterWindowHandler = new CC_Unregister_Window_Handler();
+	$addButtonHandler = &new CC_Insert_Ordered_Record_Handler($record, $application->getArgument('tableNameForAdd'),  $application->getArgument('addPosition'));
+	$unregisterWindowHandler = &new CC_Unregister_Window_Handler();
 	
 	
 	// ------------------------------------------------------------------

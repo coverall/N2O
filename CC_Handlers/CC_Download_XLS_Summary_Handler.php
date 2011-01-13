@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Download_XLS_Summary_Handler.php,v 1.22 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Download_XLS_Summary_Handler.php,v 1.17 2005/02/28 00:12:46 patrick Exp $
 //=======================================================================
 // CLASS: CC_Download_XLS_Summary_Handler
 //=======================================================================
@@ -72,17 +72,16 @@ class CC_Download_XLS_Summary_Handler extends CC_Action_Handler
 	{
 		require_once('Spreadsheet/Excel/Writer.php');
 	
+		//$application = &$_SESSION['application'];
+		
 		// pass false to get a raw data array
 		$rawData = $this->summary->getRawSummary($this->summary->getDownloadAllQuery(), false);
 		
 		// Creating a workbook 
-		$workbook = new Spreadsheet_Excel_Writer();
-		$workbook->setVersion(8);
+		$workbook = &new Spreadsheet_Excel_Writer(); 
 
 		// sending HTTP headers 
-		$filename = (isset($this->downloadFileName) ? $this->downloadFileName : $this->summary->downloadAllFileName) . '.xls';
-		$filename = $filename;
-		$workbook->send($filename);
+		$workbook->send((isset($this->downloadFileName) ? $this->downloadFileName : $this->summary->downloadAllFileName) . '.xls'); 
 		
 		$format_bold = &$workbook->addFormat();
 		$format_bold->setSize(12);
@@ -117,10 +116,6 @@ class CC_Download_XLS_Summary_Handler extends CC_Action_Handler
 		
 		// Creating a worksheet 
 		$worksheet = &$workbook->addWorksheet('Summary Data');
-		if (function_exists('iconv'))
-		{
-			$worksheet->setInputEncoding('UTF-8');
-		}
 		$worksheet->setColumn(1, 1, 15);
 		$worksheet->setColumn(2, $numberCols, 20);
 

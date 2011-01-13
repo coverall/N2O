@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_FieldManager.php,v 1.40 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_FieldManager.php,v 1.36 2004/12/21 20:18:47 patrick Exp $
 //=======================================================================
 // CLASS: CC_FieldManager
 //=======================================================================
@@ -105,30 +105,21 @@ class CC_FieldManager
 	 * This method adds a field to the CC_FieldManager. This is useful when the database, and therefore the CC_FIELDS table, is not accessible.
 	 *
 	 * @access public
-	 * @param string $fieldName The name of the field (typically matches the table's column).
-	 * @param string $fieldType The class name used by the field (eg. CC_Text_Field)
-	 * @param string $displayName The label that will be used for the field.
-	 * @param string $argstring A string of key/value arguments delimited by an ampersand (eg. 'required=1&value=insert text here').
+	 * @param CC_Database $dbManager The application's database manager.
 	 */
 
 	function addField($fieldName, $fieldType, $displayName, $argstring = '')
 	{
-		if (!class_exists($fieldType))
-		{
-			trigger_error($fieldType . ' is not defined. Defaulting to a cc_text_field. (' . getStackTrace() . ')', E_USER_WARNING);
-			$fieldType = 'cc_text_field';
-		}
-
 		$fieldData = array();
 		
-		$fieldData[0] = strtolower($fieldType);
+		$fieldData[0] = $fieldType;
 		$fieldData[1] = $displayName;
 		
 		if (strlen($argstring))
 		{
 			$rawArgs = explode('&', $argstring);
 			
-			$args = new stdclass();
+			$args = &new stdclass();
 			
 			$size = sizeof($rawArgs);
 			

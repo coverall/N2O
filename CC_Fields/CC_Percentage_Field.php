@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Percentage_Field.php,v 1.14 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Percentage_Field.php,v 1.7 2003/09/18 23:35:35 jamie Exp $
 //=======================================================================
 
 /**
@@ -84,10 +84,12 @@ class CC_Percentage_Field extends CC_Field
 
 	function CC_Percentage_Field($name, $label, $percent, $path = '/N2O/CC_Images/percentBar.gif', $width = 400, $height = 40, $border = 0, $divisions = 10, $accuracy = 1)
 	{
+		$application = &$_SESSION['application'];
+		
+		$window = &$application->getCurrentWindow();
+		
 		$this->percentageButton = new CC_Image_Button($label, $path, $width, $height, $border);
-		$this->percentageButton->setValidateOnClick(false);
 		$this->completeButton = new CC_Button('100%');
-		$this->completeButton->setValidateOnClick(false);
 		$this->percentageFilter = new CC_Percentage_Filter();
 		$this->divisions = $divisions;
 		$this->accuracy = $accuracy;
@@ -95,6 +97,13 @@ class CC_Percentage_Field extends CC_Field
 		$xValue = $width * ($percent / 100);
 
 		$this->CC_Field($name, $label, false, $xValue);
+		
+		$completeButtonHandler = new CC_100_PercentFieldHandler();
+		$completeButtonHandler->setField($this);
+		$this->completeButton->registerHandler($completeButtonHandler);
+		
+		$window->registerComponent($this->percentageButton);
+		$window->registerComponent($this->completeButton);
 	}
 	
 	
@@ -111,9 +120,9 @@ class CC_Percentage_Field extends CC_Field
 
 	function getEditHTML()
 	{
-		$output = '<table border="0"><tr><td>' . $this->percentageButton->getHTML() . '</td><td valign="top"><img src="/N2O/CC_Images/spacer.gif" width="5" height="11" border="0"><br>' . $this->completeButton->getHTML();
-		$output .= '</td></tr><tr><td colspan="2">';
-		$output .= $this->percentageFilter->processValue($this->getValue(), -1, $this->percentageButton->width - 4) . '</td></tr></table>';
+		$output = "<table border=\"0\"><tr><td>" . $this->percentageButton->getHTML() . "</td><td valign=\"top\"><img src=\"/N2O/CC_Images/spacer.gif\" width=\"5\" height=\"11\" border=\"0\"><br>" . $this->completeButton->getHTML();
+		$output .= "</td></tr><tr><td colspan=\"2\">";
+		$output .= $this->percentageFilter->processValue($this->getValue(), -1, $this->percentageButton->width) . "</td></tr></table>";
 		
 		return $output;
 	}
@@ -155,11 +164,11 @@ class CC_Percentage_Field extends CC_Field
 		
 		if ($this->accuracy == 1)
 		{
-			$percent = round($percent, 0);
+			$percent = round($percent,0);
 		}
 		else
 		{
-			for ($i = 0; $i <= 100; $i += $this->accuracy)
+			for ($i = 0; $i <= 100; $i+=$this->accuracy)
 			{
 				if ($value > $i && $values <= $i + $this->accuracy)
 				{
@@ -167,76 +176,10 @@ class CC_Percentage_Field extends CC_Field
 				}
 			}
 		}
-
+	
 		parent::setValue($percent);
 		
 		$this->percentageButton->label = $percent;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: register
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a callback method that gets called by the window when the
-	 * component is registered. It's up to the component to decide which
-	 * registerXXX() method it should call on the window. Should your
-	 * custom component consist of multiple components, you may need to
-	 * make multiple calls.
-	 *
-	 * @access public
-	 */
-
-	function register(&$window)
-	{
-		parent::register($window);
-		
-		$window->registerComponent($this->percentageButton);
-		$window->registerComponent($this->completeButton);
-
-		$completeButtonHandler = new CC_100_PercentFieldHandler();
-		$completeButtonHandler->setField($this);
-		$this->completeButton->registerHandler($completeButtonHandler);
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: handleUpdateFromRequest
-	//-------------------------------------------------------------------
-
-	/**
-     * This method gets called by CC_Window when it's time to update the field from the $_REQUEST array. Most fields are straight forward, but some have additional fields in the request that need to be handled specially. Such fields should override this method, and update the field's value in their own special way.
-     *
-     * @access public
-     * @param mixed $fieldValue The value to set the field to.
-     * @see getValue()
-     */	
-
-	function handleUpdateFromRequest()
-	{
-		if (isset($_REQUEST['_PP_' . $this->percentageButton->id . '_x']))
-		{
-			$this->setValue($_REQUEST['_PP_' . $this->percentageButton->id . '_x']);
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// STATIC METHOD: getInstance
-	//-------------------------------------------------------------------
-
-	/**
-	 * This is a static method called by CC_Record when it needs an instance
-	 * of a field. The implementing field needs to return a constructed
-	 * instance of itself.
-	 *
-	 * @access public
-	 */
-
-	static function &getInstance($className, $name, $label, $value, $args, $required)
-	{
-		return new $className($name, $label, $value);
 	}
 }
 

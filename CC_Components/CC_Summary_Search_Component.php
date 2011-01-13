@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Summary_Search_Component.php,v 1.31 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Summary_Search_Component.php,v 1.18 2004/04/06 03:04:02 patrick Exp $
 //=======================================================================
 // CLASS: CC_Summary_Search_Component
 //=======================================================================
@@ -75,37 +75,6 @@ class CC_Summary_Search_Component extends CC_Component
      */
     
     var $_queryAdditions;
-    
-    
-    /**
-     * The delimiter to use for separating values to be OR'd.
-     *
-     * @var array $_orDelimiter
-     * @access private
-     */
-    
-    var $_orDelimiter = ',';
-
-
-    /**
-     * If set to true, we will assume there's no where clause.
-     *
-     * @var bool $_assumeNoWhereClause
-     * @access private
-     */
-    
-    var $_assumeNoWhereClause = false;
-    
-    
-    
-    /**
-     * If set to true, we an use this component dynamically (with a CC_Dynamic_Summary)
-     *
-     * @var bool $_isDynamic
-     * @access private
-     */
-    
-    var $_isDynamic = false;
 
 
 
@@ -116,7 +85,7 @@ class CC_Summary_Search_Component extends CC_Component
 	/**
 	 * This is the constructor. It is very important that when you contruct
 	 * this class, you use the & to obtain a reference.
-	 * eg. $search = new CC_Summary_Search_Component(...);
+	 * eg. $search = &new CC_Summary_Search_Component(...);
 	 * 
 	 * @access public
 	 * @param string $name The name to set.
@@ -131,23 +100,14 @@ class CC_Summary_Search_Component extends CC_Component
 		$this->setName($name);
 		
 		$this->_summary = &$summary;
-		if (preg_match('/Safari/', $_SERVER['HTTP_USER_AGENT']))
-		{
-			$this->_searchField = new CC_Safari_Search_Field($name, '', false, '', 24);
-			$this->_searchField->setId($name);
-		}
-		else
-		{
-			$this->_searchField = new CC_Text_Field($name, 'Search-O-Matic:', false, '', 24);
-			$this->_searchField->setId($name);
-		}
-		$this->_searchButton = new CC_Image_Button($searchButtonLabel, '/N2O/CC_Images/search.png', 16, 16);
+		$this->_searchField = &new CC_Text_Field($name, 'Search-O-Matic', false, '', 24);
+		$this->_searchButton = &new CC_Button($searchButtonLabel);
 		$this->_searchButton->registerHandler(new CC_Summary_Search_Handler($this, $columns));
 		$this->_searchButton->setValidateOnClick(false);
 		
 		if ($showClearButton)
 		{
-			$this->_clearButton = new CC_Image_Button('Clear', '/N2O/CC_Images/clear.png', 16, 16);
+			$this->_clearButton = &new CC_Button('Clear');
 			$this->_clearButton->registerHandler(new CC_Summary_ClearSearch_Handler($this->_searchField, $this->_searchButton));
 			$this->_clearButton->setValidateOnClick(false);
 			$this->_showClearButton = true;
@@ -170,22 +130,6 @@ class CC_Summary_Search_Component extends CC_Component
 		$this->_searchField->setLabel($label);
 	}
 	
-	
-	//-------------------------------------------------------------------
-	// METHOD: setORDelimiter()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the OR delimiter. Defaults to ','.
-	 *
-	 * @access public
-	 */
-
-	function setORDelimiter($_orDelimiter)
-	{
-		$this->_orDelimiter = $_orDelimiter;
-	}
-	
 
 	//-------------------------------------------------------------------
 	// METHOD: getHTML()
@@ -203,7 +147,7 @@ class CC_Summary_Search_Component extends CC_Component
 		
 		if ($showLabel)
 		{
-			$html .= $this->_searchField->getLabel() . '</td><td>';
+			$html .= $this->_searchField->getLabel() . ':</td><td>';
 		}
 		
 		$html .= $this->_searchField->getHTML() . '</td><td>';
@@ -213,12 +157,6 @@ class CC_Summary_Search_Component extends CC_Component
 			$html .= '<td>' . $this->_clearButton->getHTML() . '</td>';
 		}
 		$html .= '</tr></table>';
-		
-		
-		if ($this->_isDynamic)
-		{
-			$html .= $this->getJavascript();
-		}
 		
 		return $html;
 	}
@@ -371,24 +309,12 @@ class CC_Summary_Search_Component extends CC_Component
 		
 		$size = sizeof($this->_queryAdditions);
 		
-		$clickButtonHandler = new CC_Click_Button_Handler($this->_searchButton);
-		
 		for ($i = 0; $i < $size; $i++)
 		{
-			if (!$this->_isDynamic)
-			{
-				if ($this->_queryAdditions[$i] instanceof CC_SelectList_Query_Addition)
-				{
-					$this->_queryAdditions[$i]->_selectList->registerHandler($clickButtonHandler);
-				}
-			}
 			$window->registerComponent($this->_queryAdditions[$i]);
 		}
 		
 		$window->registerCustomComponent($this);
-		
-		// make sure the first view is the filtered view!
-		$this->search();
 	}
 
 
@@ -405,7 +331,7 @@ class CC_Summary_Search_Component extends CC_Component
 
 	function addQueryAddition(&$queryAddition)
 	{
-		if ($queryAddition instanceof CC_Query_Addition)
+		if (is_a($queryAddition, 'CC_Query_Addition'))
 		{
 			$this->_queryAdditions[] = &$queryAddition;
 		}
@@ -431,77 +357,6 @@ class CC_Summary_Search_Component extends CC_Component
 	{
 		$this->_showClearButton = $show;
 	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setAssumeNoWhereClause()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the label of the component. Defaults to 'Search-O-Matic'.
-	 *
-	 * @access public
-	 */
-
-	function setAssumeNoWhereClause($noWhere)
-	{
-		$this->_assumeNoWhereClause = $noWhere;
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setValue()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Set's the value of the search field...
-	 *
-	 * @access public
-	 */
-
-	function setValue($value)
-	{
-		$this->_searchField->setValue($value);
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: setDynamic()
-	//-------------------------------------------------------------------
-
-	/**
-	 * Sets the label of the component. Defaults to 'Search-O-Matic'.
-	 *
-	 * @access public
-	 */
-
-	function setDynamic($dynamic)
-	{
-		$this->_isDynamic = $dynamic;
-		
-		if ($this->_isDynamic)
-		{
-			$this->_searchField->setJavascriptOnKeyup("filterPage('" . $this->_summary->getName() . "', '" . $this->getName() . "', this); return false;");
-		}
-	}
-
-
-	//-------------------------------------------------------------------
-	// METHOD: getJavascript()
-	//-------------------------------------------------------------------
-
-	/** 
-	  * Javascript methods needed for dynamic functionality
-	  *
-	  * @access public
-	  * @return javascript methods...
-	  */
-
-	function getJavascript()
-	{
-		return '<script type="text/javascript" src="/N2O/javascript/cc_summary_search_component.js"></script>';
-	}
-
 }
 
 ?>

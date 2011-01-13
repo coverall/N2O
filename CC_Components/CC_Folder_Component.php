@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_Folder_Component.php,v 1.21 2010/11/11 04:28:32 patrick Exp $
+// $Id: CC_Folder_Component.php,v 1.19 2004/08/04 01:22:15 patrick Exp $
 //=======================================================================
 // CLASS: CC_Folder_Component
 //=======================================================================
@@ -209,7 +209,7 @@ class CC_Folder_Component extends CC_Component
 		if ($allowDelete)
 		{
 			$this->_allowDelete = $allowDelete;
-			$this->_deleteButton = new CC_Button($deleteButtonLabel);
+			$this->_deleteButton = &new CC_Button($deleteButtonLabel);
 			$this->_deleteButton->registerHandler(new CC_Delete_Folder_File_Handler($this));
 		}
 
@@ -220,9 +220,7 @@ class CC_Folder_Component extends CC_Component
 		$this->buttonBarColour    = $ccButtonBarRowColour;	// the colour of the button row
 		$this->rowHighlightColour = $ccRecordHighlightRowColour; // the colour of the highlight shading
 		
-		$this->_fileSizeFilter = new CC_File_Size_Filter();
-		
-		$this->setStyle('ccSummary');
+		$this->_fileSizeFilter = &new CC_File_Size_Filter();
 	}
 
 
@@ -254,8 +252,10 @@ class CC_Folder_Component extends CC_Component
 				{
 					$filesize = filesize($this->_directory . '/' . $file);
 					
+					$filesizeFormatted = ($filesize > 1024 ? number_format($filesize / 1024) . ' KB' : $filesize . ' B');
+					
 					$this->_folderContents[$rowNumber][0] = $file;
-					$this->_folderContents[$rowNumber][1] = $filesize;
+					$this->_folderContents[$rowNumber][1] = $filesizeFormatted;
 					$this->_folderContents[$rowNumber][2] = (is_dir($this->_directory . '/' . $file) ? true : false);
 					$this->_folderContents[$rowNumber][3] = filectime($this->_directory . '/' . $file);
 
@@ -266,7 +266,7 @@ class CC_Folder_Component extends CC_Component
 					}
 					else
 					{
-						$checkboxField = new CC_Checkbox_Field($fieldName, $file);
+						$checkboxField = &new CC_Checkbox_Field($fieldName, $file);
 						$checkboxField->setOptionalValue($file);
 					}
 					
@@ -318,16 +318,16 @@ class CC_Folder_Component extends CC_Component
 		{
 		
 			$html .= '<table border="0" cellspacing="' . $this->cellspacing . '" cellpadding="' . $this->cellpadding . '" width="100%" class="' . $this->style . '">' . "\n";
-			$html .= '  <tr bgcolor="' . $this->columnHeaderColour . "\" class=\"ccSummaryHeadings\">\n";
+			$html .= '  <tr bgcolor="' . $this->columnHeaderColour . "\">\n";
 			if ($this->_allowDelete)
 			{
-				$html .= '   <td ></td>' . "\n";
+				$html .= '   <td class="ccSummaryHeadings"></td>' . "\n";
 			}
-			$html .= '   <td></td>' . "\n";
-			$html .= '   <td>File</td>' . "\n";
-			$html .= '   <td>Download</td>' . "\n";
-			$html .= '   <td>Size</td>' . "\n";
-			$html .= '   <td>Creation</td>' . "\n";
+			$html .= '   <td class="ccSummaryHeadings"></td>' . "\n";
+			$html .= '   <td class="ccSummaryHeadings">File</td>' . "\n";
+			$html .= '   <td class="ccSummaryHeadings">Download</td>' . "\n";
+			$html .= '   <td class="ccSummaryHeadings">Size</td>' . "\n";
+			$html .= '   <td class="ccSummaryHeadings">Creation</td>' . "\n";
 			$html .= " </tr>\n";
 		
 			for ($rowNumber = 0; $rowNumber < $directorySize; $rowNumber++)
@@ -339,9 +339,8 @@ class CC_Folder_Component extends CC_Component
 
 				$path = substr($this->_directory, strlen($_SERVER['DOCUMENT_ROOT']));
 				
-				$className = ($rowNumber % 2 == 0 ? 'even' : 'odd');
-
-				$html .= ' <tr class="' . $className . '">' . "\n";
+				$backgroundcolour = ($rowNumber % 2 == 0 ? $this->evenRowColour : $this->oddRowColour);
+				$html .= ' <tr bgcolor="' . $backgroundcolour . '" id="r' . $rowNumber . '" valign="top" onMouseOver="obj=document.getElementById(\'r' . $rowNumber . '\'); obj.style.backgroundColor=\'' . $this->rowHighlightColour . '\'; return true" onMouseOut="obj=document.getElementById(\'r' . $rowNumber . '\'); obj.style.backgroundColor=\'\'; return true" style="ccSummaryHeadings">' . "\n";
 		
 				if ($file != "." && $file != "..")
 				{
@@ -356,11 +355,11 @@ class CC_Folder_Component extends CC_Component
 					
 					if ($isDirectory)
 					{
-						$html .= ' <td align="center"><img src="/N2O/CC_Images/folder.png" width="16" height="16" border="0"></td>';
+						$html .= ' <td align="center"><img src="/N2O/CC_Images/next.gif" width="18" height="18" border="0"></td>';
 					}
 					else
 					{
-						$html .= ' <td align="center"><img src="/N2O/CC_Images/cc_summary.view.png" width="16" height="16" border="0"></td>';
+						$html .= ' <td align="center"><img src="/N2O/CC_Images/cc_summary.view.gif" width="16" height="18" border="0"></td>';
 					}
 					
 					if ($this->_allowDelete)
@@ -393,7 +392,7 @@ class CC_Folder_Component extends CC_Component
 	
 			if ($this->_allowDelete)
 			{
-				$html .= '<p>' . $this->_deleteButton->getHTML() . '</p>';
+				$html .= '<p>' . $this->_deleteButton->getHTML();
 			}
 		}
 		

@@ -1,5 +1,5 @@
 <?php
-// $Id: CC_DateTime_Filter.php,v 1.9 2005/03/11 18:38:22 mike Exp $
+// $Id: CC_DateTime_Filter.php,v 1.8 2004/12/16 20:30:40 jamie Exp $
 //=======================================================================
 // CLASS: CC_DateTime_Filter
 //=======================================================================
@@ -56,7 +56,7 @@ class CC_DateTime_Filter extends CC_Summary_Filter
 
 	function processValue($date)
 	{
-		if ($date == '0000-00-00 00:00:00' || $date == '') { return '-'; }
+		if ($date == '0000-00-00 00:00' || $date == '') { return '-'; }
 		
 		$time = convertMysqlDateTimeToTimestamp(substr($date, 0, 18));
 
