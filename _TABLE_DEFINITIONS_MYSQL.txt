@@ -1,0 +1,48 @@
+=========================================================================
+CC_FRAMEWORK REQUIRED TABLE DEFINITIONS - MYSQL
+=========================================================================
+
+To use CC_Framework, you need the following tables:
+
+CREATE TABLE CC_FIELDS (
+  COLUMN_NAME char(128) NOT NULL default '',
+  FIELD_TYPE char(128) NOT NULL default '',
+  DISPLAY_NAME char(128) NOT NULL default '',
+  ARGS varchar(255) not null default '',
+  PRIMARY KEY  (COLUMN_NAME)
+) TYPE=InnoDB;
+
+CREATE TABLE CC_RELATIONSHIPS (
+  FOREIGN_KEY char(128) NOT NULL default '',
+  RELATED_TABLE char(128) NOT NULL default '',
+  RELATED_COLUMN char(128) NOT NULL default '',
+  DISPLAY_COLUMN char(255) NOT NULL default '',
+  PRIMARY KEY  (FOREIGN_KEY)
+) TYPE=InnoDB;
+
+CREATE TABLE CC_MANY_RELATIONSHIPS (
+  FOREIGN_KEY char(128) NOT NULL default '',
+  SET_TABLE char(128) NOT NULL default '',
+  SOURCE_TABLE char(128) NOT NULL default '',
+  DISPLAY_COLUMN char(128) NOT NULL default '',
+  PRIMARY KEY  (FOREIGN_KEY)
+) TYPE=InnoDB;
+
+Other tables must have at least these fields:
+
+create table [name]
+(
+	ID int not null default 0 auto_increment,
+	
+	[ other column definitions 
+
+	DATE_ADDED datetime not null,
+	LAST_MODIFIED timestamp not null,
+	
+	primary key (ID)
+) TYPE=InnoDB;
+
+	SORT_ID int not null default 0, // only necessary for ordered tables
+
+
+=========================================================================

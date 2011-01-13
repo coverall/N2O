@@ -1,0 +1,48 @@
+=========================================================================
+CC_FRAMEWORK REQUIRED TABLE DEFINITIONS - POSTGRESQL
+=========================================================================
+
+To use CC_Framework, you need the following tables:
+
+CREATE TABLE CC_FIELDS (
+  COLUMN_NAME char(128) NOT NULL DEFAULT '',
+  FIELD_TYPE char(128) NOT NULL DEFAULT '',
+  DISPLAY_NAME char(128) NOT NULL DEFAULT '',
+  ARGS varchar(255) not null DEFAULT '',
+  PRIMARY KEY (COLUMN_NAME)
+);
+
+CREATE TABLE CC_MANY_RELATIONSHIPS (
+  FOREIGN_KEY char(128) NOT NULL DEFAULT '',
+  SET_TABLE char(128) NOT NULL DEFAULT '',
+  SOURCE_TABLE char(128) NOT NULL DEFAULT '',
+  DISPLAY_COLUMN char(128) NOT NULL DEFAULT '',
+  PRIMARY KEY (FOREIGN_KEY)
+);
+
+CREATE TABLE CC_RELATIONSHIPS (
+  FOREIGN_KEY char(128) NOT NULL DEFAULT '',
+  RELATED_TABLE char(128) NOT NULL DEFAULT '',
+  RELATED_COLUMN char(128) NOT NULL DEFAULT '',
+  DISPLAY_COLUMN char(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (FOREIGN_KEY)
+);
+
+Other tables must have at least these fields:
+
+create sequence [table name]_id_seq;
+
+create table [name]
+(
+	ID int4 default nextval('[table name]_id_seq'),
+	
+	[ other column definitions ]
+
+	DATE_ADDED TIMESTAMP NOT NULL DEFAULT '0001-01-01 00:00:00',
+	LAST_MODIFIED timestamp not null,
+	
+	primary key (ID)
+	
+);
+
+SORT_ID int not null default 0, // only necessary for ordered tables

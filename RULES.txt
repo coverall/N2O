@@ -1,0 +1,51 @@
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+CC_Framework Rules
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+1) Required Tables
+   ---------------
+	a) CC_FIELDS
+	b) CC_RELATIONSHIPS
+	c) CC_MANY_RELATIONSHIPS
+
+
+2) No fields in different tables can have the same name since entries in
+the CC_FIELDS table are not table-specific (ie. type definitions for all
+fields from all tables in the application will be found here).
+
+
+3) Styles (ie. colors, fonts etc..) should be documented and their
+configuration placed in a central location:
+
+	=====================================================================
+	STYLE				DESCRIPTION
+	---------------------------------------------------------------------
+	fieldError			Used when a CC_Field has a validation error.
+
+
+	=====================================================================
+
+
+4) Application's config.php file must define the following variables:
+
+	a) all database-specific variables
+	b) an absolute path to the root of the application tree as follows
+	   (ie. using the "APPLICATION_PATH" variable name) :
+
+define("APPLICATION_PATH", "/path/to/application") which is then accessed as APPLICATION_PATH (no "$")
+	c) a relative path to the application folder for use with text-link redirects.
+	d) version information of the application
+
+
+5) Queries for a CC_Summary object must have an ID column returned in them
+   (all tables must have an "ID" column which is their autoincrementing unique
+    identifier)
+    
+6) All non-CC tables MUST have the following three fields:
+	a) ID of type int(11) autoincrement
+	b) DATE_ADDED of type datetime
+	c) LAST_MODIFIED of type timestamp
+	
+7) For CC_File_Upload_To_Path we require a '777' directory called 'uploads' in the root of the application's folder.
+
+8) CC_File_Upload_To_DB fields must be named with a "FILE_DB" prefix in the database

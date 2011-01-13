@@ -1,0 +1,14 @@
+# We don't ever want people in here...
+deny from all
+<FilesMatch "\.(css|htc|js)$">
+  <Limit GET>
+    allow from all
+  </Limit>
+</FilesMatch>
+
+<Files eaccelerator.php>
+  <Limit POST>
+    allow from all
+  </Limit>
+</Files>
+
