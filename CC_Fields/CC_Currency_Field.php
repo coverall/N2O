@@ -148,7 +148,7 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 	 * @access public
 	 */
 
-	static function &getInstance($className, $name, $label, $value, $args, $required)
+	function &getInstance($className, $name, $label, $value, $args, $required)
 	{
 		$currency = (isset($args->currency) ? $args->currency : 'dollar');
 		

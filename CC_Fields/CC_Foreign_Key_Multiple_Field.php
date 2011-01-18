@@ -648,7 +648,7 @@ class CC_Foreign_Key_Multiple_Field extends CC_Field
 	 * @access public
 	 */
 
-	static function getInstance($className, $name, $label, $value, $args, $required)
+	function getInstance($className, $name, $label, $value, $args, $required)
 	{
 		global $application;
 		

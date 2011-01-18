@@ -5,7 +5,7 @@
 //=======================================================================
 
 /**
- * CC_Image_Utilities contains static functions available for image manipulation
+ * CC_Image_Utilities contains functions available for image manipulation
  * 
  * @package N2O
  * @access public

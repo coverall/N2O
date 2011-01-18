@@ -5,7 +5,7 @@
 //=======================================================================
 
 /**
- * CC_Utilities contains static functions available to all classes in N2O.
+ * CC_Utilities contains functions available to all classes in N2O.
  * 
  * @package N2O
  * @access public
