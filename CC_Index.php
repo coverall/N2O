@@ -19,6 +19,10 @@
 	//--- Require the CC_Framework files --------------------------------
 
 	require_once(CC_FRAMEWORK_PATH . '/_RequireOnceFiles.php');
+	if (!isset($require_admin) || $require_admin != false)
+	{
+		require_once(CC_FRAMEWORK_PATH . '/_RequireOnceAdminFiles.php');
+	}
 	//require_once(APPLICATION_PATH . '_n2o_extras.php');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'required/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'handlers/');
@@ -26,6 +30,11 @@
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'fields/');
 	requireAllFilesInFolderIfExists(APPLICATION_PATH . 'contentproviders/');
 
+	// Provide a hook so applications can require other files...
+	if (function_exists('_n2o_init'))
+	{
+		_n2o_init();
+	}
 		
 	//--- Session Starting ----------------------------------------------
 	
