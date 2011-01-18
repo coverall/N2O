@@ -405,7 +405,7 @@ function requireAllFilesInFolder($folder)
 		{
 			requireAllFilesInFolder($fullFile . '/');
 		}
-		else if (preg_match('/^[^.]\.php$/', $fullFile))
+		else if (preg_match('/\.php$/', $fullFile))
 		{
 			require_once($fullFile);
 		}
