@@ -815,8 +815,8 @@ class CC_Summary extends CC_Component
 		$this->nextButton = &new CC_Image_Button('Next >>', '/N2O/CC_Images/next.gif', 20, 20, 0);
 		$this->previousButton = &new CC_Image_Button('<< Previous', '/N2O/CC_Images/previous.gif', 20, 20, 0);
 		
-		$this->nextButton->registerHandler(new CC_Summary_Next_Handler($this->name));
-		$this->previousButton->registerHandler(new CC_Summary_Previous_Handler($this->name));
+		$this->nextButton->registerHandler(new CC_Summary_PreviousNext_Handler($this->name));
+		$this->previousButton->registerHandler(new CC_Summary_PreviousNext_Handler($this->name, -1));
 		
 		$this->nextButton->setValidateOnClick(false);
 		$this->previousButton->setValidateOnClick(false);
