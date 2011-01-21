@@ -308,7 +308,7 @@ class CC_ProvinceState_Field extends CC_SelectList_Field
 			}
 			else
 			{
-				$options = array_merge($options, $narArray);
+				$options = array_merge($options, $naArray);
 			}
 		}
 

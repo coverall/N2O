@@ -47,10 +47,10 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 		
 		if ($startYear < $today['year'])
 		{
-			$startyear = $today['year'];
+			$startYear = $today['year'];
 		}
 
-		if ($startYear + 8 <= $endYear)
+		if ($endYear > eval($startYear + 8))
 		{
 			$endYear = $startYear + 8;
 		}
