@@ -37,6 +37,8 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 
 	function CC_Expiry_Date_Field($name, $label, $required = false, $defaultMonthValue = -1, $defaultDateValue = 1, $defaultYearValue = -1, $startYear = 2004, $endYear = 2012)
 	{
+		$bigEndYear = 0;
+		
 		$today = getdate(strtotime('today +1 month'));
 
 		if ($defaultMonthValue == -1 && $defaultYearValue == -1)
@@ -45,12 +47,12 @@ class CC_Expiry_Date_Field extends CC_Date_Field
 			$defaultYearValue = $today['year'];
 		}
 		
-		if ($startYear < $today['year'])
+		if ($startYear < intval($today['year']))
 		{
-			$startYear = $today['year'];
+			$startYear = intval($today['year']);
 		}
-
-		if ($endYear > eval($startYear + 8))
+		
+		if (intval($endYear) < ($startYear + 8))
 		{
 			$endYear = $startYear + 8;
 		}
