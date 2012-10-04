@@ -12,9 +12,9 @@
  * @author The Crew <N2O@coverallcrew.com>
  * @copyright Copyright &copy; 2003, Coverall Crew
  */
-	
+
 class CC_Currency_Field extends CC_FloatNumber_Field
-{	
+{
 
 	/**
      * The field's currency name.
@@ -34,14 +34,14 @@ class CC_Currency_Field extends CC_FloatNumber_Field
      */
 
 	var $currencySymbol;
-	
+
 
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Currency_Field
 	//-------------------------------------------------------------------
 
-	/** 
-	 * The CC_FloatNumber_Field constructor sets its values here, yo. 
+	/**
+	 * The CC_FloatNumber_Field constructor sets its values here, yo.
 	 *
 	 * @access public
 	 * @param string $name The unique name of the field. Names must be unique so that N2O knows which fields to update when users submit data.
@@ -55,7 +55,7 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 	function CC_Currency_Field($name, $label, $required = false, $defaultValue = 0.00, $size = 6, $maxlength = 8, $currency = 'dollar')
 	{
 		$this->currency = $currency;
-		
+
 		switch (strtolower($this->currency))
 		{
 			case 'dollar':
@@ -63,30 +63,30 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 				$this->currencySymbol = '$';
 			}
 			break;
-			
+
 			case 'euro':
 			{
 				$this->currencySymbol ='&euro;';
 			}
 			break;
-			
+
 			default:
 			{
 				error_log('CC_Currency_Field: The currency "' . $this->currency . '" was not found! Assuming dollar;');
 				$this->currencySymbol = '$';
 			}
 		}
-		
+
 		$this->CC_FloatNumber_Field($name, $label, $required, $defaultValue, $size, $maxlength);
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getViewHTML
 	//-------------------------------------------------------------------
 
-	/** 
-	 * Returns a dollar string to two decimal places complete with dollar sign. 
+	/**
+	 * Returns a dollar string to two decimal places complete with dollar sign.
 	 *
 	 * @access public
 	 * @return float A float to two decimal points.
@@ -96,13 +96,13 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 	{
 		return sprintf($this->currencySymbol . "%.2f", $this->value);
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: getEditHTML
 	//-------------------------------------------------------------------
 
-	/** 
+	/**
 	 * Returns HTML for an 'text' form field. Numbers displayed are to two decimal placesand are prefixed by a dollar sign.
 	 *
 	 * @access public
@@ -111,7 +111,7 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 
 	function getEditHTML()
 	{
-		return sprintf($this->currencySymbol . "<input type=\"text\" size=\"$this->size\" maxlength=\"$this->maxlength\" name=\"" . $this->getRecordKey() . "$this->name\" value=\"%.2f\" id=\"%s\">", $this->value, $this->id);
+		return $this->currencySymbol . <input type="text" id="' . $this->id . '"  size="' . $this->size. '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . htmlspecialchars($this->value) . '" class="' . $this->inputStyle . '"' . ($this->disabled ? ' disabled="true"' : '') . ' tabindex="' . $this->_tabIndex .'">';
 	}
 
 
@@ -125,17 +125,17 @@ class CC_Currency_Field extends CC_FloatNumber_Field
      * @access public
      * @param mixed $fieldValue The value to set the field to.
      * @see getValue()
-     */	
+     */
 
 	function setValue($fieldValue = 0.00)
 	{
 		// strip out anything that isn't a digit or a decimal place
 		$fieldValue = ereg_replace('[^0-9\.-]', '', $fieldValue);
-		
+
 		parent::setValue(round($fieldValue, 2));
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// STATIC METHOD: getInstance
 	//-------------------------------------------------------------------
@@ -151,10 +151,10 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 	function &getInstance($className, $name, $label, $value, $args, $required)
 	{
 		$currency = (isset($args->currency) ? $args->currency : 'dollar');
-		
+
 		$size = (isset($args->size) ? $args->size : 32);
 		$maxlength = (isset($args->maxlength) ? $args->maxlength : 128);
-		
+
 		$field = new $className($name, $label, $required, $value, $size, $maxlength, $currency);
 
 		unset($size, $maxlength, $currencySymbol);
