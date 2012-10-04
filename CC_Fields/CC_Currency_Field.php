@@ -111,7 +111,7 @@ class CC_Currency_Field extends CC_FloatNumber_Field
 
 	function getEditHTML()
 	{
-		return $this->currencySymbol . '<input type="text" id="' . $this->id . '"  size="' . $this->size. '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . htmlspecialchars($this->value) . '" class="' . $this->inputStyle . '"' . ($this->disabled ? ' disabled="true"' : '') . ' tabindex="' . $this->_tabIndex .'">';
+		return $this->currencySymbol . sprintf('<input type="text" id="' . $this->id . '"  size="' . $this->size. '" maxlength="' . $this->maxlength . '" name="' . $this->getRecordKey() . $this->name . '" value="' . htmlspecialchars("%.2f") . '" class="' . $this->inputStyle . '"' . ($this->disabled ? ' disabled="true"' : '') . ' tabindex="' . $this->_tabIndex .'">', $this->value);
 	}
 
 
