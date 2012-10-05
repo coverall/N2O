@@ -39,7 +39,7 @@ class CC_Application
 
 
 	/**
-     * The current action key. This key is used so that 
+     * The current action key. This key is used so that
      *
      * @var string $action
      * @see CC_Application::setAction()
@@ -58,16 +58,16 @@ class CC_Application
 
 	var $logoutDestination = BASE_URL;
 
-	
+
 	/**
      * An array of name-value pairs to keep data between subsequent window accesses.
      *
      * @var array $arguments
      * @access private
      */
-     
-	var $arguments = array(); 			
-	
+
+	var $arguments = array();
+
 
 	/**
      * An array of name-object pairs to keep data between subsequent window accesses.
@@ -75,10 +75,10 @@ class CC_Application
      * @var array $objects
      * @access private
      */
-     
-	var $objects = array(); 
-	
-	
+
+	var $objects = array();
+
+
 	/**
      * The CC_Database object.
      *
@@ -134,7 +134,7 @@ class CC_Application
 
 	var $errorManager;
 
-	
+
 	/**
      * The current CC_Window object which is also it's key in the windows array.
      *
@@ -143,8 +143,8 @@ class CC_Application
      */
 
 	var $currentWindowName;
-		
-	
+
+
 	/**
      * The array of the application's CC_Window objects.
      *
@@ -153,7 +153,7 @@ class CC_Application
      */
 
 	var $windows = array();
-	
+
 
 	/**
      * The ID of the last clicked button.
@@ -183,9 +183,9 @@ class CC_Application
      * @access private
      */
 
-	var $buttonExpiryTime = 5;			
-		
-		
+	var $buttonExpiryTime = 5;
+
+
 	/**
      * Does the application do a GET or POST (the default value is POST).
      *
@@ -193,11 +193,11 @@ class CC_Application
      * @access private
      */
 
-	var $isGet = false;					
-	
-	
+	var $isGet = false;
+
+
 	/**
-     * Indicates whether or not the user is "logged in". 
+     * Indicates whether or not the user is "logged in".
      *
      * @var bool $_loggedIn
      * @access private
@@ -205,8 +205,8 @@ class CC_Application
      */
 
 	var $_loggedIn = false;
-	
-	
+
+
 	/**
      * The "language" for this field.
 	 *
@@ -215,8 +215,8 @@ class CC_Application
      */
 
 	var $_language = '';
-	
-		
+
+
 	//-------------------------------------------------------------------
 	// CONSTRUCTOR: CC_Application
 	//-------------------------------------------------------------------
@@ -231,11 +231,11 @@ class CC_Application
 	function CC_Application()
 	{
 		global $noDatabase, $noCCFieldManagerDatabase, $databaseConfigPath;
-		
+
 		if (!$noDatabase)
 		{
 			// initialize the database object
-			
+
 			if (!isset($databaseConfigPath))
 			{
 				include(APPLICATION_PATH . '/CC_Database_Config.php');
@@ -244,7 +244,7 @@ class CC_Application
 			{
 				include($databaseConfigPath);
 			}
-			
+
 			$this->db = &new CC_Database($DATABASE_HOST, $DATABASE_NAME, $DATABASE_USER, $DATABASE_PASSWORD, $DATABASE_ENCODE_PASSWORD, (isset($DATABASE_TYPE) ? $DATABASE_TYPE : DB_MYSQL));
 
 			// initialize the relationship manager
@@ -257,19 +257,19 @@ class CC_Application
 			}
 		}
 
-		
+
 		// initialize the field manager
 		$this->fieldManager = &new CC_FieldManager($this->db, $noCCFieldManagerDatabase);
 
 		// initialize the error manager
 		$this->errorManager = &new CC_ErrorManager();
 	}
-	
-	
+
+
 	//---------------------------------------------------------------------
 	// METHOD: setUser
 	//---------------------------------------------------------------------
-	
+
 	/** This method sets the application's references to the user object.
 	 * Use of the "user" metaphor is optional in N2O.
 	 *
@@ -277,7 +277,7 @@ class CC_Application
 	 * @param CC_User $aUser The CC_User object to set
 	 * @see CC_User
 	 */
-	 
+
 	function setUser(&$aUser)
 	{
 		if (is_a($aUser, 'CC_User'))
@@ -289,12 +289,12 @@ class CC_Application
 			trigger_error("CC_Application::setUser() did not receive a CC_User object. All user objects must extend the CC_User object.");
 		}
 	}
-	
-	
+
+
 	//---------------------------------------------------------------------
 	// METHOD: getUser
 	//---------------------------------------------------------------------
-	
+
 	/** This method gets the application's references to the user object.
 	  * Use of the "user" metaphor is optional in N2O.
 	  *
@@ -302,7 +302,7 @@ class CC_Application
  	  * @return CC_User A reference to the application's CC_User object
 	  * @see CC_User
 	  */
-	
+
 	function &getUser()
 	{
 		return $this->_user;
@@ -312,7 +312,7 @@ class CC_Application
 	//---------------------------------------------------------------------
 	// METHOD: registerWindow
 	//---------------------------------------------------------------------
-	
+
 	/** This method registers a window in the application's $windows array by id
 	 *
 	 * @access public
@@ -342,12 +342,12 @@ class CC_Application
 			$this->windows[$window->id][$key] = &$window;
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: unregisterWindow
 	//-------------------------------------------------------------------
-	
+
 	/** This method unregisters the window with the passed id from the application
 	 *
 	 * @access public
@@ -359,11 +359,11 @@ class CC_Application
 		unset($this->windows[$windowId]);
 	}
 
-	
+
 	//-------------------------------------------------------------------
 	// METHOD: unregisterAllWindows
 	//-------------------------------------------------------------------
-	
+
 	/** This method unregisters all the windows from the application.
 	 *
 	 * @access public
@@ -372,15 +372,15 @@ class CC_Application
 	function unregisterAllWindows()
 	{
 		unset($this->windows);
-		
+
 		$this->windows = array();
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: unregisterCurrentWindow
 	//-------------------------------------------------------------------
-	
+
 	/** This method unregisters the current window from the application
 	 *
 	 * @access public
@@ -390,14 +390,14 @@ class CC_Application
 	{
 		$this->unregisterWindow($this->getAction());
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: setAction
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method sets the next action (ie. screen) the application should go to. 
+	 * This method sets the next action (ie. screen) the application should go to.
 	 *
 	 * @access public
 	 * @param string $action The action to go to.
@@ -413,13 +413,13 @@ class CC_Application
 		if ($action != $this->action)
 		{
 			$this->lastAction = $this->action;
-			
+
 			$this->action = $this->setActionArguments($action);
 		}
-		
+
 		$this->lastActionKey = $this->actionKey;
 		$this->actionKey = $actionKey;
-		
+
 		// output debug info if necessary
 		if (DEBUG)
 		{
@@ -429,8 +429,8 @@ class CC_Application
 			}
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getAction
 	//-------------------------------------------------------------------
@@ -443,11 +443,11 @@ class CC_Application
 	 */
 
 	function getAction()
-	{	
+	{
 		return $this->action;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getActionKey
 	//-------------------------------------------------------------------
@@ -460,11 +460,11 @@ class CC_Application
 	 */
 
 	function getActionKey()
-	{	
+	{
 		return $this->actionKey;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getActionURL
 	//-------------------------------------------------------------------
@@ -478,7 +478,7 @@ class CC_Application
 	 */
 
 	function getActionURL()
-	{	
+	{
 		if (!strstr($this->action, '?'))
 		{
 		 	return $this->action;
@@ -488,8 +488,8 @@ class CC_Application
 			return substr($this->action, 0, strpos($this->action, '?'));
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setActionArguments
 	//-------------------------------------------------------------------
@@ -504,32 +504,32 @@ class CC_Application
 	 */
 
 	function setActionArguments($action)
-	{	
+	{
 		if (strstr($action, '?'))
 		{
 			$pairArray = array();
-		
+
 			$rpos = strpos($action, '?');
 			$start = $rpos + 1;
 			$length = strlen($action) - $rpos;
-			
+
 			$nameValueRequestString = substr($action, $start, $length);
-		
+
 			$pairArray = explode('&', $nameValueRequestString);
-	
+
 			$size = sizeof($pairArray);
-	
+
 			for ($i=0 ; $i < $size; $i++)
 			{
 				$nameValueArray = explode('=', $pairArray[$i]);
-				
+
 				$this->setArgument($nameValueArray[0], $nameValueArray[1]);
-				
+
 				unset($nameValueArray);
 			}
-			
+
 			unset($size);
-			
+
 			return substr($action, 0, $start - 1);
 		}
 		else
@@ -537,22 +537,22 @@ class CC_Application
 			return $action;
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setCurrentWindowName
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method sets the name of the current window. 
+	 * This method sets the name of the current window.
 	 *
 	 * @access private
 	 * @param string $windowName The name of the window.
 	 * @todo verify that this method is even used anywhere, doesn't appear so
 	 */
-	
+
 	function setCurrentWindowName($windowName)
-	{	
+	{
 		$this->currentWindowName = $windowName;
 	}
 
@@ -569,7 +569,7 @@ class CC_Application
 	 */
 
 	function jumpTo($jmpAction)
-	{	
+	{
 	/**
 	 * @example
 		//override this to process jumpTo requests
@@ -582,8 +582,8 @@ class CC_Application
 		}
 	*/
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getCurrentWindow
 	//-------------------------------------------------------------------
@@ -596,11 +596,11 @@ class CC_Application
 	 */
 
 	function &getCurrentWindow()
-	{	
+	{
 		return $this->getWindow($this->getAction(), $this->actionKey);
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getWindow
 	//-------------------------------------------------------------------
@@ -632,8 +632,8 @@ class CC_Application
 			return $this->windows[$windowName];
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getLastAction
 	//-------------------------------------------------------------------
@@ -647,17 +647,17 @@ class CC_Application
 	 */
 
 	function getLastAction()
-	{	
+	{
 		return $this->lastAction;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setLastAction
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method sets the last action (ie. screen) the application accessed. 
+	 * This method sets the last action (ie. screen) the application accessed.
 	 *
 	 * @access private
 	 * @param string $action The action to go to.
@@ -665,17 +665,17 @@ class CC_Application
 	 */
 
 	function setLastAction()
-	{	
+	{
 		$this->lastAction = $lastAction;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setArgument
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method sets an argument with the application which can be accessed anywhere throughout the application. 
+	 * This method sets an argument with the application which can be accessed anywhere throughout the application.
 	 *
 	 * @access public
 	 * @param string $name The name of the argument.
@@ -685,16 +685,16 @@ class CC_Application
 	 */
 
 	function setArgument($name, $value)
-	{	
+	{
 		if (is_object($value))
 		{
 			trigger_error('An object was passed to setArgument(). Use setObject() instead.', E_USER_WARNING);
 		}
-		
+
 		$this->arguments[$name] = $value;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setObject
 	//-------------------------------------------------------------------
@@ -719,7 +719,7 @@ class CC_Application
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method retrieves an object from the application's objects array. 
+	 * This method retrieves an object from the application's objects array.
      *
 	 * @access public
 	 * @param string $key The key of the object to retrieve.
@@ -738,28 +738,28 @@ class CC_Application
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method returns an argument of a given name then removes it from the arguments array. 
+	 * This method returns an argument of a given name then removes it from the arguments array.
 	 *
 	 * @access public
 	 * @param string $name The name of the argument.
 	 * @return mixed The value of the named argument.
 	 */
-	
+
 	function popArgument($name)
 	{
 		$argument = $this->getArgument($name);
 		$this->clearArgument($name);
-		
+
 		return $argument;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: clearArgument
 	//-------------------------------------------------------------------
-	
+
 	/**
-	 * This method removes an argument of a given name from the application. 
+	 * This method removes an argument of a given name from the application.
 	 *
 	 * @access public
 	 * @param string $name The name of the argument to remove.
@@ -769,11 +769,11 @@ class CC_Application
 	 */
 
 	function clearArgument($name)
-	{	
+	{
 		unset($this->arguments[$name]);
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getArgument
 	//-------------------------------------------------------------------
@@ -792,17 +792,17 @@ class CC_Application
 		{
 			trigger_error('CC_Application::getArgument() was passed an unset or NULL object.');
 		}
-		
+
 		if (array_key_exists($name, $this->arguments))
 		{
 			return $this->arguments[$name];
 		}
 		else
-		{	
+		{
 			trigger_error('The following argument doesn\'t exist: ' . $name . '. If you don\'t want this error message, use CC_Application::argumentExists() before calling this method.');
 		}
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: argumentExists
@@ -821,7 +821,7 @@ class CC_Application
 	 */
 
 	function argumentExists($name)
-	{	
+	{
 		return $this->hasArgument($name);
 	}
 
@@ -841,7 +841,7 @@ class CC_Application
 	 */
 
 	function hasArgument($name)
-	{	
+	{
 		return array_key_exists($name . '', $this->arguments);
 	}
 
@@ -863,7 +863,7 @@ class CC_Application
 	 */
 
 	function objectExists($name)
-	{	
+	{
 		return $this->hasObject($name);
 	}
 
@@ -882,7 +882,7 @@ class CC_Application
 	 */
 
 	function hasObject($name)
-	{	
+	{
 		return array_key_exists($name . '', $this->objects);
 	}
 
@@ -892,7 +892,7 @@ class CC_Application
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method checks to see if a window of a given name is registered with the application. 
+	 * This method checks to see if a window of a given name is registered with the application.
 	 *
 	 * @access public
 	 * @param string $windowName The name or id of the window to check.
@@ -900,7 +900,7 @@ class CC_Application
 	 */
 
 	function isWindowRegistered($windowName, $actionKey = '')
-	{	
+	{
 		if (!$actionKey)
 		{
 			return array_key_exists($windowName, $this->windows);
@@ -910,14 +910,14 @@ class CC_Application
 			return (array_key_exists($windowName, $this->windows) && is_array($this->windows[$windowName]) && isset($this->windows[$windowName][$actionKey]));
 		}
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: isCurrentWindowRegistered
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method checks to see if the current window is registered with the application. 
+	 * This method checks to see if the current window is registered with the application.
 	 *
 	 * @access public
 	 * @return bool Whether or not the current window is registered.
@@ -925,17 +925,17 @@ class CC_Application
 	 */
 
 	function isCurrentWindowRegistered()
-	{	
+	{
 		return $this->isWindowRegistered($this->getAction(), $this->actionKey);
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: logout
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method logs a user out of the application, resets their application cookie, destroys their session and presents then with the $logoutDestination screen. 
+	 * This method logs a user out of the application, resets their application cookie, destroys their session and presents then with the $logoutDestination screen.
 	 *
 	 * @access public
 	 * @see setLogoutDestination()
@@ -946,21 +946,21 @@ class CC_Application
 		unset($_SESSION['application']);
 
 		setCookie(session_name(), '', 0, BASE_URL);
-		
+
 		//session_unset();
 		session_destroy();
-		
+
 		header('Location: ' . $this->logoutDestination);
 		exit();
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: setLogoutDestination
 	//-------------------------------------------------------------------
 
 	/**
-	 * This method sets the action to go to upon logging out. It basically sets the $logoutDestination variable. 
+	 * This method sets the action to go to upon logging out. It basically sets the $logoutDestination variable.
 	 *
 	 * @access public
 	 * @see CC_Application::$logoutDestination
@@ -970,8 +970,8 @@ class CC_Application
 	{
 		$this->logoutDestination = $logoutDestination;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: registerButtonClick
 	//-------------------------------------------------------------------
@@ -985,9 +985,9 @@ class CC_Application
 	 */
 
 	function registerButtonClick($buttonId)
-	{	
-		$this->lastButtonClick = $buttonId; 
-		$this->lastButtonClickTime = time(); 
+	{
+		$this->lastButtonClick = $buttonId;
+		$this->lastButtonClickTime = time();
 	}
 
 
@@ -1008,8 +1008,8 @@ class CC_Application
 	{
 		return ($this->lastButtonClick == $buttonClick);
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: isMultipleClick
 	//-------------------------------------------------------------------
@@ -1030,10 +1030,10 @@ class CC_Application
 		{
 			return ((time() - $this->lastButtonClickTime) < $this->buttonExpiryTime);
 		}
-		
+
 		return false;
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: setButtonExpiryTime
@@ -1054,7 +1054,7 @@ class CC_Application
 			$this->buttonExpiryTime = $buttonExpiryTime;
 		}
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: getLastButtonClick
@@ -1072,7 +1072,7 @@ class CC_Application
 	{
 		return $this->lastButtonClick;
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: cc_die
@@ -1081,7 +1081,7 @@ class CC_Application
 	/**
 	  * This method halts application execution when something fatal occurs, like not being able to return a summary, record, or field. If you would like to handle this in your own way, override it in your application's subclass. The passed error message is displayed in the window with an accompanying logout button.
 	  *
-	  * @access public 
+	  * @access public
 	  * @param string $message The error message to display.
 	  * @todo Do we need this method any more now that we have trigger_error?
 	  */
@@ -1089,7 +1089,7 @@ class CC_Application
 	function cc_die($message)
 	{
 		$logoutButton = new CC_Logout_Button('Reset Application');
-		
+
 		$window = &$this->getCurrentWindow();
 
 		if (!$window)
@@ -1107,11 +1107,11 @@ class CC_Application
 	//-------------------------------------------------------------------
 	// METHOD: isGet
 	//-------------------------------------------------------------------
-	
+
 	/**
 	  * This method returns whether or not the application uses the GET protocol to transmit field data.
 	  *
-	  * @access public 
+	  * @access public
 	  * @return bool If we are using the GET method.
 	  */
 
@@ -1124,11 +1124,11 @@ class CC_Application
 	//-------------------------------------------------------------------
 	// METHOD: setGet
 	//-------------------------------------------------------------------
-	
+
 	/**
 	  * This method sets whether or not the application uses HTTP's GET protocol to transmit field data.
 	  *
-	  * @access public 
+	  * @access public
 	  * @param bool $get Whether or not should use the GET method.
 	  */
 
@@ -1141,16 +1141,16 @@ class CC_Application
 	//-------------------------------------------------------------------
 	// METHOD: getMethod
 	//-------------------------------------------------------------------
-	
+
 	/**
 	  * This method returns strings with a value of 'GET' or 'POST' depending on the HTTP method used by the application to transmit field data.
 	  *
-	  * @access public 
+	  * @access public
 	  * @return string A string representing the current HTTP data transmission method.
-	  * @see setGet() 
-	  * @see isGet() 
+	  * @see setGet()
+	  * @see isGet()
 	  */
-	
+
 	function getMethod()
 	{
 		return ($this->isGet ? 'GET' : 'POST');
@@ -1160,11 +1160,11 @@ class CC_Application
 	//-------------------------------------------------------------------
 	// METHOD: isSecure
 	//-------------------------------------------------------------------
-	
+
 	/**
 	  * This method returns whether or not the application is running on a secure server.
 	  *
-	  * @access public 
+	  * @access public
 	  * @return bool If the application is currently running on a secure server.
 	  */
 
@@ -1177,26 +1177,26 @@ class CC_Application
 	//-------------------------------------------------------------------
 	// METHOD: transferArgumentToCurrentWindow
 	//-------------------------------------------------------------------
-	
+
 	/**
 	  * This method takes a registered argument, and moves it and its value into the current window. Returns false if the argument doesn't exist, true if the operation was successful.
 	  *
-	  * @access public 
+	  * @access public
 	  * @param string $arg The name of the argument to transfer.
 	  * @return bool Whether or not the operation was successful.
 	  */
 
-	
+
 	function transferArgumentToCurrentWindow($arg)
 	{
 		if ($this->hasArgument($arg))
 		{
 			$window = &$this->getCurrentWindow();
-			
+
 			$window->setArgument($arg, $this->getArgument($arg));
-			
+
 			$this->clearArgument($arg);
-			
+
 			unset($window);
 		}
 		else
@@ -1204,7 +1204,7 @@ class CC_Application
 			return false;
 		}
 	}
-	
+
 
 	//-------------------------------------------------------------------
 	// METHOD: preprocess()
@@ -1212,7 +1212,7 @@ class CC_Application
 
 	/**
 	 * This method will get called at the begining of a request. You can override this method in your application and implement anything you want to.
-	 * 
+	 *
 	 * An example use for this would be to parse the $_SERVER['PATH_INFO']
 	 *
 	 * @access public
@@ -1220,7 +1220,7 @@ class CC_Application
 
 	function preprocess()
 	{
-		
+
 	}
 
 
@@ -1232,14 +1232,14 @@ class CC_Application
 	 * For applications that require users to login, you can set this to
 	 * true when the user successfully logs in. This way, you can later
 	 * use isLoggedIn() in the preprocess() function to do double-checks.
-	 * 
+	 *
 	 * @param $loggedIn boolean Is the user logged in?
 	 * @access public
 	 */
 
 	function setLoggedIn($loggedIn)
 	{
-		$this->_loggedIn = $loggedIn;	
+		$this->_loggedIn = $loggedIn;
 	}
 
 
@@ -1257,10 +1257,10 @@ class CC_Application
 
 	function isLoggedIn()
 	{
-		return $this->_loggedIn;	
+		return $this->_loggedIn;
 	}
 
-	
+
 	//-------------------------------------------------------------------
 	// METHOD: setLanguage
 	//-------------------------------------------------------------------
@@ -1269,7 +1269,7 @@ class CC_Application
 	 * This method sets the input component's language.
 	 *
 	 * @access public
-	 * @param string $style The CSS style to set. 
+	 * @param string $style The CSS style to set.
 	 */
 
 	function setLanguage($language)
@@ -1286,7 +1286,7 @@ class CC_Application
 	 * This method gets the input component's language.
 	 *
 	 * @access public
-	 * @return string The component's CSS style. 
+	 * @return string The component's CSS style.
 	 * @see setStyle()
 	 */
 
@@ -1294,8 +1294,8 @@ class CC_Application
 	{
 		return $this->_language;
 	}
-	
-	
+
+
 	//-------------------------------------------------------------------
 	// METHOD: getFormAction()
 	//-------------------------------------------------------------------
@@ -1312,7 +1312,7 @@ class CC_Application
 	function getFormAction($suffix = '', $queryString = null)
 	{
 		$action = BASE_URL . $suffix;
-		
+
 		if (isset($_COOKIE[session_name()]) && $_COOKIE[session_name()] == session_id())
 		{
 			if ($queryString)
@@ -1329,7 +1329,7 @@ class CC_Application
 				$action .= '?' . $queryString;
 			}
 		}
-		
+
 		return $action;
 	}
 
@@ -1348,7 +1348,7 @@ class CC_Application
 	function getFormOpen()
 	{
 ?>
-<form method="POST" name="CC_Form" enctype="multipart/form-data" action="<?php echo $this->getFormAction(); ?>">
+<form method="POST" name="CC_Form" id="ccForm" enctype="multipart/form-data" action="<?php echo $this->getFormAction(); ?>">
 <input type="hidden" name="pageId" value="<?php echo URLValueEncode($this->getAction()); ?>">
 <input type="hidden" name="pageIdKey" value="<?php echo URLValueEncode($this->getActionKey()); ?>">
 <?php
